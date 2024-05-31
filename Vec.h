@@ -21,9 +21,15 @@ public:
     T operator* (const Vec<T, D>& other) const;
     Vec<T, D> operator*(const T& number) const;
 
-    Vec<T, D>& operator+=(const Vec<T, D>& other); 
-    Vec<T, D>& operator-=(const Vec<T, D>& other);
+    template<typename TT>
+    Vec<T, D>& operator+=(const Vec<TT, D>& other); 
+    template<typename TT>    
+    Vec<T, D>& operator-=(const Vec<TT, D>& other);
     Vec<T, D>& operator *= (const T& number);
+
+    T sum();
+    T dot(const Vec<T, D>& other)const;
+    T abs2();
 };
 
 template<typename T, int D>
@@ -34,5 +40,5 @@ std::ostream& operator<<(std::ostream& COUT, const Vec<T, D>& ref);
 
 #include "Vec.inl"
 
-using VecF2 = Vec<float, 2>;
-using VecD2 = Vec<double, 2>;
+// using VecF2 = Vec<float, 2>;
+// using VecD2 = Vec<double, 2>;

@@ -16,8 +16,9 @@ Vec<T, D> Vec<T, D>::operator+(const Vec<T, D>& other) const {
     return result;
 }
 
-template<typename T , int D> 
-Vec<T, D>& Vec<T, D>::operator+=(const Vec<T, D>& other) {
+template<typename T , int D>
+template<typename TT>
+Vec<T, D>& Vec<T, D>::operator+=(const Vec<TT, D>& other) {
     for (int i=0; i < D; i++)
         elements[i] = elements[i] + other.elements[i];
     return *this;
@@ -30,10 +31,11 @@ Vec<T, D> Vec<T, D>::operator-(const Vec<T, D>& other) const {
     return result;
 }
 
-template<typename T , int D> 
-Vec<T, D>& Vec<T, D>::operator-=(const Vec<T, D>& other){
+template<typename T , int D>
+template<typename TT> 
+Vec<T, D>& Vec<T, D>::operator-=(const Vec<TT, D>& other){
     for (int i=0; i < D; i++)
-        elements[i] = elements [i] - other.elements[i];
+        elements[i] = elements[i] - other[i];
     return *this;
 }
 
@@ -60,11 +62,32 @@ Vec<T, D> Vec<T, D>::operator*(const T& number) const {
     return result;
 }
 
-template<typename T , int D> 
+template<typename T , int D>
 Vec<T, D>& Vec<T, D>::operator *= (const T& number){
     for (int i=0; i< D; i++)
         elements[i] = number* elements[i];
     return *this;
+}
+
+template<typename T , int D>
+T Vec<T, D>::sum(){
+    T result = elements[0];
+    for (int i=1; i<D; i++)
+        result += elements[i];
+    return result;    
+}
+
+template<typename T , int D>
+T Vec<T, D>::dot(const Vec<T, D>& other)const{
+    Vec<T, D> result;
+    for (int i=0; i<D; i++)
+        result.elements[i] = elements[i]* other.elements[i];
+    return result.sum();
+}
+
+template<typename T , int D>
+T Vec<T, D>::abs2(){
+    return dot(*this);
 }
 
 template<typename T , int D> 
