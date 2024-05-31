@@ -37,11 +37,11 @@ class Mat {
         Mat<Vec<T, NN>, M> result;
         static_assert(N == MM, "error message/condition");
             // Initialization
-        for (int i = 0; i < M; i++) {
-            for (int j = 0; j < NN; j++) {
-                result[i][j] = 0;
-            }
-        }
+        // for (int i = 0; i < M; i++) {
+        //     for (int j = 0; j < NN; j++) {
+        //         result[i][j] = 0;
+        //     }
+        // }
         //std::fill(result.elements.begin(), result.elements.end(), Vec<T, NN>(0));
 
         for (int i=0; i<M; i++){
@@ -70,9 +70,10 @@ class Mat {
         return determinant;
     }
 
-    Mat<Vec<T, N>, M> &inverse (){
+    Mat<T, M, N> inverse (){
 
-        Mat<Vec<T, N>, M> inverse_mat;
+        static_assert(N == 2 && M == 2, "only implemented for 2x2");
+        Mat<T, M, N> inverse_mat;
         // manually calculated because we are suppose to work with 2D...
         // inverse_mat [0][0] = elements[1][1];
         // inverse_mat [0][1] = - elements[0][1];
@@ -91,7 +92,7 @@ class Mat {
 
         for (int i=0; i<M; i++){
             for (int j=0; j<N; j++){
-                (inverse_mat.get_determinant)*elements[i][j];
+                (inverse_mat.get_determinant())*elements[i][j];
             }
         }
         return inverse_mat;        

@@ -9,7 +9,10 @@ class Vec {
 
 public:
     //constructors
-    Vec() = default;
+    // Vec() = default;
+    Vec(T v=0){
+        elements.fill(v);
+    };
     Vec(std::array<T, D> init) : elements(init) {}
                
     T& operator[](int index);
