@@ -8,11 +8,8 @@ class Vec {
     std::array<T, D> elements;
 
 public:
-    //constructors
     // Vec() = default;
-    Vec(T v=0){
-        elements.fill(v);
-    };
+    Vec(T v=0) {elements.fill(v);}
     Vec(std::array<T, D> init) : elements(init) {}
                
     T& operator[](int index);
@@ -21,6 +18,7 @@ public:
     Vec<T, D> operator+(const Vec<T, D>& other) const;
     Vec<T, D> operator-(const Vec<T, D>& other) const;
     Vec<T, D> operator-() const;
+    
     T operator* (const Vec<T, D>& other) const;
     Vec<T, D> operator*(const T& number) const;
 
@@ -29,6 +27,12 @@ public:
     template<typename TT>    
     Vec<T, D>& operator-=(const Vec<TT, D>& other);
     Vec<T, D>& operator *= (const T& number);
+
+    template<typename TT>    
+    bool operator==(const Vec<TT, D>& other);
+
+    template<typename TT>    
+    bool operator!=(const Vec<TT, D>& other){ return !(*this == other);}
 
     T sum();
     T dot(const Vec<T, D>& other)const;
@@ -42,6 +46,3 @@ template<typename T, int D>
 std::ostream& operator<<(std::ostream& COUT, const Vec<T, D>& ref);
 
 #include "Vec.inl"
-
-// using VecF2 = Vec<float, 2>;
-// using VecD2 = Vec<double, 2>;
