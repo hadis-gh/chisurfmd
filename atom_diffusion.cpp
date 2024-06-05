@@ -27,7 +27,7 @@ Vec<double, 2> move_atom(const Vec<double, 2>& current, int direction, const std
 int main() {
     std::random_device rd;
     std::mt19937 gen(rd());
-    std::uniform_int_distribution<> dis(0, directions.size()-1); // Six directions
+    std::uniform_int_distribution<> dis(0, directions.size()-1);
 
     const int min = -10;
     const int L = 20;
@@ -55,26 +55,16 @@ int main() {
     Vec<double, 2> vec1({1, 0});  
     Vec<double, 2> vec2({1/2, sqrt3/2});
     Mat<double, 2, 2> basis({vec1, vec2});
-/*
-    std::ofstream outFile("atom_path.txt");
-    for (int y = min; y< min + L; ++y){
-        for (int x = min; x<min + L; ++x){
-            const int i = x-min + (y-min)*L;
-            Mat<double, 2, 1> red_path ({x}, {y});
-            const auto cart = basis * red_path;
-            outFile << cart[0] <<" " << cart[1] <<" "<< hist[i]<< " "<< hist100[i]<< std::endl;
-        }
-    }
-*/
+
     std::ofstream outFile("atom_path.txt");
     for (int y = min; y< min + L; ++y){
         for (int x = min; x<min + L; ++x){
             const int i = x-min + (y-min)*L;
             Mat<double, 2, 1> red_path ({x,y});
             const auto cart = basis * red_path;
-            // std::cout << cart(0, 0) << " " << cart(0, 1) << " " << hist[i]<< " "<< hist100[i]<< std::endl;
             outFile << cart(0, 0) << " " << cart(0, 1) << " " << hist[i]<< " "<< hist100[i]<< std::endl;
         }
     }
+
     return 0;
 }
