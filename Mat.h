@@ -24,6 +24,8 @@ class Mat {
     Mat<T, M, N> operator* (const Mat<T, MM, NN> &other) const;
     Mat<T, M, N> &operator* (const T &scaler);
 
+    Vec<T, M> operator* (const Vec<T, N> &other) const;  
+    
     template <int MM, int NN>
     Mat<T, M, N> inner_product (const Mat<T, MM, NN> &other);
 

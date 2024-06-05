@@ -59,6 +59,16 @@ Mat<T, M, N> & Mat<T, M, N>::operator* (const T &scaler) {
 }
 
 template<typename T, int M, int N>
+Vec<T, M> Mat<T, M, N>::operator* (const Vec<T, N> &other) const{
+    Vec<T, M> result;
+    for (int i=0; i<M; i++){
+        result[i] = elements[i].dot(other); 
+    }
+    return result;
+}
+
+
+template<typename T, int M, int N>
 template <int MM, int NN>
 Mat<T, M, N> Mat<T, M, N>::inner_product (const Mat<T, MM, NN> &other){
     return ((*this).transpose()) * other;

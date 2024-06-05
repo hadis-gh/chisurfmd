@@ -71,16 +71,63 @@ Vec<T, D>& Vec<T, D>::operator *= (const T& number){
 
 template<typename T , int D>
 template<typename TT>    
-bool Vec<T, D>::operator==(const Vec<TT, D>& other){
+bool Vec<T, D>::operator==(const Vec<TT, D>& other)const{
     for (int i=0; i < D; i++){
         if (elements[i] != other[i])
             return false;
     }
     return true;
 }
+template<typename T , int D>
+bool Vec<T, D>::operator>=(const T& number) const{ 
+    for (int i=0; i<D; i++){
+        if (elements[i]< number){
+            return false;
+        }
+    }
+    return true;
+}
 
 template<typename T , int D>
-T Vec<T, D>::sum(){
+bool Vec<T, D>::operator<=(const T& number)const{ 
+        return !(*this > number);
+    }
+
+template<typename T , int D>
+bool Vec<T, D>::operator>(const T& number)const{ 
+    for (int i=0; i<D; i++){
+        if (elements[i]<= number){
+            return false;
+        }
+    }
+    return true;
+}
+
+template<typename T , int D>
+bool Vec<T, D>::operator<(const T& number)const{ 
+    for (int i=0; i<D; i++){
+        if (elements[i]>= number){
+            return false;
+        }
+    }
+    return true;
+    }
+
+template<typename T , int D>
+Vec<T, D> Vec<T, D>::operator- (const T& number)const{
+    for (int i=0; i< D; i++)
+        elements[i] -= number;
+    return *this;
+}
+
+template<typename T , int D>
+Vec<T, D> Vec<T, D>::operator+ (const T& number)const{
+    for (int i=0; i< D; i++)
+        elements[i] += number;
+    return *this;
+}
+template<typename T , int D>
+T Vec<T, D>::sum()const{
     T result = elements[0];
     for (int i=1; i<D; i++)
         result += elements[i];
@@ -96,12 +143,12 @@ T Vec<T, D>::dot(const Vec<T, D>& other)const{
 }
 
 template<typename T , int D>
-T Vec<T, D>::abs2(){
+T Vec<T, D>::abs2()const{
     return dot(*this);
 }
 
 template<typename T , int D> 
-Vec<T, D> operator*(const T& number, const Vec<T, D>& vec) {
+Vec<T, D> operator*(const T& number, const Vec<T, D>& vec){
     Vec<T, D> result(vec);
     result *= number;
     return result;

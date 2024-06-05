@@ -29,14 +29,23 @@ public:
     Vec<T, D>& operator *= (const T& number);
 
     template<typename TT>    
-    bool operator==(const Vec<TT, D>& other);
+    bool operator==(const Vec<TT, D>& other)const;
 
     template<typename TT>    
     bool operator!=(const Vec<TT, D>& other){ return !(*this == other);}
 
-    T sum();
+    bool operator>=(const T& number) const;
+    bool operator<=(const T& number)const;
+
+    bool operator>(const T& number)const;
+    bool operator<(const T& number)const;
+
+    Vec<T, D> operator- (const T& number)const;
+    Vec<T, D> operator+ (const T& number)const;
+
+    T sum()const;
     T dot(const Vec<T, D>& other)const;
-    T abs2();
+    T abs2()const;
 };
 
 template<typename T, int D>
