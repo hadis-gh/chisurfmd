@@ -15,7 +15,10 @@ class Mat {
     T& operator()(int i, int j);
     const T& operator()(int i, int j) const;
 
-    Mat<T, M, N> transpose();
+    Vec<T, N>& operator()(int i);
+    const Vec<T, N>& operator()(int i) const;
+
+    Mat<T, M, N> transpose() const;
     
     template <int MM, int NN>
     Mat<T, M, N> operator* (const Mat<T, MM, NN> &other) const;
@@ -27,15 +30,15 @@ class Mat {
     template <int MM, int NN>
     Mat<T, M, N> outer_product (Mat<T, MM, NN> &other) const;
 
-    T get_determinant()const;
+    T get_determinant() const;
 
-    Mat<T, M, N> inverse();
-
-    template <int MM, int NN>
-    bool operator==(const Mat<T, MM, NN> &other);
+    Mat<T, M, N> inverse() const;
 
     template <int MM, int NN>
-    bool operator!=(const Mat<T, MM, NN> &other);   
+    bool operator==(const Mat<T, MM, NN> &other) const;
+
+    template <int MM, int NN>
+    bool operator!=(const Mat<T, MM, NN> &other) const;   
 };
 
 template<typename T, int M = 2, int N = 2>
