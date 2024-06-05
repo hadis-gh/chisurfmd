@@ -33,7 +33,7 @@ int main() {
 
     int steps = 100;
     int traceStep = 10;
-    int samples = 1000;
+    int samples = 10000000;
 
     for (int a=0; a<samples; ++a) {
         Vec<int, 2> current ({L/2, L/2});
@@ -57,7 +57,7 @@ int main() {
     for (int y = min; y< min + L; ++y){
         for (int x = min; x<min + L; ++x){
             const int i = x-min + (y-min)*L;
-            Vec<double, 2> red_path ({x*1.0,y*1.0});
+            Vec<double, 2> red_path ({double(x),double(y)});
             const auto cart = basis * red_path;
             outFile << cart[0] << " " << cart[1] << " " << hist[i]<< " "<< hist100[i]<< std::endl;
         }
