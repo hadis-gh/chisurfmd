@@ -23,9 +23,9 @@ int main() {
     std::vector<unsigned int> count(L*L, 0); 
     std::vector<unsigned int> endpoint_count(L*L, 0);
 
-    int steps = 100;
+    int steps = 1000;
     int traceStep = 10;
-    int samples = 1000;
+    int samples = 1000000;
 
     simulate_randomwalk(count, endpoint_count, steps, samples);
     write_to_file(count, endpoint_count);
@@ -82,8 +82,10 @@ void write_to_file(const std::vector<unsigned int>& count, const std::vector<uns
 
             const auto cartesian = basis * lattice_coords;
 
-            output_file << cartesian[0] << " " << cartesian[1] << " " 
-                        << count[index] << " " << endpoint_count[index] << std::endl;
+            // output_file << cartesian[0] << " " << cartesian[1] << " " 
+            //             << count[index] << " " << endpoint_count[index] << std::endl;
+            output_file << lattice_coords[0] << " " << lattice_coords[1] << " " 
+                        << count[index] << " " << endpoint_count[index] << std::endl;    
         }
     }
 }
