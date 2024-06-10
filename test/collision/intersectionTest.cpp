@@ -1,10 +1,10 @@
 #include <iostream>
-#include <lettuce/Intersection_line_circle.h>
+#include "lettuce/IntersectionLineCircle.h"
 
 
 int main() {
     const Vec<float> point ({0.0, 0.0});
-    const Vec<float> direction ({1.0, 0.0});     //= {1.0, 1.0}
+    const Vec<float> direction ({1.0, 0.0});
 
     const Circle<float> c1 = {{{3.0, -1.0}}, 1.0};
     const Circle<float> c2 = {{{0.0, 3.0}}, 1.0};

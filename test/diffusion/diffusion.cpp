@@ -23,9 +23,9 @@ int main() {
     std::vector<unsigned int> count(L*L, 0); 
     std::vector<unsigned int> endpoint_count(L*L, 0);
 
-    int steps = 1000;
+    int steps = 100;
     int traceStep = 10;
-    int samples = 1000000;
+    int samples = 100000;
 
     simulate_randomwalk(count, endpoint_count, steps, samples);
     write_to_file(count, endpoint_count);
@@ -49,9 +49,8 @@ std::vector <Vec<int, 2>> lattice_type(const std::string &name){
 }
 
 void simulate_randomwalk(std::vector<unsigned int>& count, std::vector<unsigned int>& endpoint_count, const int steps, const int samples){
-    // std::random_device rd;
-    // std::mt19937 gen(rd());     //previous one
-    std::mt19937 gen(std::chrono::high_resolution_clock::now().time_since_epoch().count());
+    std::random_device rd;
+    std::mt19937 gen(rd());     //previous one
     std::uniform_int_distribution<> distribution(0, directions.size()-1);
 
     for (int a=0; a<samples; ++a) {

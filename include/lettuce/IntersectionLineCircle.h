@@ -3,13 +3,7 @@
 #include <iostream>
 #include <cmath>
 #include "Vec.h"
-
-template <typename T>
-struct Circle 
-{
-    Vec<T, 2> c;
-    T r;
-};
+#include "Circle.h"
 
 template <typename T>
 T calculateIntersection(const Vec<T, 2> &p,const Vec<T> &d,const Circle<T> &circle) 
