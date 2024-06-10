@@ -1,7 +1,7 @@
 #include <iostream>
 #include <array>
-#include "Vec.h"
-#include "Mat.h"
+#include "lettuce/Vec.h"
+#include "lettuce/Mat.h"
 
 bool test_vector ();
 bool test_matrix ();

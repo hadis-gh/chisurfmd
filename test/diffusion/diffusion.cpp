@@ -6,16 +6,16 @@
 #include <cmath>
 #include <random>
 #include <chrono>
-#include "Vec.h"
-#include "Mat.h"
+#include "lettuce/Vec.h"
+#include "lettuce/Mat.h"
 
-template <class T>
+template <typename T>
 struct Point {T x,y;};
 
 std::vector <Vec<int, 2>> lattice_type(const std::string &name);
 void simulate_randomwalk(std::vector<unsigned int>& count, std::vector<unsigned int>& endpoint_count, const int steps, const int samples);
 void write_to_file(const std::vector<unsigned int>& count, const std::vector<unsigned int>& endpoint_count);
-std::vector <Vec<int, 2>> directions = lattice_type("square");
+std::vector <Vec<int, 2>> directions = lattice_type("triangular");
 const int L = 20;
 
 
@@ -82,10 +82,10 @@ void write_to_file(const std::vector<unsigned int>& count, const std::vector<uns
 
             const auto cartesian = basis * lattice_coords;
 
-            // output_file << cartesian[0] << " " << cartesian[1] << " " 
-            //             << count[index] << " " << endpoint_count[index] << std::endl;
-            output_file << lattice_coords[0] << " " << lattice_coords[1] << " " 
-                        << count[index] << " " << endpoint_count[index] << std::endl;    
+            output_file << cartesian[0] << " " << cartesian[1] << " " 
+                        << count[index] << " " << endpoint_count[index] << std::endl;
+            // output_file << lattice_coords[0] << " " << lattice_coords[1] << " " 
+            //             << count[index] << " " << endpoint_count[index] << std::endl;    
         }
     }
 }

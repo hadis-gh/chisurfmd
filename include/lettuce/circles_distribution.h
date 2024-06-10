@@ -15,11 +15,9 @@ double random_double(const double &min, const double &max) {
     return min + rand() % int(max) +1;
 }
 
-bool has_overlap (const circle &new_circle,const circle &old_circle, const int &radius){
-    double distance = std::sqrt ((new_circle.x -old_circle.x)*(new_circle.x -old_circle.x) + (new_circle.y -old_circle.y)*(new_circle.y -old_circle.y));
-    if (distance < 2*double(radius))
-        return true;
-    return false;
+bool has_overlap (const circle &c1,const circle &c2, const int &r){
+    double distance = std::sqrt ((c1.x -c2.x)*(c1.x -c2.x) + (c1.y -c2.y)*(c1.y -c2.y));
+    return distance < 2*double(r);
 }
 
 std::vector <circle> dist_circles (const int &circles_number, const double &L, const double &radius){
@@ -46,7 +44,7 @@ std::vector <circle> dist_circles (const int &circles_number, const double &L, c
 int main() {
     int circles_number = 20;
     double length = 100.0;
-    double radius = 1.0;
+    double radius = 5.0;
 
     std::vector <circle> circles = dist_circles (circles_number, length, radius);
     for (auto c: circles)
