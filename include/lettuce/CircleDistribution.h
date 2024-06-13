@@ -13,7 +13,7 @@ bool has_overlap (const Circle<T> &c1,const Circle<T> &c2){
 }
 
 template <typename T>
-std::vector <Circle<T>> dist_circles (const int &circles_number, const T &L, const T &radius, std::mt19937 &gen){
+std::vector <Circle<T>> distCircles (const int &circles_number, const T &L, const T &radius, std::mt19937 &gen){
     std::vector <Circle<T>> circles;
     std::uniform_real_distribution<> dis(radius, L-radius);
     
