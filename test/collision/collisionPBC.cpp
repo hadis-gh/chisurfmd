@@ -1,4 +1,5 @@
 #include <iostream>
+#include <fstream>
 #include <random>
 #include "lettuce/Vec.h"
 #include "lettuce/Circle.h"
@@ -16,12 +17,12 @@ void movePoint (Vec<float> &point, const Vec<T> &direction,const T &length){
 }
 
 int main() {
-    Vec<float> originPoint ({1.0, 1.0});
-    Vec<float> moveDirection ({1.0, 1.0});
+    Vec<float> originPoint ({20.0, 20.0});
+    Vec<float> moveDirection ({1.0, 0.0});
 
     float length = 50.0;
-    int circleNum = 30;
-    float circleR = 0.5;
+    int circleNum = 25;
+    float circleR = 1;
 
     std::random_device rd;
     std::mt19937 gen(rd());
@@ -53,29 +54,22 @@ int main() {
     std::cout << "Intersection point: " << intersectionPoint << std::endl;
     std::cout << "Number of iteration: " << iteration << std::endl;
 
+
+    std::ofstream outputFile("collisionPBC_info.txt");
+
+    outputFile << "originPoint= "<< originPoint
+               << "\nmovementDirection= "<< moveDirection
+               << "\nlength= "<< length
+               << "\ncirclesRadius= "<< circleR
+
+               << "\n\nintersection= "<< intersectionPoint
+               << "\nNumberOfIteration= " << iteration;
+
+    outputFile << "\n\ncirclesCenters= [";
+    for (auto c: circles){
+        outputFile << c.c <<", ";
+    }
+    outputFile << "]"<< std::endl;
+
     return 0;
 }
-
-    // int maxIterations = 1000; // add a maximum number of iterations
-    // int iteration = 0;
-
-    // do {
-    //     for (auto c : circles) {
-    //         intersectionPoint = calculateIntersectionPoint(originPoint, moveDirection, c);
-    //         if (!std::isnan(intersectionPoint[0]) && !std::isinf(intersectionPoint[0])) {
-    //             break; // found an intersection point, exit the loop
-    //         }
-    //     }
-
-    //     if (std::isnan(intersectionPoint[0]) || std::isinf(intersectionPoint[0])) {
-    //         movePoint(originPoint, moveDirection, length);
-    //         iteration++;
-    //     }
-
-    // } while (iteration < maxIterations && std::isnan(intersectionPoint[0]));
-
-    // if (std::isnan(intersectionPoint[0])) {
-    //     std::cerr << "No intersection point found after " << maxIterations << " iterations." << std::endl;
-    // } else {
-    //     std::cout << "Intersection point: " << intersectionPoint << std::endl;
-    // }
