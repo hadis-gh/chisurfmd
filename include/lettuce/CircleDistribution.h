@@ -15,7 +15,7 @@ bool has_overlap (const Circle<T> &c1,const Circle<T> &c2){
 template <typename T>
 std::vector <Circle<T>> distCircles (const int &circles_number, const T &L, const T &radius, std::mt19937 &gen){
     std::vector <Circle<T>> circles;
-    std::uniform_real_distribution<> dis(radius, L-radius);
+    std::uniform_real_distribution<> dis(0, L);
     
     while (circles.size() < circles_number){
         Circle<T> new_circle;
@@ -36,4 +36,33 @@ std::vector <Circle<T>> distCircles (const int &circles_number, const T &L, cons
         }
     }
     return circles;
+}
+
+template<typename T>
+std::vector<Circle<T>> distCirclesPBC (const int &circles_number, const T &L, const T &radius, std::mt19937 &gen){
+    std::vector<Circle<T>> repCircles = distCircles (circles_number, L, radius, gen);
+    
+    for (const auto &circle : repCircles) {
+        Vec<T> c = circle.c;
+        T r = circle.r;
+        // left, right, bottom, up
+        if (c[0] - r < 0)
+            repCircles.emplace_back(Vec<T>({c[0] + L, c[1]}), r);
+        if (c[0] + r >= L) 
+            repCircles.emplace_back(Vec<T>({c[0] - L, c[1]}), r);
+        if (c[1] - r < 0) 
+            repCircles.emplace_back(Vec<T>({c[0], c[1] + L}), r);
+        if (c[1] + r >= L)
+            repCircles.emplace_back(Vec<T>({c[0], c[1] - L}), r);
+        //corners
+        if (c[0] - r < 0 && c[1] - r < 0)
+            repCircles.emplace_back(Vec<T>({c[0] + L, c[1] + L}), r);
+        if (c[0] + r >= L && c[1] - r < 0) 
+            repCircles.emplace_back(Vec<T>({c[0] - L, c[1] + L}), r);
+        if (c[0] - r < 0 && c[1] + r >= L)
+            repCircles.emplace_back(Vec<T>({c[0] + L, c[1] - L}), r);
+        if (c[0] + r >= L && c[1] + r >= L)
+            repCircles.emplace_back(Vec<T>({c[0] - L, c[1] - L}), r);
+    }
+    return repCircles;
 }
