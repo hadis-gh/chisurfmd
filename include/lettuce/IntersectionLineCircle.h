@@ -6,12 +6,12 @@
 #include "Circle.h"
 
 template <typename T>
-T calculateIntersection(const Vec<T, 2> &p,const Vec<T> &d,const Circle<T> &circle) 
+T calculateIntersection(const Vec<T, 2> &point,const Vec<T> &direction,const Circle<T> &circle) 
 {   
-    const T a = d.dot(d);
-    const auto dist = p - circle.c;
-    const T b = 2 * d.dot(dist);
-    // T b = 2 * (dx * (p[0] - circle.x) + dy * (py - circle.y));
+    const T a = direction.dot(direction);
+    const auto dist = point - circle.c;
+    const T b = 2 * direction.dot(dist);
+    // T b = 2 * (dx * (point[0] - circle.x) + dy * (py - circle.y));
 
     // const T c = (px - circle.x) * (px - circle.x) + (py - circle.y) * (py - circle.y) - circle.r * circle.r;
     const T c = dist.dot(dist) - circle.r * circle.r;
@@ -38,8 +38,8 @@ T calculateIntersection(const Vec<T, 2> &p,const Vec<T> &d,const Circle<T> &circ
 }
 
 template <typename T>
-Vec<T, 2> calculateIntersectionPoint(const Vec<T, 2> &p,const Vec<T> &d,const Circle<T> &circle) 
+Vec<T, 2> calculateIntersectionPoint(const Vec<T, 2> &point,const Vec<T> &direction,const Circle<T> &circle) 
 {
-    const auto t = calculateIntersection(p, d, circle);
-    return p + t*d;
+    const auto t = calculateIntersection(point, direction, circle);
+    return point + t*direction;
 }

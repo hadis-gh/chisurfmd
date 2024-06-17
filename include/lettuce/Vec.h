@@ -8,6 +8,10 @@ class Vec {
     std::array<T, D> elements;
 
 public:
+    T x = elements[0];
+    T y = elements[1];
+    T z = elements[2];
+    
     // Vec() = default;
     Vec(T v=0) {elements.fill(v);}
     Vec(std::array<T, D> init) : elements(init) {}

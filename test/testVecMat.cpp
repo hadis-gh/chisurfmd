@@ -3,20 +3,25 @@
 #include "lettuce/Vec.h"
 #include "lettuce/Mat.h"
 
-bool test_vector ();
-bool test_matrix ();
-void Print_result(bool result, const std::string& label);
+bool testVector ();
+bool testMatrix ();
+void PrintResult(bool result, const std::string& label);
 
 int main() {
     
-    Print_result(test_vector(), "Vector");
-    Print_result(test_matrix(), "Matrix");
+    PrintResult(testVector(), "Vector");
+    PrintResult(testMatrix(), "Matrix");
+
+    Vec<double, 3> v21({1, 4, 55});
+    std::cout << v21.x << std::endl;
+    std::cout << v21.y << std::endl;
+    std::cout << v21.z << std::endl;
 
     return 0;
 }
 
 
-bool test_vector (){
+bool testVector (){
 
     Vec<int, 3> v1 ({1, 0, 1});
     Vec<int, 3> v2 ({1, -1, 1});
@@ -28,7 +33,7 @@ bool test_vector (){
     return !(v3 != result || v3.abs2()!= 2);
 }
 
-bool test_matrix (){
+bool testMatrix (){
 
     Vec<double, 2> vec1({1, -1});  
     Vec<double, 2> vec2({2, 1});
@@ -43,7 +48,7 @@ bool test_matrix (){
     return mat1*mat1.inverse() == identity_mat;
 }
 
-void Print_result(bool result, const std::string& label){
+void PrintResult(bool result, const std::string& label){
 
     if (!result){
         std::cout << "there is a problem in "<< label <<" implementation!" << std::endl;
