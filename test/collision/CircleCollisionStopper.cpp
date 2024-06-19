@@ -21,7 +21,7 @@ void moveCircle(Circle<T>& movingCircle, const std::vector<Circle<T>>& circles, 
 
     bool collision = false;
 
-    while (!collision && movingCircle.c.x <areaSize && movingCircle.c.y <areaSize) {
+    while (!collision && movingCircle.c[0] <areaSize && movingCircle.c[1]<areaSize) {
         movingCircle.c[0] += dx;
         movingCircle.c[1] += dy;
 

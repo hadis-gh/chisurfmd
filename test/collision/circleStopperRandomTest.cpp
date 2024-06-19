@@ -16,14 +16,14 @@ bool checkCollision(const Circle<T>& c1, const Circle<T>& c2) {
 }
 
 template<typename T>
-void moveCircle(Circle<T>& movingCircle, const std::vector<Circle<T>>& circles, T angle, T stepSize, const T &areaSize) {
+auto moveCircle(Circle<T> movingCircle, const std::vector<Circle<T>>& circles, T angle, T stepSize, const T &areaSize) {
     T radian = angle * M_PI / 180.0;
     T dx = std::cos(radian) * stepSize;
     T dy = std::sin(radian) * stepSize;
 
     bool collision = false;
 
-    while (!collision && movingCircle.c.x <areaSize && movingCircle.c.y <areaSize) {
+    while (!collision && movingCircle.c < areaSize) {
         movingCircle.c[0] += dx;
         movingCircle.c[1] += dy;
 
@@ -34,12 +34,23 @@ void moveCircle(Circle<T>& movingCircle, const std::vector<Circle<T>>& circles, 
             }
         }
     }
+    if (!collision)
+        movingCircle.c.invalidate();
+    return movingCircle;
+}
+
+template<typename T>
+void writeCricles(T begin, T end, const std::string& fname)
+{
+        std::ofstream output_file(fname);
+        for (auto c = begin; c != end; ++c)
+            output_file << c->c << ", " << c->r <<"\n";
 }
 
 int main() {
-    Circle<float> movingCircle = {{{0.0, 0.0}}, 1.0};
     const float angle = 45.0;
     const float stepSize = 0.1;
+    const float radius = 1.;
     const float areaSize = 100;
 
     const int circlesNumber = 50;
@@ -47,10 +58,25 @@ int main() {
     std::random_device rd;
     std::mt19937 gen(rd());
 
-    std::vector<Circle<float>> circles = distCircles (circlesNumber, areaSize, movingCircle.r, gen);
+    std::vector<Circle<float>> circles = distCircles (circlesNumber, areaSize, radius, gen);
 
     clock_t startTime = clock();
 
+    std::uniform_real_distribution<> dis(0, areaSize);
+
+    for (int i = 0; i < 10; ++i)
+    {
+        auto movingCircle = placeRandomCircle(circles, dis, radius, gen);
+        if(std::isnan(movingCircle.c[0]))
+            continue;
+        movingCircle = moveCircle(movingCircle, circles, 45.f, stepSize, areaSize);
+        if(std::isnan(movingCircle.c[0]))
+            continue;
+        circles.push_back(movingCircle);
+    }
+
+    auto movingCircle = circles [0];
+    movingCircle.c[0] += movingCircle.r / 2;
     moveCircle(movingCircle, circles, angle, stepSize, areaSize);
     circles.push_back(movingCircle);
 
@@ -58,8 +84,9 @@ int main() {
     double timeTaken = double(endTime - startTime) / CLOCKS_PER_SEC;
     std::cout << "Time taken: " << timeTaken << " seconds\n";
 
-    std::ofstream output_file("circleStopperRandom.txt");
-    for (auto c: circles)
-        output_file << c.c <<"\n";    
+    writeCricles(circles.begin(), circles.begin()+circlesNumber, "circleStopperRandom.txt");
+
+    writeCricles(circles.begin()+circlesNumber, circles.end(), "circleStopperRandomMoving.txt");
+    
     return 0;
 }

@@ -12,28 +12,37 @@ bool has_overlap (const Circle<T> &c1,const Circle<T> &c2){
     return distance2 < radiuses*radiuses;
 }
 
+template<typename T>
+Circle<T> placeRandomCircle(const std::vector <Circle<T>> &circles, std::uniform_real_distribution<> dis, const T &radius, std::mt19937 &gen)
+{
+    Circle<T> new_circle;
+    new_circle.c[0] = dis(gen);
+    new_circle.c[1] = dis(gen);
+    new_circle.r = radius;
+
+    bool overlap = false;
+    
+    for (auto circle: circles){
+        if(has_overlap(new_circle, circle)){
+            overlap = true;
+            break;
+        }
+    }
+    if(overlap)      
+        new_circle.c = NAN;
+    return new_circle;
+}
+
 template <typename T>
 std::vector <Circle<T>> distCircles (const int &circles_number, const T &L, const T &radius, std::mt19937 &gen){
     std::vector <Circle<T>> circles;
     std::uniform_real_distribution<> dis(0, L);
     
     while (circles.size() < circles_number){
-        Circle<T> new_circle;
-        new_circle.c[0] = dis(gen);
-        new_circle.c[1] = dis(gen);
-        new_circle.r = radius;
-
-        bool overlap = false;
-        
-        for (auto circle: circles){
-            if(has_overlap(new_circle, circle)){
-                overlap = true;
-                break;
-            }
-        }
-        if (!overlap){
-            circles.push_back(new_circle);
-        }
+        auto newCircle = placeRandomCircle(circles, dis, radius, gen);
+        if(!std::isnan(newCircle.c[0]))
+           circles.push_back(newCircle);
+        std::cerr << "attemped circle\n";
     }
     return circles;
 }

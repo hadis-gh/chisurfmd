@@ -12,11 +12,6 @@ int main() {
     PrintResult(testVector(), "Vector");
     PrintResult(testMatrix(), "Matrix");
 
-    Vec<double, 3> v21({1, 4, 55});
-    std::cout << v21.x << std::endl;
-    std::cout << v21.y << std::endl;
-    std::cout << v21.z << std::endl;
-
     return 0;
 }
 

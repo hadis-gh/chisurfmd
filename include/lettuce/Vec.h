@@ -2,16 +2,13 @@
 
 #include <iostream>
 #include <array>
+#include <cmath>
 
 template<typename T , int D = 2> 
 class Vec {
     std::array<T, D> elements;
 
 public:
-    T x = elements[0];
-    T y = elements[1];
-    T z = elements[2];
-    
     // Vec() = default;
     Vec(T v=0) {elements.fill(v);}
     Vec(std::array<T, D> init) : elements(init) {}
@@ -50,7 +47,14 @@ public:
     T sum()const;
     T dot(const Vec<T, D>& other)const;
     T abs2()const;
+
+    void invalidate() {
+        elements.fill(NAN);
+    }
 };
+
+//template<typename T , int D = 2> 
+//constexpr Vec<T, D>::invalid {{NAN, NAN}};
 
 template<typename T, int D>
 Vec<T, D> operator*(const T& number, const Vec<T, D>& vec);
