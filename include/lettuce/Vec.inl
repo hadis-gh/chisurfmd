@@ -62,12 +62,27 @@ Vec<T, D> Vec<T, D>::operator*(const T& number) const {
     return result;
 }
 
+template<typename T , int D> 
+Vec<T, D> Vec<T, D>::operator/(const T& number) const {
+    Vec<T, D> result(*this);
+    result /= number;
+    return result;
+}
+
 template<typename T , int D>
 Vec<T, D>& Vec<T, D>::operator *= (const T& number){
     for (int i=0; i< D; i++)
         elements[i] = number* elements[i];
     return *this;
 }
+
+template<typename T , int D>
+Vec<T, D>& Vec<T, D>::operator /= (const T& number){
+    for (int i=0; i< D; i++)
+        elements[i] = elements[i]/ number;
+    return *this;
+}
+
 
 template<typename T , int D>
 template<typename TT>    

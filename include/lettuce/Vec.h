@@ -22,12 +22,14 @@ public:
     
     T operator* (const Vec<T, D>& other) const;
     Vec<T, D> operator*(const T& number) const;
+    Vec<T, D> operator/(const T& number) const;
 
     template<typename TT>
     Vec<T, D>& operator+=(const Vec<TT, D>& other); 
     template<typename TT>    
     Vec<T, D>& operator-=(const Vec<TT, D>& other);
     Vec<T, D>& operator *= (const T& number);
+    Vec<T, D>& operator /= (const T& number);
 
     template<typename TT>    
     bool operator==(const Vec<TT, D>& other)const;

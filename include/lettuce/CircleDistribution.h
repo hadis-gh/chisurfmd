@@ -42,7 +42,6 @@ std::vector <Circle<T>> distCircles (const int &circles_number, const T &L, cons
         auto newCircle = placeRandomCircle(circles, dis, radius, gen);
         if(!std::isnan(newCircle.c[0]))
            circles.push_back(newCircle);
-        std::cerr << "attemped circle\n";
     }
     return circles;
 }
