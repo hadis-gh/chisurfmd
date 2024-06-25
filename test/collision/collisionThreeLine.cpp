@@ -12,6 +12,58 @@
 float r = 1.0;
 
 template<typename T>
+std::pair<Circle<T>, T> findStopPoint (const Circle<T> &startCircle, Vec<T> &direction, const Circle<T> &closestCircle){
+
+    const T a = direction.abs2();
+    const T b = static_cast<T>(2.0) * direction*(startCircle.c - closestCircle.c);
+    const T c = (startCircle.c - closestCircle.c).abs2() - 4 * startCircle.r * startCircle.r;
+
+    const T discriminant = b * b - 4 * a * c;
+    if (discriminant < 0) {
+        return {{NAN, NAN}, NAN};
+    }
+
+    const T t1 = (-b + std::sqrt(discriminant)) / (2 * a);
+    const T t2 = (-b - std::sqrt(discriminant)) / (2 * a);
+
+    T t;
+    if (t1 >= 0 && t2 >= 0) {
+        t = std::min(t1, t2);
+    } else if (t1 >= 0) {
+        t = t1;
+    } else if (t2 >= 0) {
+        t = t2;
+    } else {
+        return {{NAN, NAN}, NAN};
+    }
+    return {{startCircle.c + t * direction}, t};
+}
+
+template<typename T>
+Circle<T> findStopPointAll (const Circle<T> &startCircle, Vec<T> &direction, const std::vector<Circle<T>> &circles){
+    std::vector<std::pair<Circle<T>, T>> pairs;
+    for (const auto &c: circles){
+        pairs.push_back(findStopPoint(startCircle, direction, c));
+    }
+    std::cout << ((pairs[3]).first).c <<std::endl; //the problem is some of them are NAN and while choosing the min value they have priority to real numbers!
+
+    auto it = std::min_element(pairs.begin(), pairs.end(),
+        [](const std::pair<Circle<T>, T>& a, const std::pair<Circle<T>, T>& b) {
+            if (!std::isnan(a.second) && !std::isnan(b.second)) {
+                return a.second < b.second;
+            }
+            else if (std::isnan(a.second)) {
+                return false;
+            }
+            else {
+                return true;
+            }
+        });
+
+    return it->first;
+}
+
+template<typename T>
 std::pair<Circle<T>, T> findClosestCircle (const Vec<T> &startPoint, const Vec<T> &direction, const std::vector<Circle<T>> &circles){
     std::vector<size_t> circlesIndex;
     std::vector<T> circlesDistance;
@@ -59,7 +111,7 @@ Circle<T> moveCircle(const Circle<T> &startCircle, const Vec<T> &direction, cons
     bool collision = false;
     Circle<T> targetCircle = findClosestCircle3Line (movedCircle.c, direction, circles);
     while (!collision && movedCircle.c < areaSize) {
-        movedCircle.c += direction/static_cast<T>(10.0);
+        movedCircle.c += direction/static_cast<T>(100.0);
         for (const auto& circle : circles) {
             if (checkCollision(movedCircle, targetCircle)) {
                 collision = true;
@@ -94,17 +146,23 @@ int main() {
     clock_t startTime = clock();
 
     direction /= static_cast<float>(sqrt(direction.abs2())); 
-    Circle<float> closeCs3 = findClosestCircle3Line(startCircle.c, direction, circles);
-    Circle<float> movedCircle = moveCircle(startCircle, direction, circles, areaSize);
+
+    // Circle<float> closeCs3 = findClosestCircle3Line(startCircle.c, direction, circles);     //finding closest one with 3line method
+    // Circle<float> movedCircle = moveCircle(startCircle, direction, circles, areaSize);      //moving by steps
+    // Circle<float> moved2Circle = findStopPoint(startCircle, direction, closeCs3).first;     //location by solving eq
+
+    Circle<float> finalPos = findStopPointAll (startCircle, direction, circles);            //finding closest circle and final location using solve eq for circles
 
     circles.push_back(startCircle);
-    circles.push_back(movedCircle);
+    circles.push_back(finalPos);
 
     clock_t endTime = clock();
     double timeTaken = double(endTime - startTime) / CLOCKS_PER_SEC;
     std::cout << "Time taken: " << timeTaken << " seconds\n";
     std::cout << "===========================\n";
-    std::cout << "Closest Circle from 3 lines: Center" << closeCs3.c << "\n";
+    // std::cout << "moved circle with iteration:"<< movedCircle.c <<"\n";
+    // std::cout << "moved circle with solving eq:"<< moved2Circle.c <<"\n";
+    std::cout << "final Position with solving eq:"<< finalPos.c <<"\n";
 
     writeCricles(circles.begin(), circles.begin()+circlesNumber, "circle3Lines.txt");
     writeCricles(circles.begin()+circlesNumber, circles.end(), "circle3LinesMoving.txt");
