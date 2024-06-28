@@ -141,6 +141,15 @@ Vec<T, D> Vec<T, D>::operator+ (const T& number)const{
         elements[i] += number;
     return *this;
 }
+
+template<typename T, int D>
+Vec<T, D> Vec<T, D>::operator+ (const T& number) {
+    Vec<T, D> result(*this);
+    for (int i=0; i< D; i++)
+        result.elements[i] += number;
+    return result;
+}
+
 template<typename T , int D>
 T Vec<T, D>::sum()const{
     T result = elements[0];

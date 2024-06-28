@@ -5,6 +5,39 @@
 #include <random>
 #include "Circle.h"
 
+template<typename T>
+Circle<T> startCircleRandom (const T& radius, const T& areaWidth){   
+    Circle<T> newCircle;
+    newCircle.r = radius;
+
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_real_distribution<> randomPos(0, areaWidth);
+
+    std::random_device dev;
+    std::mt19937 rng(dev());
+    std::uniform_int_distribution<> randomSide(1,4); 
+
+    if (randomSide.operator()(rng) == 1) {
+        newCircle.c[0] = randomPos(gen);        //why can't I write newCircle.c={{randomPos(gen), 0}};
+        newCircle.c[1] = 0;
+    }
+    else if(randomSide.operator()(rng) == 2){
+        newCircle.c[0] = 0;
+        newCircle.c[1] = randomPos(gen);
+    }
+    else if(randomSide.operator()(rng) == 3){
+        newCircle.c[0] = areaWidth;
+        newCircle.c[1] = randomPos(gen);        
+    }
+    else {
+        newCircle.c[0] = randomPos(gen);
+        newCircle.c[1] = areaWidth;
+    }
+
+    return newCircle;
+}
+
 template <typename T>
 bool has_overlap (const Circle<T> &c1,const Circle<T> &c2){
     T distance2 = (c1.c - c2.c).abs2();
@@ -15,22 +48,22 @@ bool has_overlap (const Circle<T> &c1,const Circle<T> &c2){
 template<typename T>
 Circle<T> placeRandomCircle(const std::vector <Circle<T>> &circles, std::uniform_real_distribution<> dis, const T &radius, std::mt19937 &gen)
 {
-    Circle<T> new_circle;
-    new_circle.c[0] = dis(gen);
-    new_circle.c[1] = dis(gen);
-    new_circle.r = radius;
+    Circle<T> newCircle;
+    newCircle.c[0] = dis(gen);
+    newCircle.c[1] = dis(gen);
+    newCircle.r = radius;
 
     bool overlap = false;
     
     for (auto circle: circles){
-        if(has_overlap(new_circle, circle)){
+        if(has_overlap(newCircle, circle)){
             overlap = true;
             break;
         }
     }
     if(overlap)      
-        new_circle.c = NAN;
-    return new_circle;
+        newCircle.c = NAN;
+    return newCircle;
 }
 
 template <typename T>

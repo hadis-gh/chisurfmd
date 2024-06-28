@@ -45,6 +45,7 @@ public:
 
     Vec<T, D> operator- (const T& number)const;
     Vec<T, D> operator+ (const T& number)const;
+    Vec<T, D> operator+ (const T& number);
 
     T sum()const;
     T dot(const Vec<T, D>& other)const;
