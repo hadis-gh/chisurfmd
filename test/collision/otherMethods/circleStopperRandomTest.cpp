@@ -39,14 +39,6 @@ auto moveCircle(Circle<T> movingCircle, const std::vector<Circle<T>>& circles, T
     return movingCircle;
 }
 
-template<typename T>
-void writeCricles(T begin, T end, const std::string& fname)
-{
-        std::ofstream output_file(fname);
-        for (auto c = begin; c != end; ++c)
-            output_file << c->c << ", " << c->r <<"\n";
-}
-
 int main() {
     const float angle = 45.0;
     const float stepSize = 0.1;
@@ -84,9 +76,9 @@ int main() {
     double timeTaken = double(endTime - startTime) / CLOCKS_PER_SEC;
     std::cout << "Time taken: " << timeTaken << " seconds\n";
 
-    writeCricles(circles.begin(), circles.begin()+circlesNumber, "circleStopperRandom.txt");
+    writeCircles(circles.begin(), circles.begin()+circlesNumber, "circleStopperRandom.txt");
 
-    writeCricles(circles.begin()+circlesNumber, circles.end(), "circleStopperRandomMoving.txt");
+    writeCircles(circles.begin()+circlesNumber, circles.end(), "circleStopperRandomMoving.txt");
     
     return 0;
 }

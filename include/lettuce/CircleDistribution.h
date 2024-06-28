@@ -6,27 +6,22 @@
 #include "Circle.h"
 
 template<typename T>
-Circle<T> startCircleRandom (const T& radius, const T& areaWidth){   
+Circle<T> startCircleRandom (const T& radius, const T& areaWidth, std::mt19937 &gen){   
     Circle<T> newCircle;
     newCircle.r = radius;
 
-    std::random_device rd;
-    std::mt19937 gen(rd());
     std::uniform_real_distribution<> randomPos(0, areaWidth);
-
-    std::random_device dev;
-    std::mt19937 rng(dev());
     std::uniform_int_distribution<> randomSide(1,4); 
 
-    if (randomSide.operator()(rng) == 1) {
-        newCircle.c[0] = randomPos(gen);        //why can't I write newCircle.c={{randomPos(gen), 0}};
+    if (randomSide.operator()(gen) == 1) {
+        newCircle.c[0] = randomPos(gen);        //why can't we write newCircle.c={{randomPos(gen), 0}};
         newCircle.c[1] = 0;
     }
-    else if(randomSide.operator()(rng) == 2){
+    else if(randomSide.operator()(gen) == 2){
         newCircle.c[0] = 0;
         newCircle.c[1] = randomPos(gen);
     }
-    else if(randomSide.operator()(rng) == 3){
+    else if(randomSide.operator()(gen) == 3){
         newCircle.c[0] = areaWidth;
         newCircle.c[1] = randomPos(gen);        
     }
@@ -36,6 +31,11 @@ Circle<T> startCircleRandom (const T& radius, const T& areaWidth){
     }
 
     return newCircle;
+}
+
+template<typename T>
+Vec<T> shootToCenter(const Circle<T> &startCircle, const T &areaWidth) {
+    return -startCircle.c + areaWidth / static_cast<T>(2);
 }
 
 template <typename T>
@@ -106,4 +106,11 @@ std::vector<Circle<T>> distCirclesPBC (const int &circles_number, const T &L, co
             repCircles.emplace_back(Vec<T>({c[0] - L, c[1] - L}), r);
     }
     return repCircles;
+}
+
+template<typename T>
+void writeCircles(T begin, T end, const std::string& fname){
+        std::ofstream output_file(fname);
+        for (auto c = begin; c != end; ++c)
+            output_file << c->c << ", " << c->r <<"\n";
 }

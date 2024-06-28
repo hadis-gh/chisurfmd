@@ -1,15 +1,13 @@
+#pragma once
+
 #include <iostream>
 #include <fstream>
 #include <vector>
 #include <utility>
 #include <cmath>
 #include <algorithm>
-#include "lettuce/IntersectionLineCircle.h"
-#include "lettuce/Vec.h"
-#include "lettuce/Circle.h"
-#include "lettuce/CircleDistribution.h"
-
-float r = 1.0;
+#include "Vec.h"
+#include "Circle.h"
 
 template<typename T>
 std::pair<Circle<T>, T> findStopPoint (const Circle<T> &startCircle, Vec<T> &direction, const Circle<T> &closestCircle){
@@ -45,7 +43,6 @@ Circle<T> findStopPointAll (const Circle<T> &startCircle, Vec<T> &direction, con
     for (const auto &c: circles){
         pairs.push_back(findStopPoint(startCircle, direction, c));
     }
-    std::cout << ((pairs[3]).first).c <<std::endl; //the problem is some of them are NAN and while choosing the min value they have priority to real numbers!
 
     auto it = std::min_element(pairs.begin(), pairs.end(),
         [](const std::pair<Circle<T>, T>& a, const std::pair<Circle<T>, T>& b) {
@@ -92,10 +89,10 @@ bool checkCollision(const Circle<T>& c1, const Circle<T>& c2) {
 }
 
 template<typename T>
-Circle<T> findClosestCircle3Line (const Vec<T> &startPoint, const Vec<T> &direction, const std::vector<Circle<T>> &circles){
-    std::vector<std::pair<Circle<T>, T>> pairs = {findClosestCircle({{startPoint[0] - r*direction[1], startPoint[0] + r*direction[0]}}, direction, circles),
-                                                  findClosestCircle({{startPoint[0] + r*direction[0], startPoint[0] + r*direction[1]}}, direction, circles),
-                                                  findClosestCircle({{startPoint[0] + r*direction[1], startPoint[0] - r*direction[0]}}, direction, circles)};
+Circle<T> findClosestCircle3Line (const Circle<T> &startPoint, const Vec<T> &direction, const std::vector<Circle<T>> &circles){
+    std::vector<std::pair<Circle<T>, T>> pairs = {findClosestCircle({{startPoint.c[0] - startPoint.r*direction[1], startPoint.c[0] + startPoint.r*direction[0]}}, direction, circles),
+                                                  findClosestCircle({{startPoint.c[0] + startPoint.r*direction[0], startPoint.c[0] + startPoint.r*direction[1]}}, direction, circles),
+                                                  findClosestCircle({{startPoint.c[0] + startPoint.r*direction[1], startPoint.c[0] - startPoint.r*direction[0]}}, direction, circles)};
 
     auto it = std::min_element(pairs.begin(), pairs.end(),
                               [](const std::pair<Circle<T>, T>& a,
@@ -122,50 +119,4 @@ Circle<T> moveCircle(const Circle<T> &startCircle, const Vec<T> &direction, cons
     if (!collision)
         movedCircle.c.invalidate();
     return movedCircle;
-}
-
-template<typename T>
-void writeCricles(T begin, T end, const std::string& fname){
-        std::ofstream output_file(fname);
-        for (auto c = begin; c != end; ++c)
-            output_file << c->c << ", " << c->r <<"\n";
-}
-
-int main() {
-    const Circle<float> startCircle = {{{0.0, 0.0}}, r};
-    Vec<float, 2> direction = {{2, 3}};
-    
-    const float areaSize = 100;
-    const int circlesNumber = 50;
-
-    std::random_device rd;
-    std::mt19937 gen(rd());
-
-    std::vector<Circle<float>> circles = distCircles (circlesNumber, areaSize, r, gen);
-
-    clock_t startTime = clock();
-
-    direction /= static_cast<float>(sqrt(direction.abs2())); 
-
-    // Circle<float> closeCs3 = findClosestCircle3Line(startCircle.c, direction, circles);     //finding closest one with 3line method
-    // Circle<float> movedCircle = moveCircle(startCircle, direction, circles, areaSize);      //moving by steps
-    // Circle<float> moved2Circle = findStopPoint(startCircle, direction, closeCs3).first;     //location by solving eq
-
-    Circle<float> finalPos = findStopPointAll (startCircle, direction, circles);            //finding closest circle and final location using solve eq for circles
-
-    circles.push_back(startCircle);
-    circles.push_back(finalPos);
-
-    clock_t endTime = clock();
-    double timeTaken = double(endTime - startTime) / CLOCKS_PER_SEC;
-    std::cout << "Time taken: " << timeTaken << " seconds\n";
-    std::cout << "===========================\n";
-    // std::cout << "moved circle with iteration:"<< movedCircle.c <<"\n";
-    // std::cout << "moved circle with solving eq:"<< moved2Circle.c <<"\n";
-    std::cout << "final Position with solving eq:"<< finalPos.c <<"\n";
-
-    writeCricles(circles.begin(), circles.begin()+circlesNumber, "circle3Lines.txt");
-    writeCricles(circles.begin()+circlesNumber, circles.end(), "circle3LinesMoving.txt");
-
-    return 0;
 }
