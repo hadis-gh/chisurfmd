@@ -10,10 +10,10 @@
 
 // Derivative is based on Lennar Jones Potential: 4.0 * epsilon * (pow(sigma / r, 12) - pow(sigma / r, 6))
 
-const float sigma = 1e-10;
-const float epsilon = 1e-21;
-const float mass = 1e-25;
-const float dt = 1e-20;
+const double sigma = 1e-10;
+const double epsilon = 1e-21;
+const double mass = 1e-25;
+const double dt = 1e-20;
 
 template<typename T>
 struct Particle{
@@ -53,7 +53,7 @@ void calculateAccelerations(std::vector<Particle<T>> &particles) {
     }
 }
 
-template<typename T>         //Euler Integration
+template<typename T>        //Euler Integration
 void updateStateEuler(std::vector<Particle<T>> &particles, const T &dt){
     for (auto &p : particles){
         p.v += p.a * dt;
@@ -62,7 +62,7 @@ void updateStateEuler(std::vector<Particle<T>> &particles, const T &dt){
     }
 }
 
-template<typename T>            //Velocity Vernel Integration
+template<typename T>        //Velocity Vernel Integration
 void updateStateVV(std::vector<Particle<T>> &particles, const T &dt) {
     for (auto &p : particles) {
         p.r += p.v * dt + p.a/2 * dt * dt;
@@ -108,17 +108,17 @@ void writeToFile(const std::vector<Particle<T>> &particles, std::ofstream &file)
 }
 
 int main(){
-    Particle<float> P1{{{0.0, 0.0}}, {{1e-5, 1e-5}}, {{0.0, 0.0}}, mass};
-    Particle<float> P2{{{5e-10, 0.0}}, {{0.0, 0.0}}, {{0.0, 0.0}}, mass};
-    Particle<float> P3{{{0.0, 5e-10}}, {{0.0, 0.0}}, {{0.0, 0.0}}, mass};
+    Particle<double> P1{{{0.0, 0.0}}, {{0.0, 0.0}}, {{0.0, 0.0}}, mass};
+    Particle<double> P2{{{10e-9, 0.0}}, {{0.0, 0.0}}, {{0.0, 0.0}}, mass};
+    Particle<double> P3{{{0.0, 10e-9}}, {{0.0, 0.0}}, {{0.0, 0.0}}, mass};
 
-    std::vector<Particle<float>> particles {P1, P2, P3};
+    std::vector<Particle<double>> particles {P1, P2, P3};
     int numSteps = 10;
 
     std::ofstream file ("particlesPosMD.txt");
 
     for (int i = 0; i < numSteps; ++i){
-        updateStateVV(particles, dt);
+        updateStateEuler(particles, dt);
         writeToFile(particles, file);
     }
 
