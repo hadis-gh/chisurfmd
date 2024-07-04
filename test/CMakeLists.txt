@@ -8,3 +8,4 @@ add_executable(testStopperRandomCircles collision/otherMethods/circleStopperRand
 add_executable(testCollisionRandomCircles collision/collisionRandomCircles.cpp)
 add_executable(testCollisionDLA collision/collisionDLA.cpp)
 add_executable(testNParticleMD trajectory/nParticleMD.cpp)
+add_executable(test3ParticleMD trajectory/ThreeParticleMD.cpp)

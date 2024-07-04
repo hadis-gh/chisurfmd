@@ -14,7 +14,6 @@ const double sigma = 1e-10;
 const double epsilon = 1e-21;
 const double mass = 1e-25;
 const double dt = 1e-20;
-const double cutoff = 1e-4;
 
 const auto sigma6 = pow(sigma,6);
 const auto sigma12 = sigma6 * sigma6;
@@ -23,7 +22,7 @@ template<typename T>
 struct Particle{
     Vec<T> r;
     Vec<T> v;
-    T mass = mass;
+    T mass;
 };
 
 template<typename T>
@@ -56,10 +55,8 @@ template<typename T>
 Vec<T> calTotalForce(const Particle<T> &p1, const std::vector<Particle<T>> &particles){
     Vec<T> force;
     for (auto &p : particles){
-        if ((p1.r - p.r) <= cutoff){
-            if (p1.r != p.r){
-                force += calForceTwo(p1, p);
-            }
+        if (p1.r != p.r){
+            force += calForceTwo(p1, p);
         }
     }
     return force;
@@ -69,7 +66,6 @@ template<typename T>
 Vec<T> calAccelaration(const Particle<T> &p1, const std::vector<Particle<T>> &particles){
     return calTotalForce(p1, particles)/ p1.mass;
 }
-
 template<typename T>
 std::vector<Vec<T>> calculateAccelerations(std::vector<Particle<T>> &particles) {
     std::vector<Vec<T>> accelarations;
@@ -165,23 +161,12 @@ void writePlotData(const T &startR, const T &endR, const int &numSpace){
 
 int main(){
     Particle<double> P1{{{0.0, 0.0}}, {{0.0, 0.0}}, mass};
+    Particle<double> P2{{{10e-5, 0.0}}, {{0.0, 0.0}}, mass};
+    Particle<double> P3{{{0.0, 10e-5}}, {{0.0, 0.0}}, mass};
 
-    int numParticle = 50;
-    std::vector<Particle<double>> particles(numParticle);
-
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::vector <Circle<double>> circles = distCircles(numParticle, 1e-3, 1e-5, gen);
-    Particle<double> p11;
-    p11.r = circles[0].c;
-
-    for (int i = 0; i< circles.size(); ++i){
-        particles[i].r = circles[i].c; 
-    }
+    std::vector<Particle<double>> particles {P1, P2, P3};
 
     int numSteps = 10;
-    
-    clock_t startTime = clock();
 
     std::ofstream file ("particlesPosMD.txt");
 
@@ -189,10 +174,6 @@ int main(){
         updateStateEuler(particles, dt);
         writeToFile(particles, file);
     }
-
-    clock_t endTime = clock();
-    double timeTaken = double(endTime - startTime) / CLOCKS_PER_SEC;
-    std::cout << "Time taken: " << timeTaken << " seconds\n";
 
     const double startR = 0.9 * sigma;
     const double endR = 3.0 * sigma;
