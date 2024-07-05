@@ -10,10 +10,10 @@
 
 // Derivative is based on Lennar Jones Potential: 4.0 * epsilon * (pow(sigma / r, 12) - pow(sigma / r, 6))
 
-const double sigma = 1e-10;
-const double epsilon = 1e-21;
-const double mass = 1e-25;
-const double dt = 1e-20;
+const double sigma = 1;
+const double epsilon = 1;
+const double mass = 1;
+const double dt = 0.01;
 
 const auto sigma6 = pow(sigma,6);
 const auto sigma12 = sigma6 * sigma6;
@@ -26,75 +26,75 @@ struct Particle{
 };
 
 template<typename T>
-Vec<T> calForceTwo(const Particle<T> &p1, const Particle<T> &p2){
-    T r = (p2.r - p1.r).abs2();
-    if (r == 0) return {{0, 0}};
-    auto rPower6 = pow(r, 6);
-    
-    T ljForce = 48.0 * epsilon * (sigma6 * sigma6 /(rPower6 * rPower6 * r) - 0.5 * sigma6 /(rPower6 * r));
-    return ljForce * (p2.r - p1.r)/r;
-}
-
-template<typename T>
-T ljPotential(T &r){
-    if (r == 0) return 0;
-    T r6 = pow(r, 6);
-    T r12 = r6 * r6;
-    return 4.0 * epsilon * (sigma12 /(r12) - 0.5 * sigma6 /(r6));
-}
-
-template<typename T>
-T ljForce(T &r){
+T ljForce(const T r){
     if (r == 0) return 0;
     T r6 = pow(r, 6);
     T r12 = r6 * r6;
     return 48.0 * epsilon * (sigma12 /(r12 * r) - 0.5 * sigma6 /(r6 * r));
 }
 
+template<typename T, typename Force>
+Vec<T> calForceTwo(const Particle<T> &p1, const Particle<T> &p2, Force force){
+    T r = (p2.r - p1.r).abs2();
+    if (r == 0) return {{0, 0}};
+    
+    T f = force(r);
+    return f * (p2.r - p1.r)/r;
+}
+
 template<typename T>
-Vec<T> calTotalForce(const Particle<T> &p1, const std::vector<Particle<T>> &particles){
-    Vec<T> force;
+T ljPotential(const T r){
+    if (r == 0) return 0;
+    T r6 = pow(r, 6);
+    T r12 = r6 * r6;
+    return 4.0 * epsilon * (sigma12 /(r12) - 0.5 * sigma6 /(r6));
+}
+
+template<typename T, typename Force>
+Vec<T> calTotalForce(const Particle<T> &p1, const std::vector<Particle<T>> &particles, Force force){
+    Vec<T> f;
     for (auto &p : particles){
         if (p1.r != p.r){
-            force += calForceTwo(p1, p);
+            f += calForceTwo(p, p1, force);
         }
     }
-    return force;
+    return f;
 }
 
-template<typename T>
-Vec<T> calAccelaration(const Particle<T> &p1, const std::vector<Particle<T>> &particles){
-    return calTotalForce(p1, particles)/ p1.mass;
+template<typename T, typename Force>
+Vec<T> calAccelaration(const Particle<T> &p1, const std::vector<Particle<T>> &particles, Force force){
+    return calTotalForce(p1, particles, force)/ p1.mass;
 }
-template<typename T>
-std::vector<Vec<T>> calculateAccelerations(std::vector<Particle<T>> &particles) {
-    std::vector<Vec<T>> accelarations;
-    for (auto &p : particles) {
-        accelarations.push_back(calAccelaration(p, particles) / p.mass);
+template<typename T, typename Force>
+std::vector<Vec<T>> calculateAccelerations(std::vector<Particle<T>> &particles, Force force) {
+    std::vector<Vec<T>> accelerations(particles.size());
+    for (unsigned int a = 0; a < particles.size(); ++a) {
+        accelerations[a] = calAccelaration(particles[a], particles, force);
     }
-    return accelarations;
+    return accelerations;
 }
 
-template<typename T>        //Euler Integration
-void updateStateEuler(std::vector<Particle<T>> &particles, const T &dt){
-    for (auto &p : particles){
-        p.v += calAccelaration(p, particles) * dt;
+template<typename T, typename Force>        //Euler Integration
+void updateStateEuler(std::vector<Particle<T>> &particles, const T &dt, Force force){
+    const auto accelerations = calculateAccelerations(particles, force);
+    for (unsigned int a = 0; a < particles.size(); ++a) {
+        auto& p = particles[a];
+        p.v += accelerations[a]*dt;
         p.r += p.v * dt;
     }
 }
 
-template<typename T>        //Velocity Vernel Integration
-void updateStateVV(std::vector<Particle<T>> &particles, const T &dt) {
-    for (auto &p : particles) {
-        p.r += p.v * dt + calAccelaration(p, particles)/2 * dt * dt;
+template<typename T, typename Force>        //Velocity Vernel Integration
+void updateStateVV(std::vector<Particle<T>> &particles, const T &dt, Force &&force) {
+    const auto old_accelerations = calculateAccelerations(particles, std::forward<Force>(force));
+    for (unsigned int a = 0; a < particles.size(); ++a) {
+        auto& p = particles[a];
+        p.r += p.v * dt + old_accelerations[a]/2 * dt * dt;
     }
-    std::vector<Vec<T>> old_accelerations;
-    for (const auto &p : particles) {
-        old_accelerations.push_back(calAccelaration(p, particles));
-    }
-    std::vector<Vec<T>> accelarations = calculateAccelerations(particles);
+    //old_accelerations.reserve(particles.size());
+    const auto accelerations = calculateAccelerations(particles, force);
     for (size_t i = 0; i < particles.size(); ++i) {
-        particles[i].v += (old_accelerations[i] + accelarations[i])/2 * dt;
+        particles[i].v += (old_accelerations[i] + accelerations[i])/2 * dt;
     }
 }
 
@@ -120,7 +120,7 @@ void debuggingPrintInfo(std::vector<Particle<T>> &particles, const int &numSteps
 }
 
 template<typename T>
-void writeToFile(const std::vector<Particle<T>> &particles, std::ofstream &file){
+void writeToFile(const std::vector<Particle<T>> &particles, std::ostream &file){
     for (auto &p: particles){
         file << p.r[0] << " " << p.r[1] << " ";
     }
@@ -161,17 +161,19 @@ void writePlotData(const T &startR, const T &endR, const int &numSpace){
 
 int main(){
     Particle<double> P1{{{0.0, 0.0}}, {{0.0, 0.0}}, mass};
-    Particle<double> P2{{{10e-5, 0.0}}, {{0.0, 0.0}}, mass};
-    Particle<double> P3{{{0.0, 10e-5}}, {{0.0, 0.0}}, mass};
+    Particle<double> P2{{{1.2, 0.0}}, {{0.0, 0.0}}, mass};
+    Particle<double> P3{{{0.0, 1.2}}, {{0.0, 0.0}}, mass};
 
     std::vector<Particle<double>> particles {P1, P2, P3};
 
-    int numSteps = 10;
+    double Time = 1000.;
+    int numSteps = Time/dt;
 
     std::ofstream file ("particlesPosMD.txt");
+    writeToFile(particles, file);
 
     for (int i = 0; i < numSteps; ++i){
-        updateStateEuler(particles, dt);
+        updateStateVV(particles, dt, ljForce<double>);
         writeToFile(particles, file);
     }
 
