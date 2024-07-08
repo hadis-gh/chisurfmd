@@ -21,7 +21,7 @@ int main() {
     std::random_device rd;
     std::mt19937 gen(rd());
 
-    std::vector<Circle<float>> circles = distCircles (circlesNumber, areaSize, r, gen);
+    std::vector<Circle<float>> circles = distRandomCircles (circlesNumber, areaSize, r, gen);
 
     clock_t startTime = clock();
 

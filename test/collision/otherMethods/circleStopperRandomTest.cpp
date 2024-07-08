@@ -50,7 +50,7 @@ int main() {
     std::random_device rd;
     std::mt19937 gen(rd());
 
-    std::vector<Circle<float>> circles = distCircles (circlesNumber, areaSize, radius, gen);
+    std::vector<Circle<float>> circles = distRandomCircles (circlesNumber, areaSize, radius, gen);
 
     clock_t startTime = clock();
 

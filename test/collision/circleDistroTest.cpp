@@ -10,7 +10,7 @@ int main() {
     std::random_device rd;
     std::mt19937 gen(rd());
 
-    std::vector<Circle<float>> circles = distCircles(circlesNumber, length, radius, gen);
+    std::vector<Circle<float>> circles = distRandomCircles(circlesNumber, length, radius, gen);
 
     std::ofstream output_file("CirclesDistr.txt");
     for (auto c: circles)

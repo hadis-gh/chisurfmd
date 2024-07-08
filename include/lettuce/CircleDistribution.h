@@ -67,7 +67,7 @@ Circle<T> placeRandomCircle(const std::vector <Circle<T>> &circles, std::uniform
 }
 
 template <typename T>
-std::vector <Circle<T>> distCircles (const int &circles_number, const T &L, const T &radius, std::mt19937 &gen){
+std::vector <Circle<T>> distRandomCircles (const int &circles_number, const T &L, const T &radius, std::mt19937 &gen){
     std::vector <Circle<T>> circles;
     std::uniform_real_distribution<> dis(0, L);
     
@@ -81,7 +81,7 @@ std::vector <Circle<T>> distCircles (const int &circles_number, const T &L, cons
 
 template<typename T>
 std::vector<Circle<T>> distCirclesPBC (const int &circles_number, const T &L, const T &radius, std::mt19937 &gen){
-    std::vector<Circle<T>> repCircles = distCircles (circles_number, L, radius, gen);
+    std::vector<Circle<T>> repCircles = distRandomCircles (circles_number, L, radius, gen);
     
     for (const auto &circle : repCircles) {
         Vec<T> c = circle.c;
