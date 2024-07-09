@@ -16,6 +16,7 @@
 const double sigma = 1;
 const double epsilon = 1;
 const double mass = 1;
+const double cutoff = 20;
 const double dt = 0.01;
 
 template<typename T>
@@ -24,8 +25,8 @@ void writePlotData(const T &startR, const T &endR, const int &numSpace){
     std::vector<double> ljForceValue(numSpace);
     std::vector<double> ljPotentialValue(numSpace);
 
-    LennardJonesForce<double> LJForce(epsilon, sigma);
-    LennardJonesPotential<double> LJPotential(epsilon, sigma);
+    LennardJonesForce<double> LJForce(epsilon, sigma, cutoff);
+    LennardJonesPotential<double> LJPotential(epsilon, sigma, cutoff);
 
     for (int i = 0; i < distances.size(); ++i){
         ljForceValue[i] = LJForce(distances[i]);
