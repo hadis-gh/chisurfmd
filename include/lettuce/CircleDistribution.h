@@ -6,7 +6,7 @@
 #include "Circle.h"
 #include "lettuce/Particle.h"
 
-enum InitialParticlesConfiguration {
+enum class InitialParticlesConfiguration {
     RANDOM_CIRCLES,
     DLA
 };
@@ -145,15 +145,12 @@ std::vector<Circle<T>> distCirclesDLA (const int &shootNum, const T &L, const T 
 
 template<typename T>
 std::vector<Particle<T>> distParticleDLA (const int &shootNum, const T &L, const T &radius, std::mt19937 &gen){
-    std::vector<Circle<T>> finalCircles;
-    std::vector<Particle<T>> finalParticles;
-
-    finalCircles = distCirclesDLA (shootNum, L, radius, gen);
+    std::vector<Circle<T>> finalCircles = distCirclesDLA (shootNum, L, radius, gen);
+    std::vector<Particle<T>> finalParticles(finalCircles.size());
 
     for (int i =0; i < finalCircles.size(); ++i){
         finalParticles[i].r = finalCircles[i].c;
-    }                                               //can we write just because of Vec<T>: `finalParticles.r = finalCircles.c;`
-
+    }
     return finalParticles;
 }
 
@@ -169,9 +166,9 @@ template<typename T>
 std::vector<Particle<T>> initialParticles (const int &particlesNum, const T &L, const T &radius, std::mt19937 &gen, InitialParticlesConfiguration configuation){
     std::vector<Particle<T>> particles(particlesNum);
 
-    if (configuation == RANDOM_CIRCLES){
+    if (configuation == InitialParticlesConfiguration::RANDOM_CIRCLES){
         particles = distRandomParticles (particlesNum, L, radius, gen);
-    }else if(configuation == DLA){
+    }else if(configuation == InitialParticlesConfiguration::DLA){
         particles = distParticleDLA (particlesNum, L, radius, gen);
     }
     return particles;

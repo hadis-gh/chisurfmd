@@ -14,9 +14,9 @@ enum IntegrationMethod {
 template<typename T, typename Force>        //Euler Integration
 void updateStateEuler(std::vector<Particle<T>> &particles, const T &dt, Force &&force){
     const auto accelerations = calAllAccelerations(particles, std::forward<Force>(force));
-    for (unsigned int a = 0; a < particles.size(); ++a) {
-        auto& p = particles[a];
-        p.v += accelerations[a]*dt;
+    for (size_t i = 0; i < particles.size(); ++i) {
+        auto& p = particles[i];
+        p.v += accelerations[i]*dt;
         p.r += p.v * dt;
     }
 }
@@ -24,9 +24,9 @@ void updateStateEuler(std::vector<Particle<T>> &particles, const T &dt, Force &&
 template<typename T, typename Force>        //Velocity Vernel Integration
 void updateStateVV(std::vector<Particle<T>> &particles, const T &dt, Force &&force) {
     const auto old_accelerations = calAllAccelerations(particles, std::forward<Force>(force));
-    for (unsigned int a = 0; a < particles.size(); ++a) {
-        auto& p = particles[a];
-        p.r += p.v * dt + old_accelerations[a]/2 * dt * dt;
+    for (size_t i = 0; i < particles.size(); ++i) {
+        auto& p = particles[i];
+        p.r += p.v * dt + old_accelerations[i]/2 * dt * dt;
     }
     const auto accelerations = calAllAccelerations(particles, std::forward<Force>(force));
     for (size_t i = 0; i < particles.size(); ++i) {
@@ -35,7 +35,7 @@ void updateStateVV(std::vector<Particle<T>> &particles, const T &dt, Force &&for
 }
 
 template<typename T>
-void writeToFile(const std::vector<Particle<T>> &particles, std::ostream &file) {
+void writePositionToFile(const std::vector<Particle<T>> &particles, std::ostream &file) {
     for (const auto &p : particles) {
         file << p.r[0] << " " << p.r[1] << " ";
     }
@@ -43,27 +43,54 @@ void writeToFile(const std::vector<Particle<T>> &particles, std::ostream &file) 
 }
 
 template<typename T>
-void integrate(std::vector<Particle<T>>& particles, T dt, T Time, LennardJonesForce<T>& LJForce, IntegrationMethod method) {
-    std::string filename;
-    if (method == EULER) {
-        filename = "particlesPosMD_Euler.dat";
-    } else if (method == VELOCITY_VERLET) {
-        filename = "particlesPosMD_VV.dat";
+void writeKineticEToFile(const std::vector<Particle<T>> &particles, std::ostream &file) {
+    for (const auto &p : particles) {
+        file << 0.5 * p.mass * p.v.abs2() * p.v.abs2() << " ";
     }
-    std::ofstream file(filename);
-    writeToFile(particles, file);
+    file << "\n";
+}
+
+// template<typename T>
+// class integrate{
+// public:
+//     integrate(std::vector<Particle<T>>& particles, T dt, T Time, LennardJonesForce<T>& LJForce, IntegrationMethod method)
+
+// private:
+
+// }
+
+template<typename T>
+void integrate(std::vector<Particle<T>>& particles, T dt, T Time, LennardJonesForce<T>& LJForce, IntegrationMethod method) {
+    std::string filenamePos;
+    std::string filenameKineticE;
+
+    if (method == EULER) {
+        filenamePos = "particlesPosMD_Euler.dat";
+        filenameKineticE = "particlesKineticE_Euler.dat";
+    } else if (method == VELOCITY_VERLET) {
+        filenamePos = "particlesPosMD_VV.dat";
+        filenameKineticE = "particlesKineticE_VV.dat";
+    }
+    std::ofstream filePos(filenamePos);
+    std::ofstream fileKE(filenameKineticE);
+
+    writePositionToFile(particles, filePos);
+    writeKineticEToFile(particles, fileKE);
 
     int numSteps = static_cast<int>(Time / dt);
     if (method == EULER) {
-        for (int i = 0; i < numSteps; ++i) {
+        for (size_t i = 0; i < numSteps; ++i) {
             updateStateEuler(particles, dt, LJForce);
-            writeToFile(particles, file);
+            writePositionToFile(particles, filePos);
+            writeKineticEToFile(particles, fileKE);
         }
     } else if (method == VELOCITY_VERLET) {
-        for (int i = 0; i < numSteps; ++i) {
+        for (size_t i = 0; i < numSteps; ++i) {
             updateStateVV(particles, dt, LJForce);
-            writeToFile(particles, file);
+            writePositionToFile(particles, filePos);
+            writeKineticEToFile(particles, fileKE);
         }
     }
-    file.close();
+    filePos.close();
+    fileKE.close();
 }

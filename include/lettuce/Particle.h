@@ -29,6 +29,7 @@ Vec<T> calTotalForce(const Particle<T> &p1, const std::vector<Particle<T>> &part
         if (p1.r != p.r){
             f += calForceTwo(p, p1, force);
         }
+        std::cout << "ctf: " << f << std::endl;
     }
     return f;
 }

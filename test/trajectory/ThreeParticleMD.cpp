@@ -35,14 +35,14 @@ int main(){
 
     integrate(particles, dt, Time, LJForce, integrationMethod);
 
-    std::vector<double> kineticEnergy;
-    kineticEnergy = calculateKineticEnergy(particles, Time, dt);
+    // std::vector<double> kineticEnergy;
+    // kineticEnergy = calculateKineticEnergy(particles, Time, dt);
 
-    std::vector<double> potentialEnergyLJ;
-    potentialEnergyLJ = calculatePotentialEnergy (particles, Time, dt, LJPotential);
+    // std::vector<double> potentialEnergyLJ;
+    // potentialEnergyLJ = calculatePotentialEnergy (particles, Time, dt, LJPotential);
 
-    std::vector<double> totalEnergy;
-    totalEnergy = calculateTotalEnergy (particles, Time, dt, LJPotential);
+    // std::vector<double> totalEnergy;
+    // totalEnergy = calculateTotalEnergy (particles, Time, dt, LJPotential);
 
     return 0;
 }
