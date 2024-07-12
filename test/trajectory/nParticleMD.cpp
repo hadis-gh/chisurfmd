@@ -12,8 +12,8 @@
 #include "lettuce/Utilities.h"
 #include "lettuce/Integration.h"
 #include "lettuce/LennardJones.h"
-#include "lettuce/CircleDistribution.h"
-#include "lettuce/CirclesIntersectionFuncs.h"
+#include "lettuce/ParticlesDistribution.h"
+#include "lettuce/ParticlesIntersection.h"
 
 namespace po = boost::program_options;
 
@@ -68,6 +68,11 @@ int main(int argc, char* argv[]){
     const double areaL = vm["areaL"].as<double>();
     const double radius = vm["exclusionRadius"].as<double>();
 
+    Species<double> species1 {mass, radius};
+    Species<double> species2 {2.0 * mass, 0.5 * radius};
+
+    std::vector <Species<double>> allSpecies {species1, species2};
+
     InitialParticlesConfiguration config = InitialParticlesConfiguration::DLA;
     if (vm["particleInit"].as<std::string>() == "RANDOM")
         config = InitialParticlesConfiguration::RANDOM_CIRCLES;
@@ -75,20 +80,19 @@ int main(int argc, char* argv[]){
 
     LennardJonesForce<double> LJForce(epsilon, sigma, cutoff);
 
+    int speciesInd = 1;
 
-    std::vector<Particle<double>> particles = initialParticles (particlesNum, areaL, radius, gen, config);
+    std::vector<Particle<double>> particles = initialParticles (particlesNum, allSpecies, speciesInd, areaL, gen, config);
 
-    for (auto &p :particles){
-        p.mass = mass; 
-    }
 
     clock_t startTime = clock();
 
     const auto stepT = vm["stepT"].as<double>();
     int numSteps = static_cast<int>(Time / stepT);
+
     for (int a = 0; a < numSteps; ++a)
     {
-        integrate(particles, dt, stepT, LJForce, integrationMethod);
+        integrate(particles, allSpecies, dt, stepT, LJForce, integrationMethod);
 
 
     }

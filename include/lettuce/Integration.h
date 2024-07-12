@@ -12,8 +12,8 @@ enum IntegrationMethod {
 };
 
 template<typename T, typename Force>        //Euler Integration
-void updateStateEuler(std::vector<Particle<T>> &particles, const T &dt, Force &&force){
-    const auto accelerations = calAllAccelerations(particles, std::forward<Force>(force));
+void updateStateEuler(std::vector<Particle<T>> &particles, std::vector<Species<T>> allSpecies, const T &dt, Force &&force){
+    const auto accelerations = calAllAccelerations(particles, allSpecies, std::forward<Force>(force));
     for (size_t i = 0; i < particles.size(); ++i) {
         auto& p = particles[i];
         p.v += accelerations[i]*dt;
@@ -22,13 +22,13 @@ void updateStateEuler(std::vector<Particle<T>> &particles, const T &dt, Force &&
 }
 
 template<typename T, typename Force>        //Velocity Vernel Integration
-void updateStateVV(std::vector<Particle<T>> &particles, const T &dt, Force &&force) {
-    const auto old_accelerations = calAllAccelerations(particles, std::forward<Force>(force));
+void updateStateVV(std::vector<Particle<T>> &particles, std::vector<Species<T>>& allSpecies, const T &dt, Force &&force) {
+    const auto old_accelerations = calAllAccelerations(particles, allSpecies, std::forward<Force>(force));
     for (size_t i = 0; i < particles.size(); ++i) {
         auto& p = particles[i];
         p.r += p.v * dt + old_accelerations[i]/2 * dt * dt;
     }
-    const auto accelerations = calAllAccelerations(particles, std::forward<Force>(force));
+    const auto accelerations = calAllAccelerations(particles, allSpecies, std::forward<Force>(force));
     for (size_t i = 0; i < particles.size(); ++i) {
         particles[i].v += (old_accelerations[i] + accelerations[i])/2 * dt;
     }
@@ -43,14 +43,14 @@ void writePositionToFile(const std::vector<Particle<T>> &particles, std::ostream
 }
 
 template<typename T>
-void writeKineticEToFile(const std::vector<Particle<T>> &particles, std::ostream &file) {
+void writeKineticEToFile(const std::vector<Particle<T>> &particles, std::vector<Species<T>>& allSpecies, std::ostream &file) {
     for (const auto &p : particles) {
-        file << 0.5 * p.mass * p.v.abs2() * p.v.abs2() << " ";
+        file << 0.5 * allSpecies[p.species].mass * p.v.abs2() * p.v.abs2() << " ";
     }
     file << "\n";
 }
 
-// template<typename T>
+// template<typename T, typename Force>
 // class integrate{
 // public:
 //     integrate(std::vector<Particle<T>>& particles, T dt, T Time, LennardJonesForce<T>& LJForce, IntegrationMethod method)
@@ -60,7 +60,7 @@ void writeKineticEToFile(const std::vector<Particle<T>> &particles, std::ostream
 // }
 
 template<typename T>
-void integrate(std::vector<Particle<T>>& particles, T dt, T Time, LennardJonesForce<T>& LJForce, IntegrationMethod method) {
+void integrate(std::vector<Particle<T>>& particles, std::vector<Species<T>>& allSpecies, T dt, T Time, LennardJonesForce<T>& LJForce, IntegrationMethod method) {
     std::string filenamePos;
     std::string filenameKineticE;
 
@@ -75,20 +75,20 @@ void integrate(std::vector<Particle<T>>& particles, T dt, T Time, LennardJonesFo
     std::ofstream fileKE(filenameKineticE);
 
     writePositionToFile(particles, filePos);
-    writeKineticEToFile(particles, fileKE);
+    writeKineticEToFile(particles, allSpecies, fileKE);
 
     int numSteps = static_cast<int>(Time / dt);
     if (method == EULER) {
         for (size_t i = 0; i < numSteps; ++i) {
-            updateStateEuler(particles, dt, LJForce);
+            updateStateEuler(particles, allSpecies, dt, LJForce);
             writePositionToFile(particles, filePos);
-            writeKineticEToFile(particles, fileKE);
+            writeKineticEToFile(particles, allSpecies, fileKE);
         }
     } else if (method == VELOCITY_VERLET) {
         for (size_t i = 0; i < numSteps; ++i) {
-            updateStateVV(particles, dt, LJForce);
+            updateStateVV(particles, allSpecies, dt, LJForce);
             writePositionToFile(particles, filePos);
-            writeKineticEToFile(particles, fileKE);
+            writeKineticEToFile(particles, allSpecies, fileKE);
         }
     }
     filePos.close();

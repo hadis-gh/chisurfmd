@@ -17,23 +17,29 @@ int main(){
     const double sigma = 1;
     const double epsilon = 1;
     const double mass = 1;
+    const double radius = 1;
     const double cutoff = 20;
     const double dt = 0.01;
     const double Time = 1000.;
 
     IntegrationMethod integrationMethod = EULER; 
 
-    Particle<double> P1{{{0.0, 0.0}}, {{0.0, 0.0}}, mass};
-    Particle<double> P2{{{1.2, 0.0}}, {{0.0, 0.0}}, mass};
-    Particle<double> P3{{{0.0, 1.2}}, {{0.0, 0.0}}, mass};
-    Particle<double> P4{{{0.0, 5.1}}, {{0.0, 0.0}}, mass};
+    Species<double> species1 {mass, radius};
+    Species<double> species2 {2.0 * mass, 0.5 * radius};
+
+    std::vector <Species<double>> allSpecies {species1, species2};
+
+    Particle<double> P1{{{0.0, 0.0}}, {{0.0, 0.0}}, 0};
+    Particle<double> P2{{{1.2, 0.0}}, {{0.0, 0.0}}, 0};
+    Particle<double> P3{{{0.0, 1.2}}, {{0.0, 0.0}}, 1};
+    Particle<double> P4{{{0.0, 5.1}}, {{0.0, 0.0}}, 0};
 
     std::vector<Particle<double>> particles {P1, P2, P3, P4};
 
     LennardJonesForce<double> LJForce(epsilon, sigma, cutoff);
     LennardJonesPotential<double> LJPotential(epsilon, sigma, cutoff);
 
-    integrate(particles, dt, Time, LJForce, integrationMethod);
+    integrate(particles, allSpecies, dt, Time, LJForce, integrationMethod);
 
     // std::vector<double> kineticEnergy;
     // kineticEnergy = calculateKineticEnergy(particles, Time, dt);
