@@ -21,7 +21,7 @@ struct Particle
 };
 
 template<typename T, typename Force>
-Vec<T> calForceTwo(const Particle<T> &p1, const Particle<T> &p2, Force force){
+Vec<T> calForceTwo(const Particle<T> &p1, const Particle<T> &p2, Force &&force){
     T r = (p2.r - p1.r).abs2();
     if (r == 0) return {{0, 0}};
     
@@ -30,27 +30,27 @@ Vec<T> calForceTwo(const Particle<T> &p1, const Particle<T> &p2, Force force){
 }
 
 template<typename T, typename Force>
-Vec<T> calTotalForce(const Particle<T> &p1, const std::vector<Particle<T>> &particles, Force force){
+Vec<T> calTotalForce(const Particle<T> &p1, const std::vector<Particle<T>> &particles, Force &&force){
     Vec<T> f;
     for (auto &p : particles){
         if (p1.r != p.r){
-            f += calForceTwo(p, p1, force);
+            f += calForceTwo(p, p1, std::forward<Force>(force));
         }
     }
     return f;
 }
 
 template<typename T, typename Force>
-Vec<T> calAccelaration(const Particle<T> &p1, const std::vector<Particle<T>> &particles, std::vector<Species<T>>& allSpecies, Force force){
+Vec<T> calAccelaration(const Particle<T> &p1, const std::vector<Particle<T>> &particles, std::vector<Species<T>>& allSpecies, Force &&force){
     T mass = allSpecies[p1.species].mass;
-    return calTotalForce(p1, particles, force)/ mass;
+    return calTotalForce(p1, particles, std::forward<Force>(force))/ mass;
 }
 
 template<typename T, typename Force>
-std::vector<Vec<T>> calAllAccelerations(std::vector<Particle<T>> &particles, std::vector<Species<T>>& allSpecies, Force force) {
+std::vector<Vec<T>> calAllAccelerations(std::vector<Particle<T>> &particles, std::vector<Species<T>>& allSpecies, Force &&force) {
     std::vector<Vec<T>> accelerations(particles.size());
     for (unsigned int i = 0; i < particles.size(); ++i) {
-        accelerations[i] = calAccelaration(particles[i], particles, allSpecies, force);
+        accelerations[i] = calAccelaration(particles[i], particles, allSpecies, std::forward<Force>(force));
     }
     return accelerations;
 }

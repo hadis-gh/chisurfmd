@@ -26,7 +26,7 @@ int main(int argc, char* argv[]){
         desc.add_options()
             ("help,h", "print help")
             ("particlesNum,n", po::value<int>()->default_value(10), "number of initial particles")
-            ("time", po::value<double>()->default_value(10.), "max simulation")
+            ("time", po::value<double>()->default_value(100.), "max simulation")
             ("dt", po::value<double>()->default_value(.001), "integration step")
             ("stepT", po::value<double>()->default_value(1), "measurement interval")
             ("exclusionRadius", po::value<double>()->default_value(.8), "exclusion radius")
@@ -62,8 +62,8 @@ int main(int argc, char* argv[]){
     const double sigma = 1;
     const double epsilon = 1;
     const double mass = 1;
-    const double dt = 0.001;
-    const double cutoff = 20;
+    const double dt = 0.01;
+    const double cutoff = 10;
     const double Time = vm["time"].as<double>();
     const double areaL = vm["areaL"].as<double>();
     const double radius = vm["exclusionRadius"].as<double>();
@@ -76,10 +76,11 @@ int main(int argc, char* argv[]){
     InitialParticlesConfiguration config = InitialParticlesConfiguration::DLA;
     if (vm["particleInit"].as<std::string>() == "RANDOM")
         config = InitialParticlesConfiguration::RANDOM_CIRCLES;
-    IntegrationMethod integrationMethod = VELOCITY_VERLET; 
 
     LennardJonesForce<double> LJForce(epsilon, sigma, cutoff);
+    LennardJonesPotential<double> LJPotential(epsilon, sigma, cutoff);
 
+    EulerIntegrator<double, LennardJonesForce<double>> Method;
     int speciesInd = 1;
 
     std::vector<Particle<double>> particles = initialParticles (particlesNum, allSpecies, speciesInd, areaL, gen, config);
@@ -90,11 +91,15 @@ int main(int argc, char* argv[]){
     const auto stepT = vm["stepT"].as<double>();
     int numSteps = static_cast<int>(Time / stepT);
 
-    for (int a = 0; a < numSteps; ++a)
-    {
-        integrate(particles, allSpecies, dt, stepT, LJForce, integrationMethod);
+    std::ofstream positionFile ("N_particle_PosMD.dat");
+    std::ofstream kineticEnergyFile ("N_particle_KineticEnergyMD.dat");
+    std::ofstream PotentialEnergyFile ("N_particle_PotentialEnergyMD.dat");
 
-
+    for (int i = 0; i < numSteps; ++i){
+        integrate(particles, allSpecies, dt, Time, std::move(LJForce), Method);
+        writePositionToFile(particles, positionFile);
+        writeKineticEToFile(particles, allSpecies, kineticEnergyFile);
+        writePotentialEToFile(particles, allSpecies, LJPotential, PotentialEnergyFile);     //why it does not need std::move()?
     }
 
     clock_t endTime = clock();

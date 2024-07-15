@@ -21,34 +21,37 @@ int main(){
     const double cutoff = 20;
     const double dt = 0.01;
     const double Time = 1000.;
-
-    IntegrationMethod integrationMethod = EULER; 
+    const double stepT = 10;
 
     Species<double> species1 {mass, radius};
-    Species<double> species2 {2.0 * mass, 0.5 * radius};
+    Species<double> species2 {1.2 * mass, 0.9 * radius};
 
     std::vector <Species<double>> allSpecies {species1, species2};
 
     Particle<double> P1{{{0.0, 0.0}}, {{0.0, 0.0}}, 0};
     Particle<double> P2{{{1.2, 0.0}}, {{0.0, 0.0}}, 0};
     Particle<double> P3{{{0.0, 1.2}}, {{0.0, 0.0}}, 1};
-    Particle<double> P4{{{0.0, 5.1}}, {{0.0, 0.0}}, 0};
+    Particle<double> P4{{{1.2, 1.2}}, {{0.0, 0.0}}, 0};
 
     std::vector<Particle<double>> particles {P1, P2, P3, P4};
 
     LennardJonesForce<double> LJForce(epsilon, sigma, cutoff);
     LennardJonesPotential<double> LJPotential(epsilon, sigma, cutoff);
 
-    integrate(particles, allSpecies, dt, Time, LJForce, integrationMethod);
+    VelocityVerletIntegrator<double, LennardJonesForce<double>> Method;
 
-    // std::vector<double> kineticEnergy;
-    // kineticEnergy = calculateKineticEnergy(particles, Time, dt);
+    std::ofstream positionFile ("PosMD.dat");
+    std::ofstream kineticEnergyFile ("KineticEnergyMD.dat");
+    std::ofstream PotentialEnergyFile ("PotentialEnergyMD.dat");
 
-    // std::vector<double> potentialEnergyLJ;
-    // potentialEnergyLJ = calculatePotentialEnergy (particles, Time, dt, LJPotential);
+    int numSteps = static_cast<int>(Time / stepT);
 
-    // std::vector<double> totalEnergy;
-    // totalEnergy = calculateTotalEnergy (particles, Time, dt, LJPotential);
-
+    for (int i = 0; i < numSteps; ++i){
+        integrate(particles, allSpecies, dt, Time, std::move(LJForce), Method);
+        writePositionToFile(particles, positionFile);
+        writeKineticEToFile(particles, allSpecies, kineticEnergyFile);
+        writePotentialEToFile(particles, allSpecies, LJPotential, PotentialEnergyFile);     //why it does not need std::move()?
+    }
+    
     return 0;
 }
