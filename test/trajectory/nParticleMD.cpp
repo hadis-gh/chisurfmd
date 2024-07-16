@@ -11,6 +11,7 @@
 #include "lettuce/Particle.h"
 #include "lettuce/Utilities.h"
 #include "lettuce/Integration.h"
+#include "lettuce/Thermostat.h"
 #include "lettuce/LennardJones.h"
 #include "lettuce/ParticlesDistribution.h"
 #include "lettuce/ParticlesIntersection.h"
@@ -80,7 +81,8 @@ int main(int argc, char* argv[]){
     LennardJonesForce<double> LJForce(epsilon, sigma, cutoff);
     LennardJonesPotential<double> LJPotential(epsilon, sigma, cutoff);
 
-    EulerIntegrator<double, LennardJonesForce<double>> Method;
+    auto Method = EulerStep<double, LennardJonesForce<double>>;
+
     int speciesInd = 1;
 
     std::vector<Particle<double>> particles = initialParticles (particlesNum, allSpecies, speciesInd, areaL, gen, config);
@@ -96,10 +98,10 @@ int main(int argc, char* argv[]){
     std::ofstream PotentialEnergyFile ("N_particle_PotentialEnergyMD.dat");
 
     for (int i = 0; i < numSteps; ++i){
-        integrate(particles, allSpecies, dt, Time, std::move(LJForce), Method);
+        integrate(particles, allSpecies, dt, Time, LJForce, Method);
         writePositionToFile(particles, positionFile);
         writeKineticEToFile(particles, allSpecies, kineticEnergyFile);
-        writePotentialEToFile(particles, allSpecies, LJPotential, PotentialEnergyFile);     //why it does not need std::move()?
+        writePotentialEToFile(particles, allSpecies, LJPotential, PotentialEnergyFile);
     }
 
     clock_t endTime = clock();

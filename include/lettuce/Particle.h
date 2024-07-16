@@ -41,59 +41,16 @@ Vec<T> calTotalForce(const Particle<T> &p1, const std::vector<Particle<T>> &part
 }
 
 template<typename T, typename Force>
-Vec<T> calAccelaration(const Particle<T> &p1, const std::vector<Particle<T>> &particles, std::vector<Species<T>>& allSpecies, Force &&force){
+Vec<T> calAccelaration(const Particle<T> &p1, const std::vector<Particle<T>> &particles, const std::vector<Species<T>>& allSpecies, Force &&force){
     T mass = allSpecies[p1.species].mass;
     return calTotalForce(p1, particles, std::forward<Force>(force))/ mass;
 }
 
 template<typename T, typename Force>
-std::vector<Vec<T>> calAllAccelerations(std::vector<Particle<T>> &particles, std::vector<Species<T>>& allSpecies, Force &&force) {
+std::vector<Vec<T>> calAllAccelerations(const std::vector<Particle<T>> &particles, const std::vector<Species<T>>& allSpecies, Force &&force) {
     std::vector<Vec<T>> accelerations(particles.size());
     for (unsigned int i = 0; i < particles.size(); ++i) {
         accelerations[i] = calAccelaration(particles[i], particles, allSpecies, std::forward<Force>(force));
     }
     return accelerations;
-}
-
-template<typename T>
-std::vector<T> calculateKineticEnergy (std::vector<Particle<T>> &particles, const T &Time, const T &dt){
-    const T steps = Time/ dt;
-    std::vector<T> kineticEnergy(steps);
-    
-    for (int i = 0; i < steps; ++i){
-        for (int j= 0; j < particles.size(); ++j){
-            kineticEnergy[i] = 0.5 * particles[0].mass * particles[j].v * particles[j].v;
-        }
-    }
-    return kineticEnergy;
-}
-
-template<typename T, typename Force>
-std::vector<T> calculatePotentialEnergy (std::vector<Particle<T>> &particles, const T &Time, const T &dt, Force potential){
-    const T steps = Time/ dt;
-    std::vector<Vec<T>> accelarations(steps);
-    std::vector<T> potentialEnergy(steps);
-
-    accelarations = calAllAccelerations(particles, potential);
-    for (int i = 0; i < steps; ++i){
-        potentialEnergy[i] = accelarations[i].abs2();
-    }
-    return potentialEnergy;
-}
-
-template<typename T, typename Force>
-std::vector<T> calculateTotalEnergy (std::vector<Particle<T>> &particles, const T &Time, const T &dt, Force potentialType){
-    const T steps = Time/ dt;    
-    std::vector<T> potentialEnergy(steps);
-    std::vector<T> kineticEnergy(steps);
-    std::vector<T> totalEnergy(steps);
-
-    potentialEnergy = calculatePotentialEnergy (particles, Time, dt, potentialType);
-    kineticEnergy = calculateKineticEnergy (particles, Time, dt);
-
-    for (int i = 0; i < steps; ++i){
-        totalEnergy[i] =  kineticEnergy[i] + potentialEnergy[i];
-    }
-
-    return totalEnergy;
 }

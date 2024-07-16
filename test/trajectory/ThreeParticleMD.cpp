@@ -8,6 +8,7 @@
 #include "lettuce/Particle.h"
 #include "lettuce/Utilities.h"
 #include "lettuce/Integration.h"
+#include "lettuce/Thermostat.h"
 #include "lettuce/LennardJones.h"
 #include "lettuce/CircleDistribution.h"
 #include "lettuce/CirclesIntersectionFuncs.h"
@@ -38,7 +39,7 @@ int main(){
     LennardJonesForce<double> LJForce(epsilon, sigma, cutoff);
     LennardJonesPotential<double> LJPotential(epsilon, sigma, cutoff);
 
-    VelocityVerletIntegrator<double, LennardJonesForce<double>> Method;
+    auto Method = EulerStep<double, LennardJonesForce<double>>;
 
     std::ofstream positionFile ("PosMD.dat");
     std::ofstream kineticEnergyFile ("KineticEnergyMD.dat");
@@ -47,10 +48,10 @@ int main(){
     int numSteps = static_cast<int>(Time / stepT);
 
     for (int i = 0; i < numSteps; ++i){
-        integrate(particles, allSpecies, dt, Time, std::move(LJForce), Method);
+        integrate(particles, allSpecies, dt, Time, LJForce, Method);
         writePositionToFile(particles, positionFile);
         writeKineticEToFile(particles, allSpecies, kineticEnergyFile);
-        writePotentialEToFile(particles, allSpecies, LJPotential, PotentialEnergyFile);     //why it does not need std::move()?
+        writePotentialEToFile(particles, allSpecies, LJPotential, PotentialEnergyFile);
     }
     
     return 0;
