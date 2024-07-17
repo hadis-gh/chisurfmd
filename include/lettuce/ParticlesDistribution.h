@@ -100,12 +100,20 @@ std::vector<Particle<T>> distParticlesDLA (const int &shootNum, const T &radius,
 }
 
 template<typename T>
-std::vector<Particle<T>> initialParticles (const int &particlesNum, const std::vector<Species<T>> &allSpecies, int &speciesNum, const T &L, std::mt19937 &gen, InitialParticlesConfiguration configuation){
-    std::vector<Particle<T>> particles(particlesNum);
-    if (configuation == InitialParticlesConfiguration::RANDOM_CIRCLES){
+std::vector<Particle<T>> initialParticles (const int &particlesNum, const std::vector<Species<T>> &allSpecies, int &speciesNum, const T &L, std::mt19937 &gen, const std::string& configuation){
+    std::vector<Particle<T>> particles;
+    if (configuation == "RANDOM"){
         particles = distRandomParticles (particlesNum, allSpecies[speciesNum].radius, L, gen);
-    }else if(configuation == InitialParticlesConfiguration::DLA){
+    }else if(configuation == "DLA"){
         particles = distParticlesDLA (particlesNum, allSpecies[speciesNum].radius, L, gen);
+    }else if(configuation == "THREE"){
+        particles.reserve(4);
+        particles.push_back({{{0.0, 0.0}}, {{0.0, 0.0}}, 0});
+        particles.push_back({{{1.2, 0.0}}, {{0.0, 0.0}}, 0});
+        particles.push_back({{{0.0, 1.2}}, {{0.0, 0.0}}, 1});
+        particles.push_back({{{1.2, 1.2}}, {{0.0, 0.0}}, 0});
+
+        return particles;
     }
     for (auto &p: particles){
         p.species = speciesNum;

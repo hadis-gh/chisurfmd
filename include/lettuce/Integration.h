@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <cmath>
+#include <stdexcept>
 #include <string>
 #include "lettuce/Vec.h"
 #include "lettuce/Circle.h"
@@ -30,15 +31,16 @@ void VelocityVerletStep(std::vector<Particle<T>> &particles, const std::vector<S
     for (size_t i = 0; i < particles.size(); ++i) {
         particles[i].v += (old_accelerations[i] + accelerations[i])/2 * dt;
     }
+    throw std::runtime_error();
 }    
 
 template<typename T, typename Integrator, typename Force>
-void integrate(std::vector<Particle<T>>& particles, const std::vector<Species<T>>& allSpecies, T dt, T Time, Force&& force, Integrator &&integrator) {
+void integrate(std::vector<Particle<T>>& particles, const std::vector<Species<T>>& allSpecies, T dt, T Time,
+                Force&& force, Integrator &&integrator) {
     int numSteps = static_cast<int>(Time / dt);
 
     for (size_t i = 0; i < numSteps; ++i){
         integrator(particles, allSpecies, dt, std::forward<Force>(force));
-        thermostat(particles, allSpecies);
     }
 }
 

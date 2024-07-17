@@ -5,28 +5,32 @@
 #include <string>
 #include "lettuce/Vec.h"
 #include "lettuce/Circle.h"
+#include "lettuce/constants.h"
 #include "lettuce/LennardJones.h"
 
+
+
+template<typename T>
+class Berendensen {
+public:
+    Berendensen(T dt, T desiredTemperature, T relaxationTime)
+        : dt(dt), desiredTemperature(desiredTemperature), relaxationTime(relaxationTime) {}
+
+    T operator () (const T &currentTemperature) const{
+        return (1 + dt/ relaxationTime * (desiredTemperature/ currentTemperature - 1));
+    }
+
+private:
+    T dt;
+    T relaxationTime;
+    T desiredTemperature;
+};
 
 template<typename T>
 T systemTemperature(const std::vector<Particle<T>> &particles, const std::vector<Species<T>>& allSpecies){
     T totalKineticEnergy = systemKineticEnergy(particles, allSpecies);
-    T boltzmanC = 1;
-    return (2 * totalKineticEnergy / (boltzmanC * particles.size() * 3.));
+    return (2 * totalKineticEnergy / (constants::boltzmann * particles.size() * 3.));
 }
-
-template<typename T>
-struct systemTemprature {
-    systemTemprature(T boltzmanConstant) 
-        : boltzmanConstant(boltzmanConstant) {}
-
-    T operator()(const std::vector<Particle<T>> &particles, const std::vector<Species<T>>& allSpecies){
-        T totalKineticEnergy = systemKineticEnergy(particles, allSpecies);
-        return (2 * totalKineticEnergy / (boltzmanConstant * particles.size() * 3.));
-    }
-private:
-    T boltzmanConstant;
-};
 
 template<typename T>
 T kineticEnergy(const Particle<T> &particle, const std::vector<Species<T>>& allSpecies){
@@ -42,16 +46,10 @@ T systemKineticEnergy(const std::vector<Particle<T>> &particles, const std::vect
     return totalKineticEnergy;
 }
 
-template<typename T>
-T berendensonT (){
-
-    currentTemperature = systemKineticEnergy();
-    return (1 + dt/ relaxationT * (desireTemperature/ currentTemperature - 1));
-}
-
-template<typename T, typename Temperature, typename ThermostatMethod>
-void thermostat(std::vector<Particle<T>> &particles, const ThermostatMethod &thermostatMethod){
-    auto lamda = thermostatMethod;
+template<typename T, typename ThermostatMethod>
+void applyThermostat(std::vector<Particle<T>> &particles, const std::vector<Species<T>>& allSpecies, const ThermostatMethod &thermostatMethod){
+    T currentTemperature = systemTemperature(particles, allSpecies);
+    auto lamda = thermostatMethod(currentTemperature);
     for (auto &p : particles){
         p.v *= lamda;
     }

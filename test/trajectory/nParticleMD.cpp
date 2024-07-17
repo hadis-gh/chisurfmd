@@ -16,8 +16,18 @@
 #include "lettuce/ParticlesDistribution.h"
 #include "lettuce/ParticlesIntersection.h"
 
+enum class ThermostatID
+{
+    None = 0, Berendensen = 1, Andersen, VelocityScaling, NoseHoover
+};
+#ifndef LETTUCE_THERMOSTAT
+#define LETTUCE_THERMOSTAT ThermostatID::None
+#endif
+
+
 namespace po = boost::program_options;
 
+using Real = double;
 
 int main(int argc, char* argv[]){
 
@@ -29,9 +39,11 @@ int main(int argc, char* argv[]){
             ("particlesNum,n", po::value<int>()->default_value(10), "number of initial particles")
             ("time", po::value<double>()->default_value(100.), "max simulation")
             ("dt", po::value<double>()->default_value(.001), "integration step")
-            ("stepT", po::value<double>()->default_value(1), "measurement interval")
+            ("writeInterval", po::value<double>()->default_value(1.), "measurement interval")
+            ("thermoInterval", po::value<double>()->default_value(1.), "interval after which to apply thermostat")
+            ("temperature,T", po::value<double>()->default_value(1.), "temperature")
             ("exclusionRadius", po::value<double>()->default_value(.8), "exclusion radius")
-            ("areaL", po::value<double>()->default_value(20.), "simulation size")
+            ("areaL", po::value<double>()->default_value(100.), "simulation size")
             ("seed", po::value<unsigned int>(), "random seed")
             ("particleInit", po::value<std::string>()->default_value("DLA"), "particle intitialisation")
 
@@ -63,11 +75,12 @@ int main(int argc, char* argv[]){
     const double sigma = 1;
     const double epsilon = 1;
     const double mass = 1;
-    const double dt = 0.01;
+    const double dt = vm["dt"].as<double>();
     const double cutoff = 10;
     const double Time = vm["time"].as<double>();
     const double areaL = vm["areaL"].as<double>();
     const double radius = vm["exclusionRadius"].as<double>();
+    const double relaxationTime = .1;
 
     Species<double> species1 {mass, radius};
     Species<double> species2 {2.0 * mass, 0.5 * radius};
@@ -78,6 +91,8 @@ int main(int argc, char* argv[]){
     if (vm["particleInit"].as<std::string>() == "RANDOM")
         config = InitialParticlesConfiguration::RANDOM_CIRCLES;
 
+        
+
     LennardJonesForce<double> LJForce(epsilon, sigma, cutoff);
     LennardJonesPotential<double> LJPotential(epsilon, sigma, cutoff);
 
@@ -85,23 +100,66 @@ int main(int argc, char* argv[]){
 
     int speciesInd = 1;
 
-    std::vector<Particle<double>> particles = initialParticles (particlesNum, allSpecies, speciesInd, areaL, gen, config);
+    std::vector<Particle<double>> particles = initialParticles (particlesNum, allSpecies, speciesInd, areaL, gen, vm["particleInit"].as<std::string>());
 
 
     clock_t startTime = clock();
 
-    const auto stepT = vm["stepT"].as<double>();
-    int numSteps = static_cast<int>(Time / stepT);
+    const unsigned int writeInterval = std::ceil(vm["writeInterval"].as<double>()/dt);
+    const unsigned int thermoInterval = std::ceil(vm["thermoInterval"].as<double>()/dt);
+
+    const auto desiredTemperature = vm["temperature"].as<double>();
+    #if 0
+    [&vm](){
+        if(vm.count("temperature"))
+            return ;
+        else
+            return std::numeric_limits<double>::quiet_NaN();
+    }();
+    #endif
+
+    auto thermostat = [&](){
+        if constexpr (LETTUCE_THERMOSTAT == ThermostatID::None)
+            return [](auto){ return 1.; };
+        else if constexpr (LETTUCE_THERMOSTAT == ThermostatID::Berendensen)
+            return Berendensen<double>(vm["thermoInterval"].as<double>(), desiredTemperature, relaxationTime);
+        else if constexpr (LETTUCE_THERMOSTAT == ThermostatID::Andersen)
+            return 0; //AndersenThermostat<double>(desiredTemperature);
+    }();
+    
 
     std::ofstream positionFile ("N_particle_PosMD.dat");
     std::ofstream kineticEnergyFile ("N_particle_KineticEnergyMD.dat");
     std::ofstream PotentialEnergyFile ("N_particle_PotentialEnergyMD.dat");
 
-    for (int i = 0; i < numSteps; ++i){
-        integrate(particles, allSpecies, dt, Time, LJForce, Method);
-        writePositionToFile(particles, positionFile);
-        writeKineticEToFile(particles, allSpecies, kineticEnergyFile);
-        writePotentialEToFile(particles, allSpecies, LJPotential, PotentialEnergyFile);
+    unsigned int time = 0;
+    unsigned int writeTime = time, thermoTime = thermoInterval;
+    const unsigned int nsteps = std::ceil(Time / dt);
+
+    if constexpr (LETTUCE_THERMOSTAT == ThermostatID::None)
+        thermoTime = 2*nsteps;
+
+    while(time < nsteps)
+    {
+        const auto nextEventTime = std::min(std::min(writeTime, thermoTime), nsteps);
+        integrate(particles, allSpecies, dt, (nextEventTime - time)*dt, LJForce, Method);
+        time = nextEventTime;
+
+        if(time == writeTime)
+        {
+            writePositionToFile(particles, positionFile);
+            writeKineticEToFile(particles, allSpecies, kineticEnergyFile);
+            writePotentialEToFile(particles, allSpecies, LJPotential, PotentialEnergyFile);
+            writeTime = time + writeInterval;
+            std::cout << "written at " << time*dt << " next " << writeTime*dt << std::endl;
+        }
+        if constexpr (LETTUCE_THERMOSTAT == ThermostatID::None)
+            if(time == thermoTime)
+            {
+                applyThermostat(particles, allSpecies, thermostat);
+                thermoTime = time + thermoInterval;
+                std::cout << "thermo at " << time*dt << " next " << thermoTime*dt << std::endl;
+            }
     }
 
     clock_t endTime = clock();
