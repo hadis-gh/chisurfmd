@@ -11,18 +11,32 @@
 
 
 template<typename T>
-class Berendensen {
+class BerendensenThermostat {
 public:
-    Berendensen(T dt, T desiredTemperature, T relaxationTime)
+    BerendensenThermostat(T dt, T desiredTemperature, T relaxationTime)
         : dt(dt), desiredTemperature(desiredTemperature), relaxationTime(relaxationTime) {}
 
     T operator () (const T &currentTemperature) const{
-        return (1 + dt/ relaxationTime * (desiredTemperature/ currentTemperature - 1));
+        return sqrt(1 + dt/ relaxationTime * (desiredTemperature/ currentTemperature - 1));
     }
 
 private:
     T dt;
     T relaxationTime;
+    T desiredTemperature;
+};
+
+template<typename T>
+class VelocityScalingThermostat {
+public:
+    VelocityScalingThermostat(T desiredTemperature)
+        : desiredTemperature(desiredTemperature) {}
+
+    T operator () (const T &currentTemperature) const{
+        return sqrt(desiredTemperature/ currentTemperature);
+    }
+
+private:
     T desiredTemperature;
 };
 

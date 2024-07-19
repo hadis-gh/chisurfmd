@@ -13,11 +13,11 @@
 #include "lettuce/LennardJones.h"
 #include "lettuce/ParticlesDistribution.h"
 #include "lettuce/ParticlesIntersection.h"
-#include "lettuce/CommandLineOptions.h"
+//#include "lettuce/CommandLineOptions.h"
 
 enum class ThermostatID
 {
-    None = 0, Berendensen = 1, Andersen, VelocityScaling, NoseHoover
+    None = 0, VelocityScaling = 1, Berendensen = 2, NoseHoover = 3, Andersen = 2
 };
 #ifndef LETTUCE_THERMOSTAT
 #define LETTUCE_THERMOSTAT ThermostatID::None
@@ -28,17 +28,35 @@ using Real = double;
 
 int main(int argc, char* argv[]){
 
-    po::variables_map vm = parseCommandLineOptions(argc, argv);
+    // po::variables_map vm = parseCommandLineOptions(argc, argv);
+    po::variables_map vm;
+    po::options_description desc("Allowed Options");
+    desc.add_options()
+        ("help,h", "print help")
+        ("time,t",           po::value<double>()      ->default_value(100.),      "max simulation")
+        ("dt",               po::value<double>()      ->default_value(.001),      "integration step")
+        ("writeInterval",    po::value<double>()      ->default_value(1.),        "measurement interval")
+        ("thermoInterval",   po::value<double>()      ->default_value(1.),        "interval after which to apply thermostat")
+        ("temperature,T",    po::value<double>()      ->default_value(1.),        "temperature")
+        ("particleInit",     po::value<std::string>() ->default_value("DLA"),   "particle initialization")
+        ("exclusionRadius",  po::value<double>()      ->default_value(.8),        "exclusion radius")
+        ("seed",             po::value<unsigned int>(),                           "random seed")
+        ("areaL",            po::value<double>()      ->default_value(100.),      "simulation size")
+        ("particlesNum,n",   po::value<int>()         ->default_value(10),        "number of initial particles");
+
+    po::store(po::command_line_parser(argc, argv).options(desc).run(), vm);
+
+    if (vm.count("help") > 0) {
+        std::cout << desc << std::endl;
+        return 0;
+    }
 
     int particlesNum = vm["particlesNum"].as<int>();
 
     auto gen = [&]() {
-        if(vm.count("seed") > 0)
-        {
+        if(vm.count("seed") > 0){
             return std::mt19937(vm["seed"].as<unsigned int>());
-        }
-        else
-        {
+        }else{
             std::random_device rd;
             return std::mt19937(rd());
         }
@@ -79,10 +97,14 @@ int main(int argc, char* argv[]){
     auto thermostat = [&](){
         if constexpr (LETTUCE_THERMOSTAT == ThermostatID::None)
             return [](auto){ return 1.; };
+        else if constexpr (LETTUCE_THERMOSTAT == ThermostatID::VelocityScaling)
+            return VelocityScalingThermostat<double>(desiredTemperature);    
         else if constexpr (LETTUCE_THERMOSTAT == ThermostatID::Berendensen)
-            return Berendensen<double>(vm["thermoInterval"].as<double>(), desiredTemperature, relaxationTime);
+            return BerendensenThermostat<double>(vm["thermoInterval"].as<double>(), desiredTemperature, relaxationTime);
+        else if constexpr (LETTUCE_THERMOSTAT == ThermostatID::NoseHoover)
+            return 0;
         else if constexpr (LETTUCE_THERMOSTAT == ThermostatID::Andersen)
-            return 0; //AndersenThermostat<double>(desiredTemperature);
+            return 0;
     }();
 
     unsigned int time = 0;
@@ -107,14 +129,13 @@ int main(int argc, char* argv[]){
             writeTime = time + writeInterval;
             std::cout << "written at " << time*dt << " next " << writeTime*dt << std::endl;
         }
-        if constexpr (LETTUCE_THERMOSTAT == ThermostatID::None)
+        if constexpr (LETTUCE_THERMOSTAT != ThermostatID::None)
             if(time == thermoTime){
                 applyThermostat(particles, allSpecies, thermostat);
                 thermoTime = time + thermoInterval;
                 std::cout << "thermo at " << time*dt << " next " << thermoTime*dt << std::endl;
             }
     }
-
     clock_t endTime = clock();
 
     double timeTaken = double(endTime - startTime) / CLOCKS_PER_SEC;
