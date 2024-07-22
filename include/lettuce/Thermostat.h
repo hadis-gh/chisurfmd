@@ -48,7 +48,7 @@ T systemTemperature(const std::vector<Particle<T>> &particles, const std::vector
 
 template<typename T>
 T kineticEnergy(const Particle<T> &particle, const std::vector<Species<T>>& allSpecies){
-    return 0.5 * allSpecies[particle.species].mass * particle.v.abs2() * particle.v.abs2();
+    return 0.5 * allSpecies[particle.species].mass * particle.v.abs2();
 }
 
 template<typename T>

@@ -161,6 +161,12 @@ void writeCircles(T begin, T end, const std::string& fname){
             output_file << c->c << ", " << c->r <<"\n";
 }
 
+template<typename T>
+void writeParticle(const std::vector<Particle<T>> &particles, T radius, const std::string& fname){
+        std::ofstream output_file(fname);
+        for (auto p: particles)
+            output_file << p.r[0] << ", " << p.r[1] << ", " << radius <<"\n";
+}
 
 template<typename T>
 std::vector<Particle<T>> initialParticles (const int &particlesNum, const T &L, const T &radius, std::mt19937 &gen, InitialParticlesConfiguration configuation){

@@ -5,6 +5,7 @@
 #include <cmath>
 #include <random>
 #include <algorithm>
+#include "lettuce/Particle.h"
 #include "lettuce/Vec.h"
 #include "lettuce/Circle.h"
 #include "lettuce/CircleDistribution.h"
@@ -18,13 +19,16 @@ int main() {
     const int shootNum = 150;
 
     std::vector<Circle<float>> finalCircles;
+    std::vector<Particle<float>> finalParticles;
 
     std::random_device rd;
     std::mt19937 gen(rd());
 
     finalCircles = distCirclesDLA (shootNum, width, r, gen);
-
+    finalParticles = distParticleDLA (shootNum, width, r, gen);
+    
     writeCircles(finalCircles.begin(), finalCircles.end(), "circlesDLAtest.txt");
+    writeParticle(finalParticles, r, "particlesDLAtest.txt");
 
     return 0;
 }

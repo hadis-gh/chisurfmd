@@ -110,7 +110,7 @@ std::vector<Particle<T>> initialParticles (const int &particlesNum, const std::v
         particles.reserve(4);
         particles.push_back({{{0.0, 0.0}}, {{0.0, 0.0}}, 0});
         particles.push_back({{{1.2, 0.0}}, {{0.0, 0.0}}, 0});
-        particles.push_back({{{0.0, 1.2}}, {{0.0, 0.0}}, 1});
+        particles.push_back({{{0.0, 1.5}}, {{0.0, 0.0}}, 0});
         particles.push_back({{{1.2, 1.2}}, {{0.0, 0.0}}, 0});
 
         return particles;

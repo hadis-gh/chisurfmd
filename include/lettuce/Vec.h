@@ -50,7 +50,8 @@ public:
     T sum()const;
     T dot(const Vec<T, D>& other)const;
     T abs2()const;
-
+    T abs()const;
+    
     void invalidate() {
         elements.fill(NAN);
     }

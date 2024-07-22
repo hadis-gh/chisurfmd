@@ -171,6 +171,11 @@ T Vec<T, D>::abs2()const{
     return dot(*this);
 }
 
+template<typename T , int D>
+T Vec<T, D>::abs()const{
+    return sqrt((*this).abs2());
+}
+
 template<typename T , int D> 
 Vec<T, D> operator*(const T& number, const Vec<T, D>& vec){
     Vec<T, D> result(vec);

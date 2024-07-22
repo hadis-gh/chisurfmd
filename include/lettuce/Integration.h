@@ -31,7 +31,7 @@ void VelocityVerletStep(std::vector<Particle<T>> &particles, const std::vector<S
     for (size_t i = 0; i < particles.size(); ++i) {
         particles[i].v += (old_accelerations[i] + accelerations[i])/2 * dt;
     }
-    throw std::runtime_error();
+    // throw std::runtime_error();
 }    
 
 template<typename T, typename Integrator, typename Force>
@@ -65,7 +65,7 @@ template<typename T, typename Potential>
 void writePotentialEToFile(const std::vector<Particle<T>> &particles, const std::vector<Species<T>>& allSpecies, Potential &&potential, std::ostream &file){
     std::vector<Vec<T>> potentiaEnergy = calAllAccelerations(particles,allSpecies, std::forward<Potential> (potential));
     for (const auto &u : potentiaEnergy) {
-        file << u.abs2() << " ";
+        file << u.abs() << " ";
     }
     file << "\n";
 }
