@@ -11,12 +11,22 @@
 
 
 template<typename T, typename Force>
-void EulerStep(std::vector<Particle<T>> &particles, const std::vector<Species<T>>& allSpecies, const T &dt, const Force &force){
+void EulerSymplecticStep(std::vector<Particle<T>> &particles, const std::vector<Species<T>>& allSpecies, const T &dt, const Force &force){
     const auto accelerations = calAllAccelerations(particles, allSpecies, force);
     for (size_t i = 0; i < particles.size(); ++i) {
         auto& p = particles[i];
         p.v += accelerations[i]*dt;
         p.r += p.v * dt;
+    }    
+}
+
+template<typename T, typename Force>
+void EulerStep(std::vector<Particle<T>> &particles, const std::vector<Species<T>>& allSpecies, const T &dt, const Force &force){
+    const auto accelerations = calAllAccelerations(particles, allSpecies, force);
+    for (size_t i = 0; i < particles.size(); ++i) {
+        auto& p = particles[i];
+        p.r += p.v * dt;
+        p.v += accelerations[i]*dt;
     }    
 }
 

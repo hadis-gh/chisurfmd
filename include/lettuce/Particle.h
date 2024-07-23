@@ -22,7 +22,7 @@ struct Particle
 
 template<typename T, typename Force>
 Vec<T> calForceTwo(const Particle<T> &p1, const Particle<T> &p2, Force &&force){
-    T r = (p2.r - p1.r).abs2();
+    T r = (p2.r - p1.r).abs();
     if (r == 0) return {{0, 0}};
     
     T f = force(r);

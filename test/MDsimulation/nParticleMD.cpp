@@ -19,7 +19,7 @@ enum class ThermostatID {
 };
 
 #ifndef LETTUCE_THERMOSTAT
-#define LETTUCE_THERMOSTAT ThermostatID::None
+#define LETTUCE_THERMOSTAT ThermostatID::Berendensen
 #endif
 
 namespace po = boost::program_options;
@@ -30,16 +30,16 @@ int main(int argc, char* argv[]) {
     po::options_description desc("Allowed Options");
     desc.add_options()
         ("help,h", "print help")
-        ("time,t",                po::value<double>()->default_value(100.0),        "max simulation time")
-        ("dt",                    po::value<double>()->default_value(.001),         "integration step size")
+        ("time,t",                po::value<Real>()->default_value(100.0),          "max simulation time")
+        ("dt",                    po::value<Real>()->default_value(.0001),          "integration step size")
         ("writeStateInterval",    po::value<unsigned int>()->default_value(1.),     "measurement State interval")
-        ("writeEnergyInterval",   po::value<unsigned int>()->default_value(10.),     "measurement Energy interval")
-        ("thermoInterval",        po::value<unsigned int>()->default_value(20.),     "interval after which to apply thermostat")
-        ("temperature,T",         po::value<double>()->default_value(1.0),          "temperature")
-        ("particleInit",          po::value<std::string>()->default_value("DLA"), "particle initialization")
-        ("exclusionRadius",       po::value<double>()->default_value(.8),           "exclusion radius")
+        ("writeEnergyInterval",   po::value<unsigned int>()->default_value(1.),     "measurement Energy interval")
+        ("thermoInterval",        po::value<unsigned int>()->default_value(20.),    "interval after which to apply thermostat")
+        ("temperature,T",         po::value<Real>()->default_value(.1),             "temperature")
+        ("particleInit",          po::value<std::string>()->default_value("THREE"), "particle initialization")
+        ("exclusionRadius",       po::value<Real>()->default_value(.8),             "exclusion radius")
         ("seed",                  po::value<unsigned int>(),                        "random seed")
-        ("areaL",                 po::value<double>()->default_value(100.0),        "simulation size")
+        ("areaL",                 po::value<Real>()->default_value(100.0),          "simulation size")
         ("particlesNum,n",        po::value<int>()->default_value(10),              "number of initial particles");
 
     po::store(po::command_line_parser(argc, argv).options(desc).run(), vm);
@@ -60,33 +60,33 @@ int main(int argc, char* argv[]) {
         }
     }();
 
-    const double sigma = 1;
-    const double epsilon = 1;
-    const double mass = 1;
-    const double cutoff = 10;
-    const double areaL = vm["areaL"].as<double>();
-    const double radius = vm["exclusionRadius"].as<double>();
+    const Real sigma = 1;
+    const Real epsilon = 1;
+    const Real mass = 1;
+    const Real cutoff = 10;
+    const Real areaL = vm["areaL"].as<Real>();
+    const Real radius = vm["exclusionRadius"].as<Real>();
 
-    const double dt = vm["dt"].as<double>();
-    const double Time = vm["time"].as<double>();
+    const Real dt = vm["dt"].as<Real>();
+    const Real Time = vm["time"].as<Real>();
     const unsigned int writeStateIntervalSteps = std::ceil(vm["writeStateInterval"].as<unsigned int>() / dt);
     const unsigned int writeEnergyIntervalSteps = std::ceil(vm["writeEnergyInterval"].as<unsigned int>() / dt);
     const unsigned int thermoIntervalSteps = std::ceil(vm["thermoInterval"].as<unsigned int>() / dt);
 
-    const double relaxationTime = .1;
-    const auto desiredTemperature = vm["temperature"].as<double>();
+    const Real relaxationTime = .1;
+    const auto desiredTemperature = vm["temperature"].as<Real>();
 
-    LennardJonesForce<double> LJForce(epsilon, sigma, cutoff);
-    LennardJonesPotential<double> LJPotential(epsilon, sigma, cutoff);
+    LennardJonesForce<Real> LJForce(epsilon, sigma, cutoff);
+    LennardJonesPotential<Real> LJPotential(epsilon, sigma, cutoff);
 
-    auto Method = EulerStep<double, LennardJonesForce<double>>;
+    auto Method = VelocityVerletStep<Real, LennardJonesForce<Real>>;
 
-    Species<double> species1 {mass, radius};
-    Species<double> species2 {2.0 * mass, 0.5 * radius};
-    std::vector<Species<double>> allSpecies {species1, species2};
+    Species<Real> species1 {mass, radius};
+    Species<Real> species2 {2.0f * mass, 0.5f * radius};
+    std::vector<Species<Real>> allSpecies {species1, species2};
     int speciesInd = 1;
 
-    std::vector<Particle<double>> particles = initialParticles(particlesNum, allSpecies, speciesInd, areaL, gen, vm["particleInit"].as<std::string>());
+    std::vector<Particle<Real>> particles = initialParticles(particlesNum, allSpecies, speciesInd, areaL, gen, vm["particleInit"].as<std::string>());
 
     std::ofstream positionFile("N_particle_PosMD.dat");
     std::ofstream kineticEnergyFile("N_particle_KineticEnergyMD.dat");
@@ -96,9 +96,9 @@ int main(int argc, char* argv[]) {
         if constexpr (LETTUCE_THERMOSTAT == ThermostatID::None)
             return [](auto) { return 1.; };
         else if constexpr (LETTUCE_THERMOSTAT == ThermostatID::VelocityScaling)
-            return VelocityScalingThermostat<double>(desiredTemperature);
+            return VelocityScalingThermostat<Real>(desiredTemperature);
         else if constexpr (LETTUCE_THERMOSTAT == ThermostatID::Berendensen)
-            return BerendensenThermostat<double>(vm["thermoInterval"].as<unsigned int>() * dt, desiredTemperature, relaxationTime);
+            return BerendensenThermostat<Real>(vm["thermoInterval"].as<unsigned int>(), desiredTemperature, relaxationTime);
         else if constexpr (LETTUCE_THERMOSTAT == ThermostatID::NoseHoover)
             return nullptr;
         else if constexpr (LETTUCE_THERMOSTAT == ThermostatID::Andersen)
@@ -141,7 +141,7 @@ int main(int argc, char* argv[]) {
     }
     clock_t endTime = clock();
 
-    double timeTaken = double(endTime - startTime) / CLOCKS_PER_SEC;
+    Real timeTaken = Real(endTime - startTime) / CLOCKS_PER_SEC;
     std::cout << "Time taken: " << timeTaken << " seconds\n";
 
     return 0;
