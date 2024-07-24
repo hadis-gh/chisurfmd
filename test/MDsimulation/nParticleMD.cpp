@@ -19,7 +19,7 @@ enum class ThermostatID {
 };
 
 #ifndef LETTUCE_THERMOSTAT
-#define LETTUCE_THERMOSTAT ThermostatID::Berendensen
+#define LETTUCE_THERMOSTAT ThermostatID::None
 #endif
 
 namespace po = boost::program_options;
@@ -31,16 +31,16 @@ int main(int argc, char* argv[]) {
     desc.add_options()
         ("help,h", "print help")
         ("time,t",                po::value<Real>()->default_value(100.0),          "max simulation time")
-        ("dt",                    po::value<Real>()->default_value(.0001),          "integration step size")
-        ("writeStateInterval",    po::value<unsigned int>()->default_value(1.),     "measurement State interval")
-        ("writeEnergyInterval",   po::value<unsigned int>()->default_value(1.),     "measurement Energy interval")
-        ("thermoInterval",        po::value<unsigned int>()->default_value(20.),    "interval after which to apply thermostat")
+        ("dt",                    po::value<Real>()->default_value(.01),            "integration step size")
+        ("writeStateInterval",    po::value<Real>()->default_value(1.),             "measurement State interval")
+        ("writeEnergyInterval",   po::value<Real>()->default_value(1.),             "measurement Energy interval")
+        ("thermoInterval",        po::value<Real>()->default_value(20.),            "interval after which to apply thermostat")
         ("temperature,T",         po::value<Real>()->default_value(.1),             "temperature")
-        ("particleInit",          po::value<std::string>()->default_value("THREE"), "particle initialization")
+        ("particleInit",          po::value<std::string>()->default_value("RANDOM"),   "particle initialization")
         ("exclusionRadius",       po::value<Real>()->default_value(.8),             "exclusion radius")
         ("seed",                  po::value<unsigned int>(),                        "random seed")
-        ("areaL",                 po::value<Real>()->default_value(100.0),          "simulation size")
-        ("particlesNum,n",        po::value<int>()->default_value(10),              "number of initial particles");
+        ("areaL",                 po::value<Real>()->default_value(10.0),           "simulation size")
+        ("particlesNum,n",        po::value<unsigned int>()->default_value(10),     "number of initial particles");
 
     po::store(po::command_line_parser(argc, argv).options(desc).run(), vm);
 
@@ -49,7 +49,7 @@ int main(int argc, char* argv[]) {
         return 0;
     }
 
-    int particlesNum = vm["particlesNum"].as<int>();
+    unsigned int particlesNum = vm["particlesNum"].as<unsigned int>();
 
     auto gen = [&]() {
         if (vm.count("seed") > 0) {
@@ -69,9 +69,10 @@ int main(int argc, char* argv[]) {
 
     const Real dt = vm["dt"].as<Real>();
     const Real Time = vm["time"].as<Real>();
-    const unsigned int writeStateIntervalSteps = std::ceil(vm["writeStateInterval"].as<unsigned int>() / dt);
-    const unsigned int writeEnergyIntervalSteps = std::ceil(vm["writeEnergyInterval"].as<unsigned int>() / dt);
-    const unsigned int thermoIntervalSteps = std::ceil(vm["thermoInterval"].as<unsigned int>() / dt);
+    // if anything is negative trow an error
+    const unsigned int writeStateIntervalSteps = std::ceil(vm["writeStateInterval"].as<Real>() / dt);
+    const unsigned int writeEnergyIntervalSteps = std::ceil(vm["writeEnergyInterval"].as<Real>() / dt);
+    const unsigned int thermoIntervalSteps = std::ceil(vm["thermoInterval"].as<Real>() / dt);
 
     const Real relaxationTime = .1;
     const auto desiredTemperature = vm["temperature"].as<Real>();

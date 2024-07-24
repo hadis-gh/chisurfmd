@@ -100,7 +100,7 @@ std::vector<Particle<T>> distParticlesDLA (const int &shootNum, const T &radius,
 }
 
 template<typename T>
-std::vector<Particle<T>> initialParticles (const int &particlesNum, const std::vector<Species<T>> &allSpecies, int &speciesNum, const T &L, std::mt19937 &gen, const std::string& configuation){
+std::vector<Particle<T>> initialParticles (const unsigned int &particlesNum, const std::vector<Species<T>> &allSpecies, int &speciesNum, const T &L, std::mt19937 &gen, const std::string& configuation){
     std::vector<Particle<T>> particles;
     if (configuation == "RANDOM"){
         particles = distRandomParticles (particlesNum, allSpecies[speciesNum].radius, L, gen);
