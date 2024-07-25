@@ -9,6 +9,31 @@
 #include "lettuce/LennardJones.h"
 
 
+template<typename T>
+class AndersenThermostat {
+public:
+    AndersenThermostat(T collisionFrequency, T desiredTemperature, unsigned int seed)
+        : collisionFrequency(collisionFrequency), desiredTemperature(desiredTemperature), gen(seed),
+          dist(0.0, 1.0), maxwellDist(0.0, std::sqrt(constants::boltzmann * desiredTemperature)) {}
+
+    void operator () (std::vector<Particle<T>>& particles, const std::vector<Species<T>>& allSpecies, T dt) {
+        for (auto& p : particles) {
+            if (dist(gen) < collisionFrequency * dt) {
+                T mass = allSpecies[p.species].mass;
+                p.v = Vec<T>(maxwellDist(gen) / std::sqrt(mass),
+                             maxwellDist(gen) / std::sqrt(mass),
+                             maxwellDist(gen) / std::sqrt(mass));
+            }
+        }
+    }
+
+private:
+    T collisionFrequency;
+    T desiredTemperature;
+    std::mt19937 gen;
+    std::uniform_real_distribution<T> dist;
+    std::normal_distribution<T> maxwellDist;
+};
 
 template<typename T>
 class BerendensenThermostat {
@@ -17,7 +42,7 @@ public:
         : dt(dt), desiredTemperature(desiredTemperature), relaxationTime(relaxationTime) {}
 
     T operator () (const T &currentTemperature) const{
-        return sqrt(1 + dt/ relaxationTime * (desiredTemperature/ currentTemperature - 1));
+        return std::sqrt(1 + dt/ relaxationTime * (desiredTemperature/ currentTemperature - 1));
     }
 
 private:
@@ -33,7 +58,7 @@ public:
         : desiredTemperature(desiredTemperature) {}
 
     T operator () (const T &currentTemperature) const{
-        return sqrt(desiredTemperature/ currentTemperature);
+        return std::sqrt(desiredTemperature/ currentTemperature);
     }
 
 private:
@@ -53,7 +78,7 @@ T kineticEnergy(const Particle<T> &particle, const std::vector<Species<T>>& allS
 
 template<typename T>
 T systemKineticEnergy(const std::vector<Particle<T>> &particles, const std::vector<Species<T>>& allSpecies){
-    T totalKineticEnergy;
+    T totalKineticEnergy = 0.0;
     for (auto &p: particles){
         totalKineticEnergy += kineticEnergy(p, allSpecies);
     }
@@ -63,9 +88,13 @@ T systemKineticEnergy(const std::vector<Particle<T>> &particles, const std::vect
 template<typename T, typename ThermostatMethod>
 void applyThermostat(std::vector<Particle<T>> &particles, const std::vector<Species<T>>& allSpecies, const ThermostatMethod &thermostatMethod){
     T currentTemperature = systemTemperature(particles, allSpecies);
-    auto lamda = thermostatMethod(currentTemperature);
+    if (currentTemperature <= 0) {
+        std::cerr << "Error: Current temperature is non-positive: " << currentTemperature << std::endl;
+        return;
+    }    
+    auto lambda = thermostatMethod(currentTemperature);
     for (auto &p : particles){
-        p.v *= lamda;
+        p.v *= lambda;
     }
 }
 

@@ -5,11 +5,7 @@
 #include <random>
 #include "Circle.h"
 #include "lettuce/Particle.h"
-
-enum class InitialParticlesConfiguration {
-    RANDOM_CIRCLES,
-    DLA
-};
+#include "lettuce/CirclesIntersectionFuncs.h"
 
 template<typename T>
 Circle<T> startCircleRandom (const T& radius, const T& areaWidth, std::mt19937 &gen){   
@@ -97,35 +93,6 @@ std::vector<Particle<T>> distRandomParticles (const int &particlesNum, const T &
 }
 
 template<typename T>
-std::vector<Circle<T>> distCirclesPBC (const int &circlesNum, const T &L, const T &radius, std::mt19937 &gen){
-    std::vector<Circle<T>> repCircles = distRandomCircles (circlesNum, L, radius, gen);
-    
-    for (const auto &circle : repCircles) {
-        Vec<T> c = circle.c;
-        T r = circle.r;
-        // left, right, bottom, up
-        if (c[0] - r < 0)
-            repCircles.emplace_back(Vec<T>({c[0] + L, c[1]}), r);
-        if (c[0] + r >= L) 
-            repCircles.emplace_back(Vec<T>({c[0] - L, c[1]}), r);
-        if (c[1] - r < 0) 
-            repCircles.emplace_back(Vec<T>({c[0], c[1] + L}), r);
-        if (c[1] + r >= L)
-            repCircles.emplace_back(Vec<T>({c[0], c[1] - L}), r);
-        //corners
-        if (c[0] - r < 0 && c[1] - r < 0)
-            repCircles.emplace_back(Vec<T>({c[0] + L, c[1] + L}), r);
-        if (c[0] + r >= L && c[1] - r < 0) 
-            repCircles.emplace_back(Vec<T>({c[0] - L, c[1] + L}), r);
-        if (c[0] - r < 0 && c[1] + r >= L)
-            repCircles.emplace_back(Vec<T>({c[0] + L, c[1] - L}), r);
-        if (c[0] + r >= L && c[1] + r >= L)
-            repCircles.emplace_back(Vec<T>({c[0] - L, c[1] - L}), r);
-    }
-    return repCircles;
-}
-
-template<typename T>
 std::vector<Circle<T>> distCirclesDLA (const int &shootNum, const T &L, const T &radius, std::mt19937 &gen){
     Circle<T> target = {{{L / 2, L / 2}}, radius};
     std::vector<Circle<T>> finalCircles;
@@ -169,13 +136,28 @@ void writeParticle(const std::vector<Particle<T>> &particles, T radius, const st
 }
 
 template<typename T>
-std::vector<Particle<T>> initialParticles (const int &particlesNum, const T &L, const T &radius, std::mt19937 &gen, InitialParticlesConfiguration configuation){
-    std::vector<Particle<T>> particles(particlesNum);
+std::vector<Particle<T>> initialParticles(const unsigned int &particlesNum, const std::vector<Species<T>> &allSpecies, int &speciesNum, const T &L, std::mt19937 &gen, const std::string& configuration) {
+    std::vector<Particle<T>> particles;
 
-    if (configuation == InitialParticlesConfiguration::RANDOM_CIRCLES){
-        particles = distRandomParticles (particlesNum, L, radius, gen);
-    }else if(configuation == InitialParticlesConfiguration::DLA){
-        particles = distParticleDLA (particlesNum, L, radius, gen);
+    std::cout << "Configuration: " << configuration << std::endl;
+
+    if (configuration == "RANDOM") {
+        particles = distRandomParticles(particlesNum, allSpecies[speciesNum].radius, L, gen);
+    } else if (configuration == "DLA") {
+        particles = distParticleDLA(particlesNum, allSpecies[speciesNum].radius, L, gen);
+    } else if (configuration == "THREE") {
+        particles.reserve(4);
+        particles.push_back({{{0.0, 0.0}}, {{0.0, 0.0}}, 0});
+        particles.push_back({{{1.2, 0.0}}, {{0.0, 0.0}}, 0});
+        particles.push_back({{{0.0, 1.5}}, {{0.0, 0.0}}, 0});
+        particles.push_back({{{1.2, 1.2}}, {{0.0, 0.0}}, 0});
+    } else {
+        std::cerr << "Unknown configuration: " << configuration << std::endl;
     }
+    for (auto &p: particles){
+        p.species = speciesNum;
+    }
+    // std::cout << "Particles initialized: " << particles.size() << std::endl;
+
     return particles;
 }

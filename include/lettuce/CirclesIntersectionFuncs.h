@@ -83,40 +83,40 @@ std::pair<Circle<T>, T> findClosestCircle (const Vec<T> &startPoint, const Vec<T
     return {circles[circlesIndex[minIndex]], minDistance};
 }
 
-template<typename T>
-bool checkCollision(const Circle<T>& c1, const Circle<T>& c2) {
-    return (c1.c - c2.c).abs2() <= (c1.r + c2.r)*(c1.r + c2.r);
-}
+// template<typename T>
+// bool checkCollision(const Circle<T>& c1, const Circle<T>& c2) {
+//     return (c1.c - c2.c).abs2() <= (c1.r + c2.r)*(c1.r + c2.r);
+// }
 
-template<typename T>
-Circle<T> findClosestCircle3Line (const Circle<T> &startPoint, const Vec<T> &direction, const std::vector<Circle<T>> &circles){
-    std::vector<std::pair<Circle<T>, T>> pairs = {findClosestCircle({{startPoint.c[0] - startPoint.r*direction[1], startPoint.c[0] + startPoint.r*direction[0]}}, direction, circles),
-                                                  findClosestCircle({{startPoint.c[0] + startPoint.r*direction[0], startPoint.c[0] + startPoint.r*direction[1]}}, direction, circles),
-                                                  findClosestCircle({{startPoint.c[0] + startPoint.r*direction[1], startPoint.c[0] - startPoint.r*direction[0]}}, direction, circles)};
+// template<typename T>
+// Circle<T> findClosestCircle3Line (const Circle<T> &startPoint, const Vec<T> &direction, const std::vector<Circle<T>> &circles){
+//     std::vector<std::pair<Circle<T>, T>> pairs = {findClosestCircle({{startPoint.c[0] - startPoint.r*direction[1], startPoint.c[0] + startPoint.r*direction[0]}}, direction, circles),
+//                                                   findClosestCircle({{startPoint.c[0] + startPoint.r*direction[0], startPoint.c[0] + startPoint.r*direction[1]}}, direction, circles),
+//                                                   findClosestCircle({{startPoint.c[0] + startPoint.r*direction[1], startPoint.c[0] - startPoint.r*direction[0]}}, direction, circles)};
 
-    auto it = std::min_element(pairs.begin(), pairs.end(),
-                              [](const std::pair<Circle<T>, T>& a,
-                                 const std::pair<Circle<T>, T>& b) {
-                                  return a.second < b.second;
-                              });
-    return it->first;
-}
+//     auto it = std::min_element(pairs.begin(), pairs.end(),
+//                               [](const std::pair<Circle<T>, T>& a,
+//                                  const std::pair<Circle<T>, T>& b) {
+//                                   return a.second < b.second;
+//                               });
+//     return it->first;
+// }
 
-template<typename T>
-Circle<T> moveCircle(const Circle<T> &startCircle, const Vec<T> &direction, const std::vector<Circle<T>> &circles, const T &areaSize){
-    Circle<T> movedCircle = startCircle;
-    bool collision = false;
-    Circle<T> targetCircle = findClosestCircle3Line (movedCircle.c, direction, circles);
-    while (!collision && movedCircle.c < areaSize) {
-        movedCircle.c += direction/static_cast<T>(100.0);
-        for (const auto& circle : circles) {
-            if (checkCollision(movedCircle, targetCircle)) {
-                collision = true;
-                break;
-            }
-        }
-    }
-    if (!collision)
-        movedCircle.c.invalidate();
-    return movedCircle;
-}
+// template<typename T>
+// Circle<T> moveCircle(const Circle<T> &startCircle, const Vec<T> &direction, const std::vector<Circle<T>> &circles, const T &areaSize){
+//     Circle<T> movedCircle = startCircle;
+//     bool collision = false;
+//     Circle<T> targetCircle = findClosestCircle3Line (movedCircle.c, direction, circles);
+//     while (!collision && movedCircle.c < areaSize) {
+//         movedCircle.c += direction/static_cast<T>(100.0);
+//         for (const auto& circle : circles) {
+//             if (checkCollision(movedCircle, targetCircle)) {
+//                 collision = true;
+//                 break;
+//             }
+//         }
+//     }
+//     if (!collision)
+//         movedCircle.c.invalidate();
+//     return movedCircle;
+// }
