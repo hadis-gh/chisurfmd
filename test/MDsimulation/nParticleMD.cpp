@@ -15,7 +15,7 @@
 
 
 enum class ThermostatID {
-    None = 0, VelocityScaling = 1, Berendensen = 2, NoseHoover = 3, Andersen = 4
+    None = 0, VelocityScaling = 1, Berendsen = 2, NoseHoover = 3, Andersen = 4
 };
 
 #ifndef LETTUCE_THERMOSTAT
@@ -36,7 +36,7 @@ int main(int argc, char* argv[]) {
         ("writeEnergyInterval",   po::value<Real>()->default_value(1.),               "measurement Energy interval")
         ("thermoInterval",        po::value<Real>()->default_value(20.),              "interval after which to apply thermostat")
         ("temperature,T",         po::value<Real>()->default_value(.1),               "temperature")
-        ("particleInit",          po::value<std::string>()->default_value("RANDOM"),   "particle initialization")
+        ("particleInit",          po::value<std::string>()->default_value("DLA"),  "particle initialization")
         ("exclusionRadius",       po::value<Real>()->default_value(.8),               "exclusion radius")
         ("seed",                  po::value<unsigned int>(),                          "random seed")
         ("areaL",                 po::value<Real>()->default_value(10.0),             "simulation size")
@@ -75,6 +75,7 @@ int main(int argc, char* argv[]) {
     const unsigned int thermoIntervalSteps = std::ceil(vm["thermoInterval"].as<Real>() / dt);
 
     const Real relaxationTime = 14.;
+    const Real collisionFrequency = 1.;
     const auto desiredTemperature = vm["temperature"].as<Real>();
 
     LennardJonesForce<Real> LJForce(epsilon, sigma, cutoff);
@@ -115,12 +116,12 @@ int main(int argc, char* argv[]) {
             return [](auto) { return 1.; };
         else if constexpr (LETTUCE_THERMOSTAT == ThermostatID::VelocityScaling)
             return VelocityScalingThermostat<Real>(desiredTemperature);
-        else if constexpr (LETTUCE_THERMOSTAT == ThermostatID::Berendensen)
-            return BerendensenThermostat<Real>(vm["thermoInterval"].as<Real>(), desiredTemperature, relaxationTime);
+        else if constexpr (LETTUCE_THERMOSTAT == ThermostatID::Berendsen)
+            return BerendsenThermostat<Real>(vm["thermoInterval"].as<Real>(), desiredTemperature, relaxationTime);
         else if constexpr (LETTUCE_THERMOSTAT == ThermostatID::NoseHoover)
             return nullptr;
         else if constexpr (LETTUCE_THERMOSTAT == ThermostatID::Andersen)
-            return nullptr;
+            return AndersenThermostat<Real>(collisionFrequency, desiredTemperature, gen);
     }();
 
     const unsigned int nsteps = std::ceil(Time / dt);
@@ -152,7 +153,11 @@ int main(int argc, char* argv[]) {
         }        
         if constexpr (LETTUCE_THERMOSTAT != ThermostatID::None)
             if (step == thermoStep) {
-                applyThermostat(particles, allSpecies, thermostat);
+                if constexpr (LETTUCE_THERMOSTAT == ThermostatID::Andersen) {
+                    thermostat(particles, allSpecies, dt);
+                } else {
+                    applyThermostat(particles, allSpecies, thermostat);
+                }
                 thermoStep = step + thermoIntervalSteps;
                 std::cout << "thermo at " << step * dt << " next " << thermoStep * dt << std::endl;
             }

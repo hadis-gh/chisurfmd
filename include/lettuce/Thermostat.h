@@ -12,17 +12,15 @@
 template<typename T>
 class AndersenThermostat {
 public:
-    AndersenThermostat(T collisionFrequency, T desiredTemperature, unsigned int seed)
-        : collisionFrequency(collisionFrequency), desiredTemperature(desiredTemperature), gen(seed),
+    AndersenThermostat(T collisionFrequency, T desiredTemperature, std::mt19937 gen)
+        : collisionFrequency(collisionFrequency), desiredTemperature(desiredTemperature),
           dist(0.0, 1.0), maxwellDist(0.0, std::sqrt(constants::boltzmann * desiredTemperature)) {}
 
     void operator () (std::vector<Particle<T>>& particles, const std::vector<Species<T>>& allSpecies, T dt) {
         for (auto& p : particles) {
             if (dist(gen) < collisionFrequency * dt) {
                 T mass = allSpecies[p.species].mass;
-                p.v = Vec<T>(maxwellDist(gen) / std::sqrt(mass),
-                             maxwellDist(gen) / std::sqrt(mass),
-                             maxwellDist(gen) / std::sqrt(mass));
+                p.v *= maxwellDist(gen) / std::sqrt(mass);
             }
         }
     }
@@ -36,9 +34,9 @@ private:
 };
 
 template<typename T>
-class BerendensenThermostat {
+class BerendsenThermostat {
 public:
-    BerendensenThermostat(T dt, T desiredTemperature, T relaxationTime)
+    BerendsenThermostat(T dt, T desiredTemperature, T relaxationTime)
         : dt(dt), desiredTemperature(desiredTemperature), relaxationTime(relaxationTime) {}
 
     T operator () (const T &currentTemperature) const{
