@@ -19,7 +19,7 @@ enum class ThermostatID {
 };
 
 #ifndef LETTUCE_THERMOSTAT
-#define LETTUCE_THERMOSTAT ThermostatID::None
+#define LETTUCE_THERMOSTAT ThermostatID::VelocityScaling
 #endif
 
 namespace po = boost::program_options;
@@ -30,11 +30,11 @@ int main(int argc, char* argv[]) {
     po::options_description desc("Allowed Options");
     desc.add_options()
         ("help,h", "print help")
-        ("time,t",                po::value<Real>()->default_value(100.0),            "max simulation time")
+        ("time,t",                po::value<Real>()->default_value(20.0),            "max simulation time")
         ("dt",                    po::value<Real>()->default_value(.01),              "integration step size")
         ("writeStateInterval",    po::value<Real>()->default_value(1.),               "measurement State interval")
         ("writeEnergyInterval",   po::value<Real>()->default_value(1.),               "measurement Energy interval")
-        ("thermoInterval",        po::value<Real>()->default_value(20.),              "interval after which to apply thermostat")
+        ("thermoInterval",        po::value<Real>()->default_value(1.),              "interval after which to apply thermostat")
         ("temperature,T",         po::value<Real>()->default_value(.1),               "temperature")
         ("particleInit",          po::value<std::string>()->default_value("DLA"),     "particle initialization")
         ("exclusionRadius",       po::value<Real>()->default_value(.8),               "exclusion radius")
@@ -88,34 +88,20 @@ int main(int argc, char* argv[]) {
     std::vector<Species<Real>> allSpecies {species1, species2};
     int speciesInd = 0;
 
-// start debug DLA
-    // std::vector<Particle<Real>> particles = initialParticles(particlesNum, allSpecies, speciesInd, areaL, gen, vm["particleInit"].as<std::string>());
-    std::vector<Particle<Real>> particles = distParticleDLA(particlesNum, areaL, radius, gen);
-
-    std::cout << "Initial particles size: " << particles.size() << std::endl;
-
-    std::ofstream initDLA ("initialParticlePositions.dat");
-    for (int i = 0; i < particles.size(); ++i){
-        initDLA << particles[i].r[0] << " " << particles[i].r[1] << " " << allSpecies[speciesInd].radius << std::endl;
+    std::vector<Particle<Real>> particles = initialParticles(particlesNum, allSpecies, speciesInd, areaL, gen, vm["particleInit"].as<std::string>());
+    
+    std::ofstream initialParticles("initialConfigurationRead.dat");
+    for (auto &p: particles){
+        initialParticles << p.r[0] << " " << p.r[1] << " " << p.v[0] << " " << p.v[1] << std::endl;
     }
-    // std::vector<Particle<Real>> particles2 = distParticleDLA(particlesNum, areaL, radius, gen);
-    // std::cout << "DLA particles size: " << particles2.size() << std::endl;
-
-    // std::ofstream initDLA2 ("initialParticlePositions2.dat");
-    // for (int i = 0; i < particles2.size(); ++i){
-    //     initDLA2 << particles2[i].r[0] << " " << particles2[i].r[1] << " " << allSpecies[speciesInd].radius << std::endl;
-    // }
-// end debug DLA
 
     std::ofstream positionFile("N_particle_PosMD.dat");
     std::ofstream kineticEnergyFile("N_particle_KineticEnergyMD.dat");
     std::ofstream PotentialEnergyFile("N_particle_PotentialEnergyMD.dat");
 
-    AndersenThermostat<Real> AnderThermo (collisionFrequency, desiredTemperature, gen);
-
     auto thermostat = [&]() {
         if constexpr (LETTUCE_THERMOSTAT == ThermostatID::None)
-            return [](auto) { return 1.; };
+            return [](auto, auto) { return 1.; };
         else if constexpr (LETTUCE_THERMOSTAT == ThermostatID::VelocityScaling)
             return VelocityScalingThermostat<Real>(desiredTemperature);
         else if constexpr (LETTUCE_THERMOSTAT == ThermostatID::Berendsen)
@@ -123,7 +109,7 @@ int main(int argc, char* argv[]) {
         else if constexpr (LETTUCE_THERMOSTAT == ThermostatID::NoseHoover)
             return nullptr;
         else if constexpr (LETTUCE_THERMOSTAT == ThermostatID::Andersen){
-            return AndersenThermostat<Real> (collisionFrequency, desiredTemperature, gen);
+            return AndersenThermostat<Real> (vm["thermoInterval"].as<Real>(), collisionFrequency, desiredTemperature, gen);
         }
     }();
 
@@ -146,25 +132,40 @@ int main(int argc, char* argv[]) {
         if (step == writeStateStep) {
             writePositionToFile(particles, positionFile);
             writeStateStep = step + writeStateIntervalSteps;
-            std::cout << "written State at " << step * dt << " next " << writeStateStep * dt << std::endl;
         }
         if (step == writeEnergyStep) {
             writeKineticEToFile(particles, allSpecies, kineticEnergyFile);
             writePotentialEToFile(particles, allSpecies, LJPotential, PotentialEnergyFile);
+            //write order parameter
             writeEnergyStep = step + writeEnergyIntervalSteps;
-            std::cout << "written Energy at " << step * dt << " next " << writeEnergyStep * dt << std::endl;
         }        
         if constexpr (LETTUCE_THERMOSTAT != ThermostatID::None)
             if (step == thermoStep) {
-                if constexpr (LETTUCE_THERMOSTAT == ThermostatID::Andersen) {
-                    AnderThermo(particles, allSpecies, vm["thermoInterval"].as<Real>());
-                } else {
-                    applyThermostat(particles, allSpecies, thermostat);
-                }
+                thermostat(particles, allSpecies);
                 thermoStep = step + thermoIntervalSteps;
-                std::cout << "thermo at " << step * dt << " next " << thermoStep * dt << std::endl;
             }    
     }
+
+    std::ofstream configutation("/home/hadis/custom_vector/build/test/configuration.dat");
+    for (auto p: particles){
+        configutation << p.r[0] << " " << p.r[1] << " " << p.v[0] << " " << p.v[1] << std::endl;
+    }
+
+    std::ifstream configutation2("/home/hadis/custom_vector/build/test/configuration.dat");
+    int numParticles = 0;
+    std::string line;
+    while (std::getline(configutation2, line)) {
+        ++numParticles;
+    }
+
+    std::vector<Particle<Real>> particles2(numParticles);
+
+    for (auto& p : particles2) {
+        configutation2 >> p.r[0] >> p.r[1] >> p.v[0] >> p.v[1];
+        std::cout << p.r[0] << " "<< p.r[1] << " " <<  p.v[0] << " "  << p.v[1] << std::endl;
+    }
+
+
     clock_t endTime = clock();
 
     Real timeTaken = Real(endTime - startTime) / CLOCKS_PER_SEC;

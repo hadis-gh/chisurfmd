@@ -12,11 +12,11 @@
 template<typename T>
 class AndersenThermostat {
 public:
-    AndersenThermostat(T collisionFrequency, T desiredTemperature, std::mt19937 gen)
-        : collisionFrequency(collisionFrequency), desiredTemperature(desiredTemperature),
+    AndersenThermostat(T dt, T collisionFrequency, T desiredTemperature, std::mt19937 gen)
+        : dt(dt), collisionFrequency(collisionFrequency), desiredTemperature(desiredTemperature),
           dist(0.0, 1.0), maxwellDist(0.0, std::sqrt(constants::boltzmann * desiredTemperature)) {}
 
-    void operator () (std::vector<Particle<T>>& particles, const std::vector<Species<T>>& allSpecies, T dt) {
+    void operator () (std::vector<Particle<T>>& particles, const std::vector<Species<T>>& allSpecies) {
         for (auto& p : particles) {
             if (dist(gen) < collisionFrequency * dt) {
                 T mass = allSpecies[p.species].mass;
@@ -26,6 +26,7 @@ public:
     }
 
 private:
+    T dt;
     T collisionFrequency;
     T desiredTemperature;
     std::mt19937 gen;
@@ -39,8 +40,10 @@ public:
     BerendsenThermostat(T dt, T desiredTemperature, T relaxationTime)
         : dt(dt), desiredTemperature(desiredTemperature), relaxationTime(relaxationTime) {}
 
-    T operator () (const T &currentTemperature) const{
-        return std::sqrt(1 + dt/ relaxationTime * (desiredTemperature/ currentTemperature - 1));
+    void operator () (std::vector<Particle<T>>& particles, const std::vector<Species<T>>& allSpecies) const{
+        const T currentTemperature = systemTemperature(particles, allSpecies); 
+        const auto lambda = std::sqrt(1 + dt/ relaxationTime * (desiredTemperature/ currentTemperature - 1));
+        rescaleVelocity(particles, allSpecies, lambda);
     }
 
 private:
@@ -55,8 +58,10 @@ public:
     VelocityScalingThermostat(T desiredTemperature)
         : desiredTemperature(desiredTemperature) {}
 
-    T operator () (const T &currentTemperature) const{
-        return std::sqrt(desiredTemperature/ currentTemperature);
+    void operator () (std::vector<Particle<T>>& particles, const std::vector<Species<T>>& allSpecies) const{
+        const T currentTemperature = systemTemperature(particles, allSpecies); 
+        const auto lambda = std::sqrt(desiredTemperature/ currentTemperature);
+        rescaleVelocity(particles, allSpecies, lambda);
     }
 
 private:
@@ -83,14 +88,8 @@ T systemKineticEnergy(const std::vector<Particle<T>> &particles, const std::vect
     return totalKineticEnergy;
 }
 
-template<typename T, typename ThermostatMethod>
-void applyThermostat(std::vector<Particle<T>> &particles, const std::vector<Species<T>>& allSpecies, const ThermostatMethod &thermostatMethod){
-    T currentTemperature = systemTemperature(particles, allSpecies);
-    if (currentTemperature <= 0) {
-        std::cerr << "Error: Current temperature is non-positive: " << currentTemperature << std::endl;
-        return;
-    }    
-    auto lambda = thermostatMethod(currentTemperature);
+template<typename T>
+void rescaleVelocity(std::vector<Particle<T>> &particles, const std::vector<Species<T>>& allSpecies, const T lambda){
     for (auto &p : particles){
         p.v *= lambda;
     }

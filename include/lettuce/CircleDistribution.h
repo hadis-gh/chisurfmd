@@ -144,20 +144,29 @@ std::vector<Particle<T>> initialParticles(const unsigned int &particlesNum, cons
     if (configuration == "RANDOM") {
         particles = distRandomParticles(particlesNum, allSpecies[speciesNum].radius, L, gen);
     } else if (configuration == "DLA") {
-        particles = distParticleDLA(particlesNum, allSpecies[speciesNum].radius, L, gen);
+        particles = distParticleDLA(particlesNum, L, allSpecies[speciesNum].radius, gen);
     } else if (configuration == "THREE") {
         particles.reserve(4);
         particles.push_back({{{0.0, 0.0}}, {{0.0, 0.0}}, 0});
         particles.push_back({{{1.2, 0.0}}, {{0.0, 0.0}}, 0});
         particles.push_back({{{0.0, 1.5}}, {{0.0, 0.0}}, 0});
         particles.push_back({{{1.2, 1.2}}, {{0.0, 0.0}}, 0});
-    } else {
-        std::cerr << "Unknown configuration: " << configuration << std::endl;
+    } else if (configuration == "FILE"){
+
+        std::ifstream configutation("/home/hadis/custom_vector/build/test/configuration.dat");
+        int numParticles = 0;
+        std::string line;
+        while (std::getline(configutation, line)) {
+            ++numParticles;
+        }
+        particles.reserve(numParticles);
+        for (auto& p : particles) {
+            configutation >> p.r[0] >> p.r[1] >> p.v[0] >> p.v[1];
+        }
     }
     for (auto &p: particles){
         p.species = speciesNum;
     }
-    // std::cout << "Particles initialized: " << particles.size() << std::endl;
-
     return particles;
 }
+
