@@ -19,7 +19,7 @@ enum class ThermostatID {
 };
 
 #ifndef LETTUCE_THERMOSTAT
-#define LETTUCE_THERMOSTAT ThermostatID::Andersen
+#define LETTUCE_THERMOSTAT ThermostatID::None
 #endif
 
 namespace po = boost::program_options;
@@ -36,7 +36,7 @@ int main(int argc, char* argv[]) {
         ("writeEnergyInterval",   po::value<Real>()->default_value(1.),               "measurement Energy interval")
         ("thermoInterval",        po::value<Real>()->default_value(20.),              "interval after which to apply thermostat")
         ("temperature,T",         po::value<Real>()->default_value(.1),               "temperature")
-        ("particleInit",          po::value<std::string>()->default_value("DLA"),  "particle initialization")
+        ("particleInit",          po::value<std::string>()->default_value("DLA"),     "particle initialization")
         ("exclusionRadius",       po::value<Real>()->default_value(.8),               "exclusion radius")
         ("seed",                  po::value<unsigned int>(),                          "random seed")
         ("areaL",                 po::value<Real>()->default_value(10.0),             "simulation size")
@@ -74,8 +74,8 @@ int main(int argc, char* argv[]) {
     const unsigned int writeEnergyIntervalSteps = std::ceil(vm["writeEnergyInterval"].as<Real>() / dt);
     const unsigned int thermoIntervalSteps = std::ceil(vm["thermoInterval"].as<Real>() / dt);
 
-    const Real relaxationTime = 14.;
-    const Real collisionFrequency = 1.;
+    const Real relaxationTime = 40.;
+    const Real collisionFrequency = 1/40.;
     const auto desiredTemperature = vm["temperature"].as<Real>();
 
     LennardJonesForce<Real> LJForce(epsilon, sigma, cutoff);
@@ -111,6 +111,8 @@ int main(int argc, char* argv[]) {
     std::ofstream kineticEnergyFile("N_particle_KineticEnergyMD.dat");
     std::ofstream PotentialEnergyFile("N_particle_PotentialEnergyMD.dat");
 
+    AndersenThermostat<Real> AnderThermo (collisionFrequency, desiredTemperature, gen);
+
     auto thermostat = [&]() {
         if constexpr (LETTUCE_THERMOSTAT == ThermostatID::None)
             return [](auto) { return 1.; };
@@ -120,8 +122,9 @@ int main(int argc, char* argv[]) {
             return BerendsenThermostat<Real>(vm["thermoInterval"].as<Real>(), desiredTemperature, relaxationTime);
         else if constexpr (LETTUCE_THERMOSTAT == ThermostatID::NoseHoover)
             return nullptr;
-        else if constexpr (LETTUCE_THERMOSTAT == ThermostatID::Andersen)
-            return AndersenThermostat<Real>(collisionFrequency, desiredTemperature, gen);
+        else if constexpr (LETTUCE_THERMOSTAT == ThermostatID::Andersen){
+            return AndersenThermostat<Real> (collisionFrequency, desiredTemperature, gen);
+        }
     }();
 
     const unsigned int nsteps = std::ceil(Time / dt);
@@ -154,13 +157,13 @@ int main(int argc, char* argv[]) {
         if constexpr (LETTUCE_THERMOSTAT != ThermostatID::None)
             if (step == thermoStep) {
                 if constexpr (LETTUCE_THERMOSTAT == ThermostatID::Andersen) {
-                    thermostat(particles, allSpecies, dt);
+                    AnderThermo(particles, allSpecies, vm["thermoInterval"].as<Real>());
                 } else {
                     applyThermostat(particles, allSpecies, thermostat);
                 }
                 thermoStep = step + thermoIntervalSteps;
                 std::cout << "thermo at " << step * dt << " next " << thermoStep * dt << std::endl;
-            }
+            }    
     }
     clock_t endTime = clock();
 

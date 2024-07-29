@@ -20,7 +20,7 @@ public:
         for (auto& p : particles) {
             if (dist(gen) < collisionFrequency * dt) {
                 T mass = allSpecies[p.species].mass;
-                p.v *= maxwellDist(gen) / std::sqrt(mass);
+                p.v = maxwellDist(gen) / std::sqrt(mass);
             }
         }
     }
