@@ -41,7 +41,6 @@ void VelocityVerletStep(std::vector<Particle<T>> &particles, const std::vector<S
     for (size_t i = 0; i < particles.size(); ++i) {
         particles[i].v += (old_accelerations[i] + accelerations[i])/2 * dt;
     }
-    // throw std::runtime_error();
 }    
 
 template<typename T, typename Integrator, typename Force>
