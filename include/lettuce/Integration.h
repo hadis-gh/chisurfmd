@@ -54,6 +54,20 @@ void integrate(std::vector<Particle<T>>& particles, const std::vector<Species<T>
     }
 }
 
+template<typename T>
+unsigned int averageNeighbors(const std::vector<Particle<T>> &particles, const T &distance){
+    unsigned int totalNeighbors = 0;
+    for (auto p1: particles){
+        int eachParticleNeighbors = 0;
+        for (auto p2: particles){
+            if (p1.r =! p2.r && ((p1.r - p2.r).abs()) <= distance){
+                ++ eachParticleNeighbors;
+            }
+        }
+        totalNeighbors += eachParticleNeighbors;
+    }
+    return totalNeighbors/ particles.size();
+}
 
 template<typename T>
 void writePositionToFile(const std::vector<Particle<T>> &particles, std::ostream &file) {
@@ -78,4 +92,10 @@ void writePotentialEToFile(const std::vector<Particle<T>> &particles, const std:
         file << u.abs() << " ";
     }
     file << "\n";
+}
+
+template<typename T>
+void writeAverageNeighborToFile(const std::vector<Particle<T>> &particles, const T &distance, std::ostream &file){
+    unsigned int neighborNum = averageNeighbors(particles, distance);
+    file << neighborNum << std::endl;
 }

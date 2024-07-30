@@ -152,17 +152,19 @@ std::vector<Particle<T>> initialParticles(const unsigned int &particlesNum, cons
         particles.push_back({{{0.0, 1.5}}, {{0.0, 0.0}}, 0});
         particles.push_back({{{1.2, 1.2}}, {{0.0, 0.0}}, 0});
     } else if (configuration == "FILE"){
-
-        std::ifstream configutation("/home/hadis/custom_vector/build/test/configuration.dat");
-        int numParticles = 0;
+        particles.reserve(1024);
+        std::ifstream config("/home/hadis/custom_vector/build/test/configuration.dat");
         std::string line;
-        while (std::getline(configutation, line)) {
-            ++numParticles;
+        while (std::getline(config, line)) {
+            Particle<T> p;
+            std::istringstream is(line);
+            is >> p.r[0] >> p.r[1] >> p.v[0] >> p.v[1];
+            if (!is) {
+                throw std::runtime_error("Invalid particle line");
+            }
+            particles.push_back(p);
         }
-        particles.reserve(numParticles);
-        for (auto& p : particles) {
-            configutation >> p.r[0] >> p.r[1] >> p.v[0] >> p.v[1];
-        }
+        particles.shrink_to_fit();
     }
     for (auto &p: particles){
         p.species = speciesNum;

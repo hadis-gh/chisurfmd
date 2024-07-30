@@ -66,7 +66,8 @@ int main(int argc, char* argv[]) {
     const Real cutoff = 10;
     const Real areaL = vm["areaL"].as<Real>();
     const Real radius = vm["exclusionRadius"].as<Real>();
-
+    const unsigned int neighborDist = 5;
+    
     const Real dt = vm["dt"].as<Real>();
     const Real Time = vm["time"].as<Real>();
 
@@ -98,6 +99,7 @@ int main(int argc, char* argv[]) {
     std::ofstream positionFile("N_particle_PosMD.dat");
     std::ofstream kineticEnergyFile("N_particle_KineticEnergyMD.dat");
     std::ofstream PotentialEnergyFile("N_particle_PotentialEnergyMD.dat");
+    std::ofstream NeighborCountFile("N_particle_NeighborsMD.dat");
 
     auto thermostat = [&]() {
         if constexpr (LETTUCE_THERMOSTAT == ThermostatID::None)
@@ -136,7 +138,7 @@ int main(int argc, char* argv[]) {
         if (step == writeEnergyStep) {
             writeKineticEToFile(particles, allSpecies, kineticEnergyFile);
             writePotentialEToFile(particles, allSpecies, LJPotential, PotentialEnergyFile);
-            //write order parameter
+            writeAverageNeighborToFile(particles, neighborDist, NeighborCountFile);
             writeEnergyStep = step + writeEnergyIntervalSteps;
         }        
         if constexpr (LETTUCE_THERMOSTAT != ThermostatID::None)
@@ -150,21 +152,6 @@ int main(int argc, char* argv[]) {
     for (auto p: particles){
         configutation << p.r[0] << " " << p.r[1] << " " << p.v[0] << " " << p.v[1] << std::endl;
     }
-
-    std::ifstream configutation2("/home/hadis/custom_vector/build/test/configuration.dat");
-    int numParticles = 0;
-    std::string line;
-    while (std::getline(configutation2, line)) {
-        ++numParticles;
-    }
-
-    std::vector<Particle<Real>> particles2(numParticles);
-
-    for (auto& p : particles2) {
-        configutation2 >> p.r[0] >> p.r[1] >> p.v[0] >> p.v[1];
-        std::cout << p.r[0] << " "<< p.r[1] << " " <<  p.v[0] << " "  << p.v[1] << std::endl;
-    }
-
 
     clock_t endTime = clock();
 
