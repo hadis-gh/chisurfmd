@@ -66,8 +66,8 @@ int main(int argc, char* argv[]) {
     const Real cutoff = 10;
     const Real areaL = vm["areaL"].as<Real>();
     const Real radius = vm["exclusionRadius"].as<Real>();
-    const unsigned int neighborDist = 5;
-    
+    const Real neighborDist = 2.;
+
     const Real dt = vm["dt"].as<Real>();
     const Real Time = vm["time"].as<Real>();
 
