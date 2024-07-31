@@ -3,7 +3,10 @@
 #include <vector>
 #include <cmath>
 #include <random>
+#include <iomanip>
+
 #include <boost/program_options.hpp>
+
 #include "lettuce/Vec.h"
 #include "lettuce/Circle.h"
 #include "lettuce/Particle.h"
@@ -40,7 +43,10 @@ int main(int argc, char* argv[]) {
         ("exclusionRadius",       po::value<Real>()->default_value(.8),               "exclusion radius")
         ("seed",                  po::value<unsigned int>(),                          "random seed")
         ("areaL",                 po::value<Real>()->default_value(10.0),             "simulation size")
-        ("particlesNum,n",        po::value<unsigned int>()->default_value(10),       "number of initial particles");
+        ("particlesNum,n",        po::value<unsigned int>()->default_value(10),       "number of initial particles")
+        ("saveParticles",         po::value<std::string>(),                           "file path to save final states")
+        ("appendLog",             po::bool_switch(),                           "append time series outputs");
+        ;
 
     po::store(po::command_line_parser(argc, argv).options(desc).run(), vm);
 
@@ -48,7 +54,7 @@ int main(int argc, char* argv[]) {
         std::cout << desc << std::endl;
         return 0;
     }
-
+   
     unsigned int particlesNum = vm["particlesNum"].as<unsigned int>();
 
     auto gen = [&]() {
@@ -96,10 +102,14 @@ int main(int argc, char* argv[]) {
         initialParticles << p.r[0] << " " << p.r[1] << " " << p.v[0] << " " << p.v[1] << std::endl;
     }
 
-    std::ofstream positionFile("N_particle_PosMD.dat");
-    std::ofstream kineticEnergyFile("N_particle_KineticEnergyMD.dat");
-    std::ofstream PotentialEnergyFile("N_particle_PotentialEnergyMD.dat");
-    std::ofstream NeighborCountFile("N_particle_NeighborsMD.dat");
+    std::ios::openmode openmode = std::ios::trunc;
+    if(vm["appendLog"].as<bool>())
+        openmode = std::ios::app;
+
+    std::ofstream positionFile("N_particle_PosMD.dat", openmode);
+    std::ofstream kineticEnergyFile("N_particle_KineticEnergyMD.dat", openmode);
+    std::ofstream PotentialEnergyFile("N_particle_PotentialEnergyMD.dat", openmode);
+    std::ofstream NeighborCountFile("N_particle_NeighborsMD.dat", openmode);
 
     auto thermostat = [&]() {
         if constexpr (LETTUCE_THERMOSTAT == ThermostatID::None)
@@ -148,15 +158,17 @@ int main(int argc, char* argv[]) {
             }    
     }
 
-    std::ofstream configutation("/home/hadis/custom_vector/build/test/configuration.dat");
-    for (auto p: particles){
-        configutation << p.r[0] << " " << p.r[1] << " " << p.v[0] << " " << p.v[1] << std::endl;
-    }
-
     clock_t endTime = clock();
 
     Real timeTaken = Real(endTime - startTime) / CLOCKS_PER_SEC;
-    std::cout << "Time taken: " << timeTaken << " seconds\n";    
+    std::cout << "Time taken: " << timeTaken << " seconds\n";
+
+    if (vm.count("saveParticles") > 0) {
+        std::ofstream configutation(vm["saveParticles"].as<std::string>());
+        for (auto p: particles){
+            configutation << std::setprecision(13) << std::scientific << p.r[0] << "\t" << p.r[1] << "\t" << p.v[0] << "\t" << p.v[1] << std::endl;
+        }
+    }
 
     return 0;
 }

@@ -1,4 +1,5 @@
 #include <iostream>
+#include <fstream>
 #include <vector>
 #include <array>
 #include <cmath>
@@ -142,7 +143,7 @@ std::vector<Particle<T>> initialParticles(const unsigned int &particlesNum, cons
     std::cout << "Configuration: " << configuration << std::endl;
 
     if (configuration == "RANDOM") {
-        particles = distRandomParticles(particlesNum, allSpecies[speciesNum].radius, L, gen);
+        particles = distRandomParticles(particlesNum, L, allSpecies[speciesNum].radius, gen);
     } else if (configuration == "DLA") {
         particles = distParticleDLA(particlesNum, L, allSpecies[speciesNum].radius, gen);
     } else if (configuration == "THREE") {
@@ -151,16 +152,30 @@ std::vector<Particle<T>> initialParticles(const unsigned int &particlesNum, cons
         particles.push_back({{{1.2, 0.0}}, {{0.0, 0.0}}, 0});
         particles.push_back({{{0.0, 1.5}}, {{0.0, 0.0}}, 0});
         particles.push_back({{{1.2, 1.2}}, {{0.0, 0.0}}, 0});
-    } else if (configuration == "FILE"){
+    } else {
         particles.reserve(1024);
-        std::ifstream config("/home/hadis/custom_vector/build/test/configuration.dat");
+        std::ifstream config(configuration);
         std::string line;
         while (std::getline(config, line)) {
             Particle<T> p;
             std::istringstream is(line);
-            is >> p.r[0] >> p.r[1] >> p.v[0] >> p.v[1];
+            is >> p.r[0] >> p.r[1];
             if (!is) {
-                throw std::runtime_error("Invalid particle line");
+                std::ostringstream os;
+                os << "Invalid particle line " << particles.size()+1;
+                throw std::runtime_error(std::move(os).str());
+            }
+            // filter out particle outside of LxL box
+            if (p.r[0] > L || p.r[0] < 0. || p.r[1] > L || p.r[1] < 0.)
+                continue;
+            is >> p.v[0] >> p.v[1];
+            if (!is) {
+                p.v = {{0.,0.}};
+            }
+            if(!is.eof()) {
+                std::ostringstream os;
+                os << "Invalid particle line " << particles.size()+1 << ": unread characters.";
+                throw std::runtime_error(std::move(os).str());
             }
             particles.push_back(p);
         }
