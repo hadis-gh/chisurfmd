@@ -97,9 +97,12 @@ int main(int argc, char* argv[]) {
 
     std::vector<Particle<Real>> particles = initialParticles(particlesNum, allSpecies, speciesInd, areaL, gen, vm["particleInit"].as<std::string>());
     
+    std::ofstream checkInit("checkInit.dat");
+    
     std::ofstream initialParticles("initialConfigurationRead.dat");
     for (auto &p: particles){
         initialParticles << p.r[0] << " " << p.r[1] << " " << p.v[0] << " " << p.v[1] << std::endl;
+        checkInit << p.r[0] << " " << p.r[1] << " " << radius << std::endl;
     }
 
     std::ios::openmode openmode = std::ios::trunc;
