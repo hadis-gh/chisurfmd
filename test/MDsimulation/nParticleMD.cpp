@@ -39,13 +39,13 @@ int main(int argc, char* argv[]) {
         ("writeEnergyInterval",   po::value<Real>()->default_value(1.),               "measurement Energy interval")
         ("thermoInterval",        po::value<Real>()->default_value(1.),              "interval after which to apply thermostat")
         ("temperature,T",         po::value<Real>()->default_value(.1),               "temperature")
-        ("particleInit",          po::value<std::string>()->default_value("DLA"),     "particle initialization")
+        ("particleInit",          po::value<std::string>()->default_value("RANDOM"),     "particle initialization")
         ("exclusionRadius",       po::value<Real>()->default_value(.8),               "exclusion radius")
         ("seed",                  po::value<unsigned int>(),                          "random seed")
-        ("areaL",                 po::value<Real>()->default_value(10.0),             "simulation size")
-        ("particlesNum,n",        po::value<unsigned int>()->default_value(10),       "number of initial particles")
+        ("areaL",                 po::value<Real>()->default_value(50.0),             "simulation size")
+        ("particlesNum,n",        po::value<unsigned int>()->default_value(100),       "number of initial particles")
         ("saveParticles",         po::value<std::string>(),                           "file path to save final states")
-        ("appendLog",             po::bool_switch(),                           "append time series outputs");
+        ("appendLog",             po::bool_switch(),                                  "append time series outputs");
         ;
 
     po::store(po::command_line_parser(argc, argv).options(desc).run(), vm);
