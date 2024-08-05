@@ -9,47 +9,59 @@
 #include "lettuce/LennardJones.h"
 #include "lettuce/Thermostat.h"
 
+template<typename T>
+void implementPBC(Particle<T> &p, const T& boxPBC){
+    if (p.r[0] > boxPBC) { p.r[0] -= boxPBC; }
+    else if (p.r[0] < 0) { p.r[0] += boxPBC; }
+    
+    if (p.r[1] > boxPBC) { p.r[1] -= boxPBC; }
+    else if (p.r[1] < 0) { p.r[1] += boxPBC; }
+}
 
 template<typename T, typename Force>
-void EulerSymplecticStep(std::vector<Particle<T>> &particles, const std::vector<Species<T>>& allSpecies, const T &dt, const Force &force){
-    const auto accelerations = calAllAccelerations(particles, allSpecies, force);
+void EulerSymplecticStep(std::vector<Particle<T>> &particles, const std::vector<Species<T>>& allSpecies, const T &dt, const T& boxPBC, const Force &force){
+    const auto accelerations = calAllAccelerations(particles, allSpecies, boxPBC, force);
     for (size_t i = 0; i < particles.size(); ++i) {
         auto& p = particles[i];
         p.v += accelerations[i]*dt;
         p.r += p.v * dt;
+        implementPBC(p, boxPBC);
     }    
 }
 
 template<typename T, typename Force>
-void EulerStep(std::vector<Particle<T>> &particles, const std::vector<Species<T>>& allSpecies, const T &dt, const Force &force){
-    const auto accelerations = calAllAccelerations(particles, allSpecies, force);
+void EulerStep(std::vector<Particle<T>> &particles, const std::vector<Species<T>>& allSpecies, const T &dt, const T& boxPBC, const Force &force){
+    const auto accelerations = calAllAccelerations(particles, allSpecies, boxPBC, force);
     for (size_t i = 0; i < particles.size(); ++i) {
         auto& p = particles[i];
         p.r += p.v * dt;
         p.v += accelerations[i]*dt;
+        implementPBC(p, boxPBC);
     }    
 }
 
 template<typename T, typename Force>
-void VelocityVerletStep(std::vector<Particle<T>> &particles, const std::vector<Species<T>>& allSpecies, const T &dt, const Force &force){
-    const auto old_accelerations = calAllAccelerations(particles, allSpecies, force);
+void VelocityVerletStep(std::vector<Particle<T>> &particles, const std::vector<Species<T>>& allSpecies, const T &dt, const T& boxPBC, const Force &force){
+    const auto old_accelerations = calAllAccelerations(particles, allSpecies, boxPBC, force);
     for (size_t i = 0; i < particles.size(); ++i) {
         auto& p = particles[i];
         p.r += p.v * dt + old_accelerations[i]/2 * dt * dt;
+        implementPBC(p, boxPBC);
     }
-    const auto accelerations = calAllAccelerations(particles, allSpecies, force);
+
+    const auto accelerations = calAllAccelerations(particles, allSpecies, boxPBC, force);
     for (size_t i = 0; i < particles.size(); ++i) {
         particles[i].v += (old_accelerations[i] + accelerations[i])/2 * dt;
     }
 }    
 
 template<typename T, typename Integrator, typename Force>
-void integrate(std::vector<Particle<T>>& particles, const std::vector<Species<T>>& allSpecies, T dt, T Time,
+void integrate(std::vector<Particle<T>>& particles, const std::vector<Species<T>>& allSpecies, T dt, T Time, const T&boxPBC,
                 Force&& force, Integrator &&integrator) {
     int numSteps = static_cast<int>(Time / dt);
 
     for (size_t i = 0; i < numSteps; ++i){
-        integrator(particles, allSpecies, dt, std::forward<Force>(force));
+        integrator(particles, allSpecies, dt, boxPBC, std::forward<Force>(force));
     }
 }
 
@@ -85,8 +97,8 @@ void writeKineticEToFile(const std::vector<Particle<T>> &particles, const std::v
 }
 
 template<typename T, typename Potential>
-void writePotentialEToFile(const std::vector<Particle<T>> &particles, const std::vector<Species<T>>& allSpecies, Potential &&potential, std::ostream &file){
-    std::vector<Vec<T>> potentiaEnergy = calAllAccelerations(particles,allSpecies, std::forward<Potential> (potential));
+void writePotentialEToFile(const std::vector<Particle<T>> &particles, const std::vector<Species<T>>& allSpecies, const T& boxPBC, Potential &&potential, std::ostream &file){
+    std::vector<Vec<T>> potentiaEnergy = calAllAccelerations(particles,allSpecies, boxPBC, std::forward<Potential> (potential));
     for (const auto &u : potentiaEnergy) {
         file << u.abs() << " ";
     }

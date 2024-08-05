@@ -33,17 +33,18 @@ int main(int argc, char* argv[]) {
     po::options_description desc("Allowed Options");
     desc.add_options()
         ("help,h", "print help")
-        ("time,t",                po::value<Real>()->default_value(20.0),            "max simulation time")
+        ("time,t",                po::value<Real>()->default_value(20.0),             "max simulation time")
         ("dt",                    po::value<Real>()->default_value(.01),              "integration step size")
         ("writeStateInterval",    po::value<Real>()->default_value(1.),               "measurement State interval")
         ("writeEnergyInterval",   po::value<Real>()->default_value(1.),               "measurement Energy interval")
-        ("thermoInterval",        po::value<Real>()->default_value(1.),              "interval after which to apply thermostat")
+        ("thermoInterval",        po::value<Real>()->default_value(1.),               "interval after which to apply thermostat")
         ("temperature,T",         po::value<Real>()->default_value(.1),               "temperature")
         ("particleInit",          po::value<std::string>()->default_value("RANDOM"),     "particle initialization")
         ("exclusionRadius",       po::value<Real>()->default_value(.8),               "exclusion radius")
         ("seed",                  po::value<unsigned int>(),                          "random seed")
-        ("areaL",                 po::value<Real>()->default_value(50.0),             "simulation size")
-        ("particlesNum,n",        po::value<unsigned int>()->default_value(100),       "number of initial particles")
+        ("areaL",                 po::value<Real>()->default_value(10.0),             "simulation size")
+        ("neighborDist",          po::value<Real>()->default_value(2.0),              "Distance for counting neighbors")
+        ("particlesNum,n",        po::value<unsigned int>()->default_value(20),       "number of initial particles")
         ("saveParticles",         po::value<std::string>(),                           "file path to save final states")
         ("appendLog",             po::bool_switch(),                                  "append time series outputs");
         ;
@@ -72,7 +73,8 @@ int main(int argc, char* argv[]) {
     const Real cutoff = 10;
     const Real areaL = vm["areaL"].as<Real>();
     const Real radius = vm["exclusionRadius"].as<Real>();
-    const Real neighborDist = 2.;
+    const Real neighborDist = vm["neighborDist"].as<Real>();
+    const Real boxPBC = vm["areaL"].as<Real>();
 
     const Real dt = vm["dt"].as<Real>();
     const Real Time = vm["time"].as<Real>();
@@ -141,7 +143,7 @@ int main(int argc, char* argv[]) {
 
     while (step < nsteps) {
         const auto nextEventStep = std::min({writeStateStep, writeEnergyStep, thermoStep, nsteps});
-        integrate(particles, allSpecies, dt, (nextEventStep - step) * dt, LJForce, Method);
+        integrate(particles, allSpecies, dt, (nextEventStep - step) * dt, boxPBC, LJForce, Method);
         step = nextEventStep;
 
         if (step == writeStateStep) {
@@ -150,7 +152,7 @@ int main(int argc, char* argv[]) {
         }
         if (step == writeEnergyStep) {
             writeKineticEToFile(particles, allSpecies, kineticEnergyFile);
-            writePotentialEToFile(particles, allSpecies, LJPotential, PotentialEnergyFile);
+            writePotentialEToFile(particles, allSpecies, boxPBC, LJPotential, PotentialEnergyFile);
             writeAverageNeighborToFile(particles, neighborDist, NeighborCountFile);
             writeEnergyStep = step + writeEnergyIntervalSteps;
         }        
@@ -158,7 +160,9 @@ int main(int argc, char* argv[]) {
             if (step == thermoStep) {
                 thermostat(particles, allSpecies);
                 thermoStep = step + thermoIntervalSteps;
-            }    
+            }
+        //deposition rate  (adding one particle to the list) -> make the option (by adding collisiotn frequency parameter) for running anderson thermostat after adding particle (but this one collistion frequency should be larger)
+        //
     }
 
     clock_t endTime = clock();

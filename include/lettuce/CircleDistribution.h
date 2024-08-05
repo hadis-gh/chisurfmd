@@ -91,32 +91,37 @@ std::vector<Particle<T>> distRandomParticles(const int& particlesNum, const T& L
 
 template<typename T>
 std::vector<Particle<T>> manualRandomParticles(const int& particlesNum, const T& L, const T& radius, std::mt19937& gen) {
+    int topSquareRoot = static_cast<int>(std::ceil(std::sqrt(particlesNum)));
+    std::cout << topSquareRoot << std::endl;
     std::vector<Particle<T>> particles;
-    const double packingDensity = 0.7854;
+    const double packingDensity = 0.7854;   //this should be much smaller (some problems- maybe better to check)
     T area = L * L;
     T particleArea = M_PI * radius * radius;
     int maxParticles = static_cast<int>(packingDensity * area / particleArea);
 
-    if (particlesNum > maxParticles) {
+    if (topSquareRoot > maxParticles) {
         throw std::runtime_error("Too many particles for this area!");
     }
 
-    int particlesPerSide = static_cast<int>(sqrt(particlesNum));
-    T distance = L / (particlesPerSide + 1);
+    T distance = L / (topSquareRoot + 1);
     Particle<T> newParticle;
-    for (int i = 0; i < particlesPerSide; ++i) {
-        for (int j = 0; j < particlesPerSide; ++j) {
-            newParticle.r[0] = (i + 1) * distance;
-            newParticle.r[1] = (j + 1) * distance;
-            particles.push_back(newParticle);
+
+    for (int i = 0; i < topSquareRoot; ++i) {
+        for (int j = 0; j < topSquareRoot; ++j) {
+            if (particles.size() < particlesNum) {
+                newParticle.r[0] = (i + 1) * distance;
+                newParticle.r[1] = (j + 1) * distance;
+                particles.push_back(newParticle);
+            }
         }
     }
 
-    std::uniform_real_distribution<T> randomPos(-distance/2 + radius, distance/2 - radius);
-    for (auto &p: particles) {
+    std::uniform_real_distribution<T> randomPos(-distance / 2 + radius, distance / 2 - radius);
+    for (auto &p : particles) {
         p.r[0] += randomPos(gen);
         p.r[1] += randomPos(gen);
     }
+
     return particles;
 }
 
