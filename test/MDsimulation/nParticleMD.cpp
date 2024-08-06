@@ -66,11 +66,13 @@ int main(int argc, char* argv[]) {
             return std::mt19937(rd());
         }
     }();
+    constexpr Real sigma = 1;
+    constexpr Real epsilon = 1;
+    constexpr Real mass = 1;
+    constexpr Real cutoff = 10;
+    constexpr Real relaxationTime = 40.;
+    constexpr Real collisionFrequency = 1 / 40.;
 
-    const Real sigma = 1;
-    const Real epsilon = 1;
-    const Real mass = 1;
-    const Real cutoff = 10;
     const Real areaL = vm["areaL"].as<Real>();
     const Real radius = vm["exclusionRadius"].as<Real>();
     const Real neighborDist = vm["neighborDist"].as<Real>();
@@ -83,8 +85,8 @@ int main(int argc, char* argv[]) {
     const unsigned int writeEnergyIntervalSteps = std::ceil(vm["writeEnergyInterval"].as<Real>() / dt);
     const unsigned int thermoIntervalSteps = std::ceil(vm["thermoInterval"].as<Real>() / dt);
 
-    const Real relaxationTime = 40.;
-    const Real collisionFrequency = 1/40.;
+    // const Real relaxationTime = 40.;
+    // const Real collisionFrequency = 1/40.;
     const auto desiredTemperature = vm["temperature"].as<Real>();
 
     LennardJonesForce<Real> LJForce(epsilon, sigma, cutoff);
@@ -129,6 +131,7 @@ int main(int argc, char* argv[]) {
             return AndersenThermostat<Real> (vm["thermoInterval"].as<Real>(), collisionFrequency, desiredTemperature, gen);
         }
     }();
+    
 
     const unsigned int nsteps = std::ceil(Time / dt);
     unsigned int step = 0;
