@@ -82,11 +82,9 @@ T averageNeighbors(const std::vector<Particle<T>> &particles, const T &distance)
 
 template<typename T>
 void writeInitialParticles(const std::vector<Particle<T>>& particles, const T radius) {
-    std::ofstream checkInit("checkInit.dat");
-    std::ofstream initialParticles("initialConfigurationRead.dat");
+    std::ofstream initialParticles("FirsConfigPlot.dat");
     for (auto &p: particles){
-        initialParticles << p.r[0] << " " << p.r[1] << " " << p.v[0] << " " << p.v[1] << std::endl;
-        checkInit << p.r[0] << " " << p.r[1] << " " << radius << std::endl;
+        initialParticles << p.r[0] << " " << p.r[1] << " " << radius << std::endl;
     }
 }
 

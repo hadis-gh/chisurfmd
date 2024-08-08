@@ -20,18 +20,6 @@ struct Particle
   unsigned int species;
 };
 
-// template<typename T, typename Force>
-// Vec<T> calForceTwo(const Particle<T> &p1, const Particle<T> &p2, const T& boxPBC, Force &&force){
-//     T r = (p2.r - p1.r).abs();
-//     if (r == 0) return {{0, 0}};
-//     if (r > boxPBC){
-//         r -= boxPBC;
-//     }
-    
-//     T f = force(r);
-//     return f * (p2.r - p1.r)/r;
-// }
-
 template<typename T, typename Force>
 Vec<T> calForceTwo(const Particle<T> &p1, const Particle<T> &p2, const T& boxPBC, Force &&force){
     Vec<T> dr = p2.r - p1.r;

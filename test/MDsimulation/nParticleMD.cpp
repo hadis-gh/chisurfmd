@@ -34,11 +34,11 @@ int main(int argc, char* argv[]) {
         ("help,h", "print help")
         ("time,t",                po::value<Real>()->default_value(20.0),             "max simulation time")
         ("dt",                    po::value<Real>()->default_value(.01),              "integration step size")
-        ("writeStateInterval",    po::value<Real>()->default_value(1.),               "measurement State interval")
+        ("writeStateInterval",    po::value<Real>()->default_value(.1),               "measurement State interval")
         ("writeEnergyInterval",   po::value<Real>()->default_value(1.),               "measurement Energy interval")
         ("thermoInterval",        po::value<Real>()->default_value(1.),               "interval after which to apply thermostat")
         ("temperature,T",         po::value<Real>()->default_value(.1),               "temperature")
-        ("initConfig",            po::value<std::string>()->default_value("RANDOM"),  "particle initialization")
+        ("particleInit",          po::value<std::string>()->default_value("RANDOM"),  "particle initialization")
         ("exclusionRadius",       po::value<Real>()->default_value(.8),               "exclusion radius")
         ("cutoff",                po::value<Real>()->default_value(10.),              "cutoff distance")
         ("seed",                  po::value<unsigned int>(),                          "random seed")
@@ -48,7 +48,7 @@ int main(int argc, char* argv[]) {
         ("saveParticles",         po::value<std::string>(),                           "file path to save final states")
         ("appendLog",             po::bool_switch(),                                  "append time series outputs")
         ("relaxationTime",        po::value<Real>()->default_value(40.),              "relaxation time for Berendsen thermostat")
-        ("collisionFr",           po::value<Real>()->default_value(1.0 / 40.0),       "collision frequency for Andersen thermostat");
+        ("collisionFr",           po::value<Real>()->default_value(1.0 / 60.0),       "collision frequency for Andersen thermostat");
 
     po::store(po::command_line_parser(argc, argv).options(desc).run(), vm);
     po::notify(vm);
@@ -100,7 +100,7 @@ int main(int argc, char* argv[]) {
     std::vector<Species<Real>> allSpecies {species1, species2};
     int speciesInd = 0;
 
-    std::vector<Particle<Real>> particles = initialParticles(particlesNum, allSpecies, speciesInd, areaL, gen, vm["initConfig"].as<std::string>());
+    std::vector<Particle<Real>> particles = initialParticles(particlesNum, allSpecies, speciesInd, areaL, gen, vm["particleInit"].as<std::string>());
     writeInitialParticles(particles, radius);
 
     std::ios::openmode openmode = std::ios::trunc;
@@ -166,7 +166,9 @@ int main(int argc, char* argv[]) {
     clock_t endTime = clock();
 
     Real timeTaken = Real(endTime - startTime) / CLOCKS_PER_SEC;
-    std::cout << "Time taken: " << timeTaken << " seconds\n";
+    std::fstream timeFile ("N_timeTaken.dat");
+    timeFile << timeTaken << std::endl;
+    // std::cout << "Time taken: " << timeTaken << " seconds\n";
 
     if (vm.count("saveParticles") > 0) {
         std::ofstream configutation(vm["saveParticles"].as<std::string>());

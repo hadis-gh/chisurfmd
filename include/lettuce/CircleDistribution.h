@@ -182,9 +182,7 @@ void writeParticle(const std::vector<Particle<T>>& particles, T radius, const st
 template<typename T>
 std::vector<Particle<T>> initialParticles(const unsigned int& particlesNum, const std::vector<Species<T>>& allSpecies, int& speciesNum, const T& L, std::mt19937& gen, const std::string& configuration) {
     std::vector<Particle<T>> particles;
-
-    std::cout << "Configuration: " << configuration << std::endl;
-
+    
     if (configuration == "RANDOM") {
         // particles = distRandomParticles(particlesNum, L, allSpecies[speciesNum].radius, gen);
         particles = manualRandomParticles(particlesNum, L, allSpecies[speciesNum].radius, gen);
