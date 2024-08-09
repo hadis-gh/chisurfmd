@@ -76,6 +76,7 @@ int main(int argc, char* argv[]) {
     const Real radius = vm["exclusionRadius"].as<Real>();
     const Real areaL = vm["areaL"].as<Real>();
     const Real boxPBC = vm["areaL"].as<Real>();
+    // const Real boxPBC = 100.;
     const Real cutoff = vm["cutoff"].as<Real>();
     const Real neighborDist = vm["neighborDist"].as<Real>();
 
@@ -145,7 +146,7 @@ int main(int argc, char* argv[]) {
         step = nextEventStep;
 
         if (step == writeStateStep) {
-            writePositionToFile(particles, positionFile);
+            writePositionToFile(particles, positionFile, dt, step);
             writeStateStep = step + writeStateIntervalSteps;
         }
         if (step == writeEnergyStep) {
@@ -166,9 +167,9 @@ int main(int argc, char* argv[]) {
     clock_t endTime = clock();
 
     Real timeTaken = Real(endTime - startTime) / CLOCKS_PER_SEC;
-    std::fstream timeFile ("N_timeTaken.dat");
+    std::ofstream timeFile ("N_runnnigTime.dat");
     timeFile << timeTaken << std::endl;
-    // std::cout << "Time taken: " << timeTaken << " seconds\n";
+    std::cout << "Time taken: " << timeTaken << " seconds\n";
 
     if (vm.count("saveParticles") > 0) {
         std::ofstream configutation(vm["saveParticles"].as<std::string>());

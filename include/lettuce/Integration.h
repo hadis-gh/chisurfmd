@@ -89,7 +89,8 @@ void writeInitialParticles(const std::vector<Particle<T>>& particles, const T ra
 }
 
 template<typename T>
-void writePositionToFile(const std::vector<Particle<T>> &particles, std::ostream &file) {
+void writePositionToFile(const std::vector<Particle<T>> &particles, std::ostream &file, const T &dt, const int &step) {
+    file << dt * step << " ";
     for (const auto &p : particles) {
         file << p.r[0] << " " << p.r[1] << " ";
     }
