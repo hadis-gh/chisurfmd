@@ -34,17 +34,18 @@ int main(int argc, char* argv[]) {
         ("help,h", "print help")
         ("time,t",                po::value<Real>()->default_value(20.0),             "max simulation time")
         ("dt",                    po::value<Real>()->default_value(.01),              "integration step size")
-        ("writeStateInterval",    po::value<Real>()->default_value(.1),               "measurement State interval")
-        ("writeEnergyInterval",   po::value<Real>()->default_value(1.),               "measurement Energy interval")
-        ("thermoInterval",        po::value<Real>()->default_value(1.),               "interval after which to apply thermostat")
-        ("temperature,T",         po::value<Real>()->default_value(.1),               "temperature")
-        ("particleInit",          po::value<std::string>()->default_value("RANDOM"),  "particle initialization")
+        ("writeStateInterval",    po::value<Real>()->default_value(.05),               "measurement State interval")
+        ("writeEnergyInterval",   po::value<Real>()->default_value(.5),               "measurement Energy interval")
+        ("thermoInterval",        po::value<Real>()->default_value(.5),               "interval after which to apply thermostat")
+        ("temperature,T",         po::value<Real>()->default_value(.5),               "temperature")
+        ("particlesInit",          po::value<std::string>()->default_value("RANDOM"),  "particle initialization")
         ("exclusionRadius",       po::value<Real>()->default_value(.8),               "exclusion radius")
         ("cutoff",                po::value<Real>()->default_value(10.),              "cutoff distance")
         ("seed",                  po::value<unsigned int>(),                          "random seed")
-        ("areaL",                 po::value<Real>()->default_value(20.0),             "simulation size")
+        ("areaL",                 po::value<Real>()->default_value(40.0),             "simulation size")
+        ("particlesDensity",      po::value<Real>(),                                  "packing density of particles")
         ("neighborDist",          po::value<Real>()->default_value(2.0),              "Distance for counting neighbors")
-        ("particlesNum,n",        po::value<unsigned int>()->default_value(20),       "number of initial particles")
+        ("particlesNum,n",        po::value<unsigned int>()->default_value(100),       "number of initial particles")
         ("saveParticles",         po::value<std::string>(),                           "file path to save final states")
         ("appendLog",             po::bool_switch(),                                  "append time series outputs")
         ("relaxationTime",        po::value<Real>()->default_value(40.),              "relaxation time for Berendsen thermostat")
@@ -74,9 +75,14 @@ int main(int argc, char* argv[]) {
     constexpr Real mass = 1;
 
     const Real radius = vm["exclusionRadius"].as<Real>();
-    const Real areaL = vm["areaL"].as<Real>();
+    Real areaL = vm["areaL"].as<Real>();
+
+    if (vm.count("particlesDensity") > 0) {
+        const Real density = vm["particlesDensity"].as<Real>();
+        const Real areaL = sqrt(particlesNum * M_PI * radius * radius / (density));
+    }
+
     const Real boxPBC = vm["areaL"].as<Real>();
-    // const Real boxPBC = 100.;
     const Real cutoff = vm["cutoff"].as<Real>();
     const Real neighborDist = vm["neighborDist"].as<Real>();
 
@@ -101,7 +107,7 @@ int main(int argc, char* argv[]) {
     std::vector<Species<Real>> allSpecies {species1, species2};
     int speciesInd = 0;
 
-    std::vector<Particle<Real>> particles = initialParticles(particlesNum, allSpecies, speciesInd, areaL, gen, vm["particleInit"].as<std::string>());
+    std::vector<Particle<Real>> particles = initialParticles(particlesNum, allSpecies, speciesInd, areaL, gen, vm["particlesInit"].as<std::string>());
     writeInitialParticles(particles, radius);
 
     std::ios::openmode openmode = std::ios::trunc;

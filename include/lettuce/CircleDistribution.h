@@ -90,16 +90,21 @@ std::vector<Particle<T>> distRandomParticles(const int& particlesNum, const T& L
 }
 
 template<typename T>
+T packingDensity(const int& number, const T& radius, const T& L) {
+    return (number * M_PI * radius * radius) / (L * L);
+}
+
+template<typename T>
 std::vector<Particle<T>> manualRandomParticles(const int& particlesNum, const T& L, const T& radius, std::mt19937& gen) {
     int topSquareRoot = static_cast<int>(std::ceil(std::sqrt(particlesNum)));
-    std::cout << topSquareRoot << std::endl;
     std::vector<Particle<T>> particles;
-    const double packingDensity = 0.7854;   //this should be much smaller (some problems- maybe better to check)
-    T area = L * L;
-    T particleArea = M_PI * radius * radius;
-    int maxParticles = static_cast<int>(packingDensity * area / particleArea);
+    T currDensity = packingDensity(topSquareRoot * topSquareRoot, radius, L);
+    const double maxPackingDensity = 0.7854;
 
-    if (topSquareRoot > maxParticles) {
+    int maxParticles = static_cast<int>(maxPackingDensity * L * L / (M_PI * radius * radius));
+
+    if (currDensity > maxPackingDensity) {
+        std::cout << "maximum possible number for particles is : " << maxParticles << " but you entered: " << particlesNum << std::endl;
         throw std::runtime_error("Too many particles for this area!");
     }
 
