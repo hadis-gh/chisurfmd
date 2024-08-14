@@ -115,7 +115,13 @@ void writePotentialEToFile(const std::vector<Particle<T>> &particles, const std:
 }
 
 template<typename T>
-void writeAverageNeighborToFile(const std::vector<Particle<T>> &particles, const T &distance, std::ostream &file){
-    T neighborNum = averageNeighbors(particles, distance);
-    file << neighborNum << std::endl;
+void writeAverageNeighborToFile(const std::vector<Particle<T>> &particles, const  std::vector<T> &distances, std::ostream &file){
+    for (T d: distances){
+        file << d << "\t" << averageNeighbors(particles, d) << "\n";
+    }
+}
+
+template<typename T>
+void writeAverageNeighborToFile(const std::vector<Particle<T>> &particles, const  T &distance, std::ostream &file){
+    file << averageNeighbors(particles, distance) << "\n";
 }
