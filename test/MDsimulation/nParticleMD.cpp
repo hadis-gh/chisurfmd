@@ -159,7 +159,7 @@ int main(int argc, char* argv[]) {
         if (step == writeEnergyStep) {
             writeKineticEToFile(particles, allSpecies, kineticEnergyFile);
             writePotentialEToFile(particles, allSpecies, boxPBC, LJPotential, PotentialEnergyFile);
-            writeAverageNeighborToFile(particles, neighborDist, NeighborCountFile);
+            writeAverageNeighborToFile(particles, neighborDistances, NeighborCountFile, dt, step);
             writeEnergyStep = step + writeEnergyIntervalSteps;
         }        
         if constexpr (LETTUCE_THERMOSTAT != ThermostatID::None) {
