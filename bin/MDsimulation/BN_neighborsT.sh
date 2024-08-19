@@ -27,20 +27,20 @@ calNeighbors() {
     local time="$5"
     prevT=$startT
     for tp in $(seq $(echo "$startT + $stepT" | bc) "$stepT" "$endT"); do
-        echo -n "$tp" | tr '\n' '\t' >> "$fileName"
+        echo -n -e "${tp}\t" >> "$fileName"
 
         testNParticleMD -T "$tp" --particlesInit "${saveParticles}_${prevT}.dat" --saveParticles "${saveParticles}_${tp}.dat" --appendLog --dt "$dt" -n "$particleNum" --seed "$seed" -t "$time" --areaL "$areaL" --exclusionRadius "$exclusionRadius" --thermoInterval "$thermoInterval"
 
         NearestNeighbors=$(tail -n 7 "$neighborFile" | awk '
             {
-                for (i = 1; i <= NF; i++) {
+                for (i = 2; i <= NF; i++) {
                     sum[i] += $i;
                 }
             }
             END {
-                for (i = 1; i <= length(sum); i++) {
+                for (i = 2; i <= length(sum) + 1; i++) {
                     avg = sum[i] / NR;
-                    printf "%s\t", avg;
+                    printf "%.6f\t", avg;
                 }
             }
         ')
