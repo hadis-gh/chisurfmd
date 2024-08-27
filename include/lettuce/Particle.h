@@ -9,15 +9,20 @@
 template<typename T>
 struct Species
 {
-  T mass;
-  T radius;
+    T mass;
+    T radius;
+    T moment_of_inertia() const {
+        return 0.5 * mass * radius * radius;  // in case of solid disc
+    }
 };
 
 template<typename T>
 struct Particle
 {
-  Vec<T> r, v;
-  unsigned int species;
+    Vec<T> r, v;
+    Vec<T> w;
+    T theta;
+    unsigned int species;
 };
 
 template<typename T, typename Force>
