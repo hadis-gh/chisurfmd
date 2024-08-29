@@ -41,17 +41,24 @@ void EulerStep(std::vector<Particle<T>> &particles, const std::vector<Species<T>
 }
 
 template<typename T, typename Force>
-void VelocityVerletStep(std::vector<Particle<T>> &particles, const std::vector<Species<T>>& allSpecies, const T &dt, const T& boxPBC, const Force &force){
+void VelocityVerletStep(std::vector<Particle<T>> &particles, const std::vector<Species<T>>& allSpecies, const T &dt, const T& boxPBC, const Force &force) {
     const auto old_accelerations = calAllAccelerations(particles, allSpecies, boxPBC, force);
+    std::vector<T> torques(particles.size(), 0);
+    
     for (size_t i = 0; i < particles.size(); ++i) {
         auto& p = particles[i];
         p.r += p.v * dt + old_accelerations[i]/2 * dt * dt;
         implementPBC(p, boxPBC);
+
+        Vec<T> total_force = calTotalForce(p, particles, boxPBC, force);
+        torques[i] = calculateTorque(p, total_force);
+        T I = allSpecies[p.species].I;
+        p.w += torques[i] / I * dt;
     }
 
     const auto accelerations = calAllAccelerations(particles, allSpecies, boxPBC, force);
     for (size_t i = 0; i < particles.size(); ++i) {
-        particles[i].v += (old_accelerations[i] + accelerations[i])/2 * dt;
+        particles[i].v += (old_accelerations[i] + accelerations[i]) / 2 * dt;
     }
 }    
 
@@ -89,12 +96,16 @@ void writeInitialParticles(const std::vector<Particle<T>>& particles, const T ra
 }
 
 template<typename T>
-void writePositionToFile(const std::vector<Particle<T>> &particles, std::ostream &file, const T &dt, const int &step) {
+void writePositionToFile(const std::vector<Particle<T>> &particles, std::ostream &file, std::ostream &angFile, const T &dt, const int &step) {
     file << dt * step << " ";
+    angFile << dt * step << " ";
+
     for (const auto &p : particles) {
         file << p.r[0] << " " << p.r[1] << " ";
+        angFile << p.w << " ";
     }
     file << "\n";
+    angFile << "\n";
 }
 
 template<typename T>

@@ -11,17 +11,14 @@ struct Species
 {
     T mass;
     T radius;
-    T moment_of_inertia() const {
-        return 0.5 * mass * radius * radius;  // in case of solid disc
-    }
+    T I = 0.5 * mass * radius * radius;
 };
 
 template<typename T>
 struct Particle
 {
     Vec<T> r, v;
-    Vec<T> w;
-    T theta;
+    T w;
     unsigned int species;
 };
 
@@ -65,4 +62,9 @@ std::vector<Vec<T>> calAllAccelerations(const std::vector<Particle<T>> &particle
         accelerations[i] = calAccelaration(particles[i], particles, allSpecies, boxPBC, std::forward<Force>(force));
     }
     return accelerations;
+}
+
+template<typename T>
+T calculateTorque(const Particle<T>& p, const Vec<T>& force) {
+    return p.r[0] * force[1] - p.r[1] * force[0];
 }

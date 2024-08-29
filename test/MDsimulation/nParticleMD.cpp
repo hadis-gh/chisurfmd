@@ -117,6 +117,7 @@ int main(int argc, char* argv[]) {
     }
 
     std::ofstream positionFile("N_particle_PosMD.dat", openmode);
+    std::ofstream angularDetailFile("N_particle_AngularMD.dat", openmode);
     std::ofstream kineticEnergyFile("N_particle_KineticEnergyMD.dat", openmode);
     std::ofstream PotentialEnergyFile("N_particle_PotentialEnergyMD.dat", openmode);
     std::ofstream NeighborCountFile("N_particle_NeighborsMD.dat", openmode);
@@ -155,7 +156,7 @@ int main(int argc, char* argv[]) {
         step = nextEventStep;
 
         if (step == writeStateStep) {
-            writePositionToFile(particles, positionFile, dt, step);
+            writePositionToFile(particles, positionFile, angularDetailFile, dt, step);
             writeStateStep = step + writeStateIntervalSteps;
         }
         if (step == writeEnergyStep) {
