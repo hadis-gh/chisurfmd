@@ -21,7 +21,7 @@ enum class ThermostatID {
 };
 
 #ifndef LETTUCE_THERMOSTAT
-#define LETTUCE_THERMOSTAT ThermostatID::VelocityScaling
+#define LETTUCE_THERMOSTAT ThermostatID::Andersen
 #endif
 
 namespace po = boost::program_options;

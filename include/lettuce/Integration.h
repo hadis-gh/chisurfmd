@@ -51,7 +51,7 @@ void VelocityVerletStep(std::vector<Particle<T>> &particles, const std::vector<S
         implementPBC(p, boxPBC);
 
         Vec<T> total_force = calTotalForce(p, particles, boxPBC, force);
-        torques[i] = calculateTorque(p, total_force);
+        torques[i] = calculateTorque(p, allSpecies[p.species].radius, total_force);
         T I = allSpecies[p.species].I;
         p.w += torques[i] / I * dt;
     }
@@ -112,6 +112,17 @@ template<typename T>
 void writeKineticEToFile(const std::vector<Particle<T>> &particles, const std::vector<Species<T>>& allSpecies, std::ostream &file) {
     for (const auto &p : particles) {
         file << kineticEnergy(p, allSpecies) << " ";
+    }
+    file << "\n";
+}
+
+template<typename T>
+void writeRelativeKineticEToFile(const std::vector<Particle<T>> &particles, const std::vector<Species<T>>& allSpecies, std::ostream &file) {
+    Vec<T> comVelocity = computeCenterOfMassVelocity(particles, allSpecies);
+
+    for (const auto &p : particles) {
+        Vec<T> relativeVelocity = p.v - comVelocity;
+        file << relativeKineticEnergy(p, allSpecies, relativeVelocity) << " ";
     }
     file << "\n";
 }

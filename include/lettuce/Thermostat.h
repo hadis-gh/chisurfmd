@@ -69,14 +69,22 @@ private:
 };
 
 template<typename T>
-T systemTemperature(const std::vector<Particle<T>> &particles, const std::vector<Species<T>>& allSpecies){
-    T totalKineticEnergy = systemKineticEnergy(particles, allSpecies);
+T systemTemperature(const std::vector<Particle<T>> &particles, const std::vector<Species<T>>& allSpecies) {
+    Vec<T> comVelocity = centerOfMassVelocity(particles, allSpecies);
+    
+    T totalKineticEnergy = 0.0;
+    for (const auto& p : particles) {
+        Vec<T> relativeVelocity = p.v - comVelocity;
+        totalKineticEnergy += relativeKineticEnergy(p, allSpecies, relativeVelocity);
+    }
+
     return (2 * totalKineticEnergy / (constants::boltzmann * particles.size() * 3.));
 }
 
 template<typename T>
-T kineticEnergy(const Particle<T> &particle, const std::vector<Species<T>>& allSpecies){
-    return 0.5 * allSpecies[particle.species].mass * particle.v.abs2();
+T systemTemperatureOld(const std::vector<Particle<T>> &particles, const std::vector<Species<T>>& allSpecies){
+    T totalKineticEnergy = systemKineticEnergy(particles, allSpecies);
+    return (2 * totalKineticEnergy / (constants::boltzmann * particles.size() * 3.));
 }
 
 template<typename T>
@@ -89,9 +97,32 @@ T systemKineticEnergy(const std::vector<Particle<T>> &particles, const std::vect
 }
 
 template<typename T>
+T kineticEnergy(const Particle<T> &p, const std::vector<Species<T>>& allSpecies){
+    return 0.5 * allSpecies[p.species].mass * p.v.abs2();
+}
+
+template<typename T>
+T relativeKineticEnergy(const Particle<T> &p, const std::vector<Species<T>>& allSpecies, const Vec<T>& relativeVelocity){
+    return 0.5 * allSpecies[p.species].mass * relativeVelocity.abs2();
+}
+
+template<typename T>
 void rescaleVelocity(std::vector<Particle<T>> &particles, const std::vector<Species<T>>& allSpecies, const T lambda){
     for (auto &p : particles){
         p.v *= lambda;
     }
 }
 
+template<typename T>
+Vec<T> centerOfMassVelocity(const std::vector<Particle<T>> &particles, const std::vector<Species<T>>& allSpecies){
+    Vec<T> totalMomentum;
+    T totalMass = 0.0;
+
+    for (const auto &p : particles){
+        T mass = allSpecies[p.species].mass;
+        totalMomentum += mass * p.v;
+        totalMass += mass;
+    }
+
+    return totalMomentum/ totalMass;
+}

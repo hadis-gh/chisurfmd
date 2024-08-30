@@ -18,6 +18,7 @@ template<typename T>
 struct Particle
 {
     Vec<T> r, v;
+    T theta;
     T w;
     unsigned int species;
 };
@@ -65,6 +66,6 @@ std::vector<Vec<T>> calAllAccelerations(const std::vector<Particle<T>> &particle
 }
 
 template<typename T>
-T calculateTorque(const Particle<T>& p, const Vec<T>& force) {
-    return p.r[0] * force[1] - p.r[1] * force[0];
+T calculateTorque(const Particle<T>& p, const T& radius, const Vec<T>& force) {
+    return radius * force.abs2() * p.theta ;
 }
