@@ -123,6 +123,8 @@ int main(int argc, char* argv[]) {
     std::ofstream NeighborCountFile("N_particle_NeighborsMD.dat", openmode);
     std::ofstream TbeforeThermo("N_particle_TbeforeThermo.dat", openmode);
     std::ofstream TafterThermo("N_particle_TafterThermo.dat", openmode);
+    std::ofstream realTbeforeThermo("N_particle_realTafterThermo.dat", openmode);
+    std::ofstream realTafterThermo("N_particle_realTafterThermo.dat", openmode);
 
     auto thermostat = [&]() {
         if constexpr (LETTUCE_THERMOSTAT == ThermostatID::None)
@@ -168,9 +170,12 @@ int main(int argc, char* argv[]) {
         if constexpr (LETTUCE_THERMOSTAT != ThermostatID::None) {
             if (step == thermoStep) {
                 writeTemperature(particles, allSpecies, TbeforeThermo);
+                writeRealTemperature(particles, allSpecies, realTbeforeThermo);
+
                 thermostat(particles, allSpecies);
                 thermoStep = step + thermoIntervalSteps;
                 writeTemperature(particles, allSpecies, TafterThermo);
+                writeRealTemperature(particles, allSpecies, realTafterThermo);
             }
         //deposition rate  (adding one particle to the list) -> make the option (by adding collisiotn frequency parameter) for running anderson thermostat after adding particle (but this one collistion frequency should be larger)
         }

@@ -132,6 +132,11 @@ void writeTemperature(const std::vector<Particle<T>> &particles, const std::vect
     file << systemTemperature(particles, allSpecies) << std::endl;
 }
 
+template<typename T>
+void writeRealTemperature(const std::vector<Particle<T>> &particles, const std::vector<Species<T>>& allSpecies, std::ostream &file) {
+    file << systemTemperatureOld(particles, allSpecies) << std::endl;
+}
+
 template<typename T, typename Potential>
 void writePotentialEToFile(const std::vector<Particle<T>> &particles, const std::vector<Species<T>>& allSpecies, const T& boxPBC, Potential &&potential, std::ostream &file){
     std::vector<Vec<T>> potentiaEnergy = calAllAccelerations(particles,allSpecies, boxPBC, std::forward<Potential> (potential));
