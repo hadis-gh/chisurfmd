@@ -21,8 +21,11 @@ enum class ThermostatID {
 };
 
 #ifndef LETTUCE_THERMOSTAT
-#define LETTUCE_THERMOSTAT ThermostatID::Andersen
+#define LETTUCE_THERMOSTAT ThermostatID::Berendsen
 #endif
+
+#define STRINGIFY(x) #x
+#define TOSTRING(x) STRINGIFY(x)
 
 namespace po = boost::program_options;
 using Real = double;
@@ -125,6 +128,9 @@ int main(int argc, char* argv[]) {
     std::ofstream TafterThermo("N_particle_TafterThermo.dat", openmode);
     std::ofstream realTbeforeThermo("N_particle_realTafterThermo.dat", openmode);
     std::ofstream realTafterThermo("N_particle_realTafterThermo.dat", openmode);
+    std::ofstream thermostatName("N_particle_thermostatNamae.dat", openmode);
+
+    thermostatName << "thermostat: " << TOSTRING(LETTUCE_THERMOSTAT) << std::endl;    
 
     auto thermostat = [&]() {
         if constexpr (LETTUCE_THERMOSTAT == ThermostatID::None)
