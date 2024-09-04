@@ -11,15 +11,12 @@ struct Species
 {
     T mass;
     T radius;
-    T I = 0.5 * mass * radius * radius;
 };
 
 template<typename T>
 struct Particle
 {
     Vec<T> r, v;
-    T theta;
-    T w;
     unsigned int species;
 };
 
@@ -63,9 +60,4 @@ std::vector<Vec<T>> calAllAccelerations(const std::vector<Particle<T>> &particle
         accelerations[i] = calAccelaration(particles[i], particles, allSpecies, boxPBC, std::forward<Force>(force));
     }
     return accelerations;
-}
-
-template<typename T>
-T calculateTorque(const Particle<T>& p, const T& radius, const Vec<T>& force) {
-    return radius * force.abs2() * p.theta ;
 }
