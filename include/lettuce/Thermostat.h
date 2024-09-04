@@ -71,7 +71,8 @@ private:
 template<typename T>
 T systemTemperature(const std::vector<Particle<T>> &particles, const std::vector<Species<T>>& allSpecies) {
     Vec<T> comVelocity = centerOfMassVelocity(particles, allSpecies);
-    
+    std::cout << "comV: " << comVelocity << '\n';
+
     T totalKineticEnergy = 0.0;
     for (const auto& p : particles) {
         Vec<T> relativeVelocity = p.v - comVelocity;

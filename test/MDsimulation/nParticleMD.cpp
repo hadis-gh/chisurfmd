@@ -21,7 +21,7 @@ enum class ThermostatID {
 };
 
 #ifndef LETTUCE_THERMOSTAT
-#define LETTUCE_THERMOSTAT ThermostatID::Berendsen
+#define LETTUCE_THERMOSTAT ThermostatID::VelocityScaling
 #endif
 
 #define STRINGIFY(x) #x
@@ -35,8 +35,8 @@ int main(int argc, char* argv[]) {
     po::options_description desc("Allowed Options");
     desc.add_options()
         ("help,h", "print help")
-        ("time,t",                po::value<Real>()->default_value(100.0),            "max simulation time")
-        ("dt",                    po::value<Real>()->default_value(.001),             "integration step size")
+        ("time,t",                po::value<Real>()->default_value(10.0),            "max simulation time")
+        ("dt",                    po::value<Real>()->default_value(.01),             "integration step size")
         ("writeStateInterval",    po::value<Real>()->default_value(.05),              "measurement State interval")
         ("writeEnergyInterval",   po::value<Real>()->default_value(.5),               "measurement Energy interval")
         ("thermoInterval",        po::value<Real>()->default_value(.1),               "interval after which to apply thermostat")
@@ -126,11 +126,10 @@ int main(int argc, char* argv[]) {
     std::ofstream NeighborCountFile("N_particle_NeighborsMD.dat", openmode);
     std::ofstream TbeforeThermo("N_particle_TbeforeThermo.dat", openmode);
     std::ofstream TafterThermo("N_particle_TafterThermo.dat", openmode);
-    std::ofstream realTbeforeThermo("N_particle_realTafterThermo.dat", openmode);
+    std::ofstream realTbeforeThermo("N_particle_realTbeforeThermo.dat", openmode);
     std::ofstream realTafterThermo("N_particle_realTafterThermo.dat", openmode);
-    std::ofstream thermostatName("N_particle_thermostatNamae.dat", openmode);
 
-    thermostatName << "thermostat: " << TOSTRING(LETTUCE_THERMOSTAT) << std::endl;    
+    std::cout << "thermostat: " << TOSTRING(LETTUCE_THERMOSTAT) << std::endl;    
 
     auto thermostat = [&]() {
         if constexpr (LETTUCE_THERMOSTAT == ThermostatID::None)
@@ -190,8 +189,6 @@ int main(int argc, char* argv[]) {
     clock_t endTime = clock();
 
     Real timeTaken = Real(endTime - startTime) / CLOCKS_PER_SEC;
-    std::ofstream timeFile ("N_runnnigTime.dat");
-    timeFile << timeTaken << std::endl;
     std::cout << "Time taken: " << timeTaken << " seconds\n";
 
     if (vm.count("saveParticles") > 0) {

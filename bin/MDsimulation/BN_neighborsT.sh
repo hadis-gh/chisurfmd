@@ -1,11 +1,15 @@
 #!/usr/bin/env bash
 
+if [ -f config.sh ]; then
+    . config.sh
+fi
+
 particleNum=49
 particlesInit="RANDOM"
 areaL=20
 particlesDensity=70.0
-timeCooling=80
-timeHeating=20
+timeCooling=${timeCooling:-100}
+timeHeating=${timeHeating:-50}
 dt=0.001
 thermoInterval=0.1
 exclusionRadius=0.8
@@ -19,6 +23,8 @@ stepTemperature=0.02
 saveParticles="N_Config"
 neighborFile="N_particle_NeighborsMD.dat"
 
+MD_EXE=../test/testNParticleMD
+
 calNeighbors() {
     local startT="$1"
     local stepT="$2"
@@ -29,7 +35,7 @@ calNeighbors() {
     for tp in $(seq $(echo "$startT + $stepT" | bc) "$stepT" "$endT"); do
         echo -n -e "${tp}\t" >> "$fileName"
 
-        testNParticleMD -T "$tp" --particlesInit "${saveParticles}_${prevT}.dat" --saveParticles "${saveParticles}_${tp}.dat" --appendLog --dt "$dt" -n "$particleNum" --seed "$seed" -t "$time" --areaL "$areaL" --exclusionRadius "$exclusionRadius" --thermoInterval "$thermoInterval"
+        $MD_EXE -T "$tp" --particlesInit "${saveParticles}_${prevT}.dat" --saveParticles "${saveParticles}_${tp}.dat" --appendLog --dt "$dt" -n "$particleNum" --seed "$seed" -t "$time" --areaL "$areaL" --exclusionRadius "$exclusionRadius" --thermoInterval "$thermoInterval"
 
         NearestNeighbors=$(tail -n 7 "$neighborFile" | awk '
             {
@@ -54,7 +60,7 @@ calNeighbors() {
 > B_NeighborsCount.dat
 > B_NeighborsCount2.dat
 
-testNParticleMD -T "$highTemperature" --particlesInit "$particlesInit" --saveParticles "${saveParticles}_${highTemperature}.dat" --dt "$dt" -n "$particleNum" --seed "$seed" -t "$timeCooling" --areaL "$areaL" --exclusionRadius "$exclusionRadius" --thermoInterval "$thermoInterval"
+$MD_EXE -T "$highTemperature" --particlesInit "$particlesInit" --saveParticles "${saveParticles}_${highTemperature}.dat" --dt "$dt" -n "$particleNum" --seed "$seed" -t "$timeCooling" --areaL "$areaL" --exclusionRadius "$exclusionRadius" --thermoInterval "$thermoInterval"
 echo "done for temperature: $highTemperature"
 
 echo "Start Cooling Process"
