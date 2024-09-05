@@ -185,10 +185,8 @@ Vec<T, D> operator*(const T& number, const Vec<T, D>& vec){
 
 template<typename T, int D>
 std::ostream& operator<<(std::ostream& COUT, const Vec<T, D>& ref) {
-    COUT << "(" ;
     COUT << ref[0];
     for (int i=1; i<D; i++)
-        COUT << " , " << ref[i];
-    COUT << ")";
+        COUT << " " << ref[i];
     return COUT;
 }

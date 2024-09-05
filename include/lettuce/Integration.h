@@ -110,7 +110,7 @@ void writeKineticEToFile(const std::vector<Particle<T>> &particles, const std::v
 
 template<typename T>
 void writeRelativeKineticEToFile(const std::vector<Particle<T>> &particles, const std::vector<Species<T>>& allSpecies, std::ostream &file) {
-    Vec<T> comVelocity = computeCenterOfMassVelocity(particles, allSpecies);
+    Vec<T> comVelocity = centerOfMassVelocity(particles, allSpecies);
 
     for (const auto &p : particles) {
         Vec<T> relativeVelocity = p.v - comVelocity;
@@ -150,4 +150,9 @@ void writeAverageNeighborToFile(const std::vector<Particle<T>> &particles, const
 template<typename T>
 void writeAverageNeighborToFile(const std::vector<Particle<T>> &particles, const  T &distance, std::ostream &file, const T &dt, const int &step){
     file << dt * step << " " << averageNeighbors(particles, distance) << "\n";
+}
+
+template<typename T>
+void writeComVelocityToFile(const std::vector<Particle<T>> &particles, const std::vector<Species<T>>& allSpecies, std::ostream &file, const T &dt, const int &step){
+    file << dt * step << " " << centerOfMassVelocity(particles, allSpecies) << "\n";
 }

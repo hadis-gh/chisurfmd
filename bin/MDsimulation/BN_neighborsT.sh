@@ -11,19 +11,24 @@ particlesDensity=70.0
 timeCooling=${timeCooling:-100}
 timeHeating=${timeHeating:-50}
 dt=0.001
-thermoInterval=0.1
+thermoInterval=0.01
 exclusionRadius=0.8
 cutoff=10.0
 seed=15
 relaxationTime=40.0
 collisionFr=$(echo "scale=4; 1 / 60" | bc -l)
-lowTemperature=0.02
+lowTemperature=${lowTemperature:-0.02}
 highTemperature=1.00
 stepTemperature=0.02
 saveParticles="N_Config"
+coolingDir="cooling_configs"
+heatingDir="heating_configs"
 neighborFile="N_particle_NeighborsMD.dat"
 
 MD_EXE=../test/testNParticleMD
+
+mkdir -p "$coolingDir"
+mkdir -p "$heatingDir"
 
 calNeighbors() {
     local startT="$1"
@@ -31,11 +36,12 @@ calNeighbors() {
     local endT="$3"
     local fileName="$4"
     local time="$5"
+    local configDir="$6"
     prevT=$startT
     for tp in $(seq $(echo "$startT + $stepT" | bc) "$stepT" "$endT"); do
         echo -n -e "${tp}\t" >> "$fileName"
 
-        $MD_EXE -T "$tp" --particlesInit "${saveParticles}_${prevT}.dat" --saveParticles "${saveParticles}_${tp}.dat" --appendLog --dt "$dt" -n "$particleNum" --seed "$seed" -t "$time" --areaL "$areaL" --exclusionRadius "$exclusionRadius" --thermoInterval "$thermoInterval"
+        $MD_EXE -T "$tp" --particlesInit "${configDir}/${saveParticles}_${prevT}.dat" --saveParticles "${configDir}/${saveParticles}_${tp}.dat" --appendLog --dt "$dt" -n "$particleNum" --seed "$seed" -t "$time" --areaL "$areaL" --exclusionRadius "$exclusionRadius" --thermoInterval "$thermoInterval"
 
         NearestNeighbors=$(tail -n 7 "$neighborFile" | awk '
             {
@@ -60,10 +66,13 @@ calNeighbors() {
 > B_NeighborsCount.dat
 > B_NeighborsCount2.dat
 
-$MD_EXE -T "$highTemperature" --particlesInit "$particlesInit" --saveParticles "${saveParticles}_${highTemperature}.dat" --dt "$dt" -n "$particleNum" --seed "$seed" -t "$timeCooling" --areaL "$areaL" --exclusionRadius "$exclusionRadius" --thermoInterval "$thermoInterval"
+$MD_EXE -T "$highTemperature" --particlesInit "$particlesInit" --saveParticles "${coolingDir}/${saveParticles}_${highTemperature}.dat" --dt "$dt" -n "$particleNum" --seed "$seed" -t "$timeCooling" --areaL "$areaL" --exclusionRadius "$exclusionRadius" --thermoInterval "$thermoInterval"
 echo "done for temperature: $highTemperature"
 
 echo "Start Cooling Process"
-calNeighbors "$highTemperature" "-$stepTemperature" "$lowTemperature" "B_NeighborsCount.dat" "$timeCooling"
-echo "Start Heating Process"
-calNeighbors "$lowTemperature" "$stepTemperature" "$highTemperature" "B_NeighborsCount2.dat" "$timeHeating"
+calNeighbors "$highTemperature" "-$stepTemperature" "$lowTemperature" "B_NeighborsCount.dat" "$timeCooling" "$coolingDir"
+
+lastCoolingConfig="${coolingDir}/${saveParticles}_${lowTemperature}.dat"
+echo "Start Heating Process from last cooling configuration: $lastCoolingConfig"
+$MD_EXE -T "$lowTemperature" --particlesInit "$lastCoolingConfig" --saveParticles "${heatingDir}/${saveParticles}_${lowTemperature}.dat" --appendLog --dt "$dt" -n "$particleNum" --seed "$seed" -t "$timeHeating" --areaL "$areaL" --exclusionRadius "$exclusionRadius" --thermoInterval "$thermoInterval"
+calNeighbors "$lowTemperature" "$stepTemperature" "$highTemperature" "B_NeighborsCount2.dat" "$timeHeating" "$heatingDir"

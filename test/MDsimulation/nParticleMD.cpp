@@ -21,7 +21,7 @@ enum class ThermostatID {
 };
 
 #ifndef LETTUCE_THERMOSTAT
-#define LETTUCE_THERMOSTAT ThermostatID::Andersen
+#define LETTUCE_THERMOSTAT ThermostatID::None
 #endif
 
 #define STRINGIFY(x) #x
@@ -123,6 +123,7 @@ int main(int argc, char* argv[]) {
     std::ofstream kineticEnergyFile("N_particle_KineticEnergyMD.dat", openmode);
     std::ofstream PotentialEnergyFile("N_particle_PotentialEnergyMD.dat", openmode);
     std::ofstream NeighborCountFile("N_particle_NeighborsMD.dat", openmode);
+    std::ofstream ComVelocityFile("N_particle_comVelocityMD.dat", openmode);
     std::ofstream TbeforeThermo("N_particle_TbeforeThermo.dat", openmode);
     std::ofstream TafterThermo("N_particle_TafterThermo.dat", openmode);
     std::ofstream realTbeforeThermo("N_particle_realTbeforeThermo.dat", openmode);
@@ -169,6 +170,7 @@ int main(int argc, char* argv[]) {
             writeKineticEToFile(particles, allSpecies, kineticEnergyFile);
             writePotentialEToFile(particles, allSpecies, boxPBC, LJPotential, PotentialEnergyFile);
             writeAverageNeighborToFile(particles, neighborDistances, NeighborCountFile, dt, step);
+            writeComVelocityToFile(particles, allSpecies, ComVelocityFile, dt, step);
             writeEnergyStep = step + writeEnergyIntervalSteps;
         }        
         if constexpr (LETTUCE_THERMOSTAT != ThermostatID::None) {
