@@ -110,6 +110,7 @@ T relativeKineticEnergy(const Particle<T> &p, const std::vector<Species<T>>& all
 template<typename T>
 void rescaleVelocity(std::vector<Particle<T>> &particles, const std::vector<Species<T>>& allSpecies, const T lambda){
     for (auto &p : particles){
+        p.v -= centerOfMassVelocity(particles, allSpecies);
         p.v *= lambda;
     }
 }
