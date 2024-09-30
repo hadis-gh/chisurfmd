@@ -29,14 +29,17 @@ enum class ThermostatID {
 
 namespace po = boost::program_options;
 using Real = double;
+// why not typedef double = Real; ?
+
+// what is char* argv[] ? Does it something to do with lambda functions because of [] or just showing traditional lists?
 
 int main(int argc, char* argv[]) {
     po::variables_map vm;
     po::options_description desc("Allowed Options");
     desc.add_options()
         ("help,h", "print help")
-        ("time,t",                po::value<Real>()->default_value(10.0),            "max simulation time")
-        ("dt",                    po::value<Real>()->default_value(.01),             "integration step size")
+        ("time,t",                po::value<Real>()->default_value(10.0),             "max simulation time")
+        ("dt",                    po::value<Real>()->default_value(.01),              "integration step size")
         ("writeStateInterval",    po::value<Real>()->default_value(.05),              "measurement State interval")
         ("writeEnergyInterval",   po::value<Real>()->default_value(.5),               "measurement Energy interval")
         ("thermoInterval",        po::value<Real>()->default_value(.1),               "interval after which to apply thermostat")

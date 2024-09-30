@@ -2,3 +2,7 @@
 a.out
 *.o
 build
+buildAndersen
+buildBerendsen
+buildNone
+buildVS
