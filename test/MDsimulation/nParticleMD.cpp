@@ -80,7 +80,8 @@ int main(int argc, char* argv[]) {
     constexpr Real sigma = 1;
     constexpr Real epsilon = 1;
     constexpr Real mass = 1;
-
+// can't we ignore sigma and epsilon and consider them in units of r and u? (modified formula of LJ)
+    
     const Real radius = vm["exclusionRadius"].as<Real>();
     Real areaL = vm["areaL"].as<Real>();
 
@@ -93,12 +94,6 @@ int main(int argc, char* argv[]) {
     const Real cutoff = vm["cutoff"].as<Real>();
     const Real neighborDist = vm["neighborDist"].as<Real>();
     const std::vector<Real> neighborDistances {0.8, 1.0, 1.2, 1.5, 1.8, 2.0, 2.5};
-    const Real dt = vm["dt"].as<Real>();
-    const Real Time = vm["time"].as<Real>();
-
-    const unsigned int writeStateIntervalSteps = std::ceil(vm["writeStateInterval"].as<Real>() / dt);
-    const unsigned int writeEnergyIntervalSteps = std::ceil(vm["writeEnergyInterval"].as<Real>() / dt);
-    const unsigned int thermoIntervalSteps = std::ceil(vm["thermoInterval"].as<Real>() / dt);
 
     const Real relaxationTime = vm["relaxationTime"].as<Real>();
     const Real collisionFrequency = vm["collisionFr"].as<Real>();
@@ -113,6 +108,7 @@ int main(int argc, char* argv[]) {
     Species<Real> species2 {2.0f * mass, 0.5f * radius};
     std::vector<Species<Real>> allSpecies {species1, species2};
     int speciesInd = 0;
+//encapsulation and abstraction of particle species instead of allSpecies + speciesInd + particles in the functions
 
     std::vector<Particle<Real>> particles = initialParticles(particlesNum, allSpecies, speciesInd, areaL, gen, vm["particlesInit"].as<std::string>());
     writeInitialParticles(particles, radius);
@@ -148,15 +144,24 @@ int main(int argc, char* argv[]) {
         }
     }();
 
-    const unsigned int nsteps = std::ceil(Time / dt);
-    unsigned int step = 0;
-    unsigned int writeStateStep = writeStateIntervalSteps;
-    unsigned int writeEnergyStep = writeEnergyIntervalSteps;
-    unsigned int thermoStep = thermoIntervalSteps;
+    const Real dt = vm["dt"].as<Real>();
+    const Real Time = vm["time"].as<Real>();
+
+    const size_t writeStateIntervalSteps = std::ceil(vm["writeStateInterval"].as<Real>() / dt);
+    const size_t writeEnergyIntervalSteps = std::ceil(vm["writeEnergyInterval"].as<Real>() / dt);
+    const size_t thermoIntervalSteps = std::ceil(vm["thermoInterval"].as<Real>() / dt);
+
+    const size_t nsteps = std::ceil(Time / dt);
+
+    size_t step = 0;
+    size_t writeStateStep = writeStateIntervalSteps;
+    size_t writeEnergyStep = writeEnergyIntervalSteps;
+    size_t thermoStep = thermoIntervalSteps;
 
     if constexpr (LETTUCE_THERMOSTAT == ThermostatID::None) {
         thermoStep = 2 * nsteps;
     }
+    // considering line 184: if constexpr (LETTUCE_THERMOSTAT != ThermostatID::None) is not this redundent?
 
     clock_t startTime = clock();
 
@@ -175,7 +180,7 @@ int main(int argc, char* argv[]) {
             writeAverageNeighborToFile(particles, neighborDistances, NeighborCountFile, dt, step);
             writeComVelocityToFile(particles, allSpecies, ComVelocityFile, dt, step);
             writeEnergyStep = step + writeEnergyIntervalSteps;
-        }        
+        }
         if constexpr (LETTUCE_THERMOSTAT != ThermostatID::None) {
             if (step == thermoStep) {
                 writeTemperature(particles, allSpecies, TbeforeThermo);
