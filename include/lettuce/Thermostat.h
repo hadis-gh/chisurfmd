@@ -8,7 +8,6 @@
 #include "lettuce/constants.h"
 #include "lettuce/LennardJones.h"
 
-
 template<typename T>
 class AndersenThermostat {
 public:
@@ -40,9 +39,9 @@ public:
     BerendsenThermostat(T dt, T desiredTemperature, T relaxationTime)
         : dt(dt), desiredTemperature(desiredTemperature), relaxationTime(relaxationTime) {}
 
-    void operator () (std::vector<Particle<T>>& particles, const std::vector<Species<T>>& allSpecies) const{
-        const T currentTemperature = systemTemperature(particles, allSpecies); 
-        const auto lambda = std::sqrt(1 + dt/ relaxationTime * (desiredTemperature/ currentTemperature - 1));
+    void operator () (std::vector<Particle<T>>& particles, const std::vector<Species<T>>& allSpecies) const {
+        const T currentTemperature = calculateInternalTemperature(particles, allSpecies); 
+        const auto lambda = std::sqrt(1 + dt / relaxationTime * (desiredTemperature / currentTemperature - 1));
         rescaleVelocity(particles, allSpecies, lambda);
     }
 
@@ -58,9 +57,9 @@ public:
     VelocityScalingThermostat(T desiredTemperature)
         : desiredTemperature(desiredTemperature) {}
 
-    void operator () (std::vector<Particle<T>>& particles, const std::vector<Species<T>>& allSpecies) const{
-        const T currentTemperature = systemTemperature(particles, allSpecies); 
-        const auto lambda = std::sqrt(desiredTemperature/ currentTemperature);
+    void operator () (std::vector<Particle<T>>& particles, const std::vector<Species<T>>& allSpecies) const {
+        const T currentTemperature = calculateInternalTemperature(particles, allSpecies); 
+        const auto lambda = std::sqrt(desiredTemperature / currentTemperature);
         rescaleVelocity(particles, allSpecies, lambda);
     }
 
@@ -69,62 +68,70 @@ private:
 };
 
 template<typename T>
-T systemTemperature(const std::vector<Particle<T>> &particles, const std::vector<Species<T>>& allSpecies) {
-    Vec<T> comVelocity = centerOfMassVelocity(particles, allSpecies);
-    // std::cout << "comV: " << comVelocity << '\n';
+T calculateInternalTemperature(const std::vector<Particle<T>>& particles, const std::vector<Species<T>>& allSpecies) {
+    T internalKE = calculateInternalKineticEnergy(particles, allSpecies);
+    return (2 * internalKE) / (constants::boltzmann * particles.size() * 3.0);
+}
 
-    T totalKineticEnergy = 0.0;
+template<typename T>
+T calculateRawTemperature(const std::vector<Particle<T>>& particles, const std::vector<Species<T>>& allSpecies) {
+    T rawKE = calculateRawKineticEnergy(particles, allSpecies);
+    return (2 * rawKE) / (constants::boltzmann * particles.size() * 3.0);
+}
+
+template<typename T>
+T calculateInternalKineticEnergy(const std::vector<Particle<T>>& particles, const std::vector<Species<T>>& allSpecies) {
+    Vec<T> comVel = calculateCOMVelocity(particles, allSpecies);
+    T totalKE = 0.0;
     for (const auto& p : particles) {
-        Vec<T> relativeVelocity = p.v - comVelocity;
-        totalKineticEnergy += relativeKineticEnergy(p, allSpecies, relativeVelocity);
+        Vec<T> relativeVelocity = p.v - comVel;
+        totalKE += calculateParticleRelativeKineticEnergy(p, allSpecies, relativeVelocity);
     }
-
-    return (2 * totalKineticEnergy / (constants::boltzmann * particles.size() * 3.));
+    return totalKE;
 }
 
 template<typename T>
-T systemTemperatureOld(const std::vector<Particle<T>> &particles, const std::vector<Species<T>>& allSpecies){
-    T totalKineticEnergy = systemKineticEnergy(particles, allSpecies);
-    return (2 * totalKineticEnergy / (constants::boltzmann * particles.size() * 3.));
-}
-
-template<typename T>
-T systemKineticEnergy(const std::vector<Particle<T>> &particles, const std::vector<Species<T>>& allSpecies){
-    T totalKineticEnergy = 0.0;
-    for (auto &p: particles){
-        totalKineticEnergy += kineticEnergy(p, allSpecies);
+T calculateRawKineticEnergy(const std::vector<Particle<T>>& particles, const std::vector<Species<T>>& allSpecies) {
+    T totalKE = 0.0;
+    for (const auto& p : particles) {
+        totalKE += calculateParticleKineticEnergy(p, allSpecies);
     }
-    return totalKineticEnergy;
+    return totalKE;
 }
 
 template<typename T>
-T kineticEnergy(const Particle<T> &p, const std::vector<Species<T>>& allSpecies){
+T calculateParticleKineticEnergy(const Particle<T>& p, const std::vector<Species<T>>& allSpecies) {
     return 0.5 * allSpecies[p.species].mass * p.v.abs2();
 }
 
 template<typename T>
-T relativeKineticEnergy(const Particle<T> &p, const std::vector<Species<T>>& allSpecies, const Vec<T>& relativeVelocity){
+T calculateParticleRelativeKineticEnergy(const Particle<T>& p, const std::vector<Species<T>>& allSpecies, const Vec<T>& relativeVelocity) {
     return 0.5 * allSpecies[p.species].mass * relativeVelocity.abs2();
 }
 
 template<typename T>
-void rescaleVelocity(std::vector<Particle<T>> &particles, const std::vector<Species<T>>& allSpecies, const T lambda){
-    for (auto &p : particles){
-        p.v -= centerOfMassVelocity(particles, allSpecies);
+void rescaleVelocity(std::vector<Particle<T>>& particles, const std::vector<Species<T>>& allSpecies, const T lambda) {
+    for (auto& p : particles) {
         p.v *= lambda;
     }
 }
 
 template<typename T>
-Vec<T> centerOfMassVelocity(const std::vector<Particle<T>> &particles, const std::vector<Species<T>>& allSpecies){
+Vec<T> calculateCOMVelocity(const std::vector<Particle<T>>& particles, const std::vector<Species<T>>& allSpecies) {
     Vec<T> totalMomentum;
     T totalMass = 0.0;
-
-    for (const auto &p : particles){
+    for (const auto& p : particles) {
         T mass = allSpecies[p.species].mass;
         totalMomentum += mass * p.v;
         totalMass += mass;
     }
+    return totalMomentum / totalMass;
+}
 
-    return totalMomentum/ totalMass;
+template<typename T>
+void removeCOMVelocity(std::vector<Particle<T>>& particles, const std::vector<Species<T>>& allSpecies) {
+    Vec<T> comVel = calculateCOMVelocity(particles, allSpecies);
+    for (auto& p : particles) {
+        p.v -= comVel;
+    }
 }

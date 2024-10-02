@@ -187,6 +187,7 @@ int main(int argc, char* argv[]) {
                 writeRealTemperature(particles, allSpecies, realTbeforeThermo);
 
                 thermostat(particles, allSpecies);
+                // remove com velocity - with ability of turning on or off
                 thermoStep = step + thermoIntervalSteps;
                 writeTemperature(particles, allSpecies, TafterThermo);
                 writeRealTemperature(particles, allSpecies, realTafterThermo);
