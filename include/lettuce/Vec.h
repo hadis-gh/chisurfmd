@@ -49,6 +49,7 @@ public:
 
     T sum()const;
     T dot(const Vec<T, D>& other)const;
+    Vec<T, D> cross(const Vec<T, D>& other)const;
     T abs2()const;
     T abs()const;
     

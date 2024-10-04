@@ -167,6 +167,20 @@ T Vec<T, D>::dot(const Vec<T, D>& other)const{
 }
 
 template<typename T , int D>
+Vec<T, D> Vec<T, D>::cross(const Vec<T, D>& other) const {
+    Vec<T, 3> result;
+    
+    if (D==2){
+        elements[2] = 0;
+        other.elements[2] = 0;
+    }
+    result.elements[0] = elements[1] * other.elements[2] - elements[2] * other.elements[1];
+    result.elements[1] = elements[2] * other.elements[0] - elements[0] * other.elements[2];
+    result.elements[2] = elements[0] * other.elements[1] - elements[1] * other.elements[0];
+    return result;
+}
+
+template<typename T , int D>
 T Vec<T, D>::abs2()const{
     return dot(*this);
 }

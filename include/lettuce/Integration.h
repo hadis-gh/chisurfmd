@@ -62,7 +62,7 @@ void integrate(std::vector<Particle<T>>& particles, const std::vector<Species<T>
 }
 
 template<typename T>
-T averageNeighbors(const std::vector<Particle<T>>& particles, const T& distance) {
+T calAverageNeighbors(const std::vector<Particle<T>>& particles, const T& distance) {
     T totalNeighbors = 0;
     for (const auto& p1 : particles) {
         int eachParticleNeighbors = 0;
@@ -74,6 +74,55 @@ T averageNeighbors(const std::vector<Particle<T>>& particles, const T& distance)
         totalNeighbors += eachParticleNeighbors;
     }
     return totalNeighbors / particles.size();
+}
+
+template<typename T>
+Vec<T> calCOMposition(const std::vector<Particle<T>>& particles, const std::vector<Species<T>>& allSpecies) {
+    Vec<T> comPos;
+    T totalMass = 0;
+    for (const auto& p : particles) {
+        const T mass = allSpecies[p.species].mass;
+        comPos += p.r * mass;
+        totalMass += mass;
+    }
+    return comPos / totalMass;
+}
+
+template<typename T>
+Vec<T> calAngularMomentum(const std::vector<Particle<T>>& particles, const std::vector<Species<T>>& allSpecies, const Vec<T>& comPos) {
+    Vec<T> L;
+    for (const auto& p : particles) {
+        const T mass = allSpecies[p.species].mass;
+        Vec<T> r_com = p.r - comPos;
+        L += r_com.cross(p.v) * mass;
+    }
+    return L;
+}
+
+template<typename T>
+T calMomentOfInertia(const std::vector<Particle<T>>& particles, const std::vector<Species<T>>& allSpecies, const Vec<T>& com) {
+    T I = 0;
+    for (const auto& p : particles) {
+        const T mass = allSpecies[p.species].mass;
+        Vec<T> r_com = p.r - com;
+        I += mass * r_com.abs2();
+    }
+    return I;
+}
+
+template<typename T>
+void removeCOMvelocityRotation(std::vector<Particle<T>>& particles, const std::vector<Species<T>>& allSpecies) {
+    Vec<T> comPos = calCOMposition(particles, allSpecies);
+    Vec<T> angularMomentum = calAngularMomentum(particles, allSpecies, comPos);
+    T momentOfInertia = calMomentOfInertia(particles, allSpecies, comPos);
+
+    Vec<T> angularVelocity = angularMomentum / momentOfInertia;  // Angular velocity ω = L / I
+
+    for (auto& p : particles) {
+        Vec<T> r_com = p.r - comPos;
+        Vec<T> v_rot = angularVelocity.cross(r_com);  // Rotational velocity component
+        p.v -= v_rot;
+    }
 }
 
 template<typename T>
@@ -96,7 +145,7 @@ void writePositionToFile(const std::vector<Particle<T>>& particles, std::ostream
 template<typename T>
 void writeKineticEToFile(const std::vector<Particle<T>>& particles, const std::vector<Species<T>>& allSpecies, std::ostream& file) {
     for (const auto& p : particles) {
-        file << particleKineticEnergy(p, allSpecies) << " ";
+        file << calParticleKineticEnergy(p, allSpecies) << " ";
     }
     file << "\n";
 }
@@ -107,19 +156,19 @@ void writeRelativeKineticEToFile(const std::vector<Particle<T>>& particles, cons
 
     for (const auto& p : particles) {
         Vec<T> relativeVelocity = p.v - comVelocity;
-        file << particleRelativeKineticEnergy(p, allSpecies, relativeVelocity) << " ";
+        file << calParticleRelativeKineticEnergy(p, allSpecies, relativeVelocity) << " ";
     }
     file << "\n";
 }
 
 template<typename T>
 void writeTemperature(const std::vector<Particle<T>>& particles, const std::vector<Species<T>>& allSpecies, std::ostream& file) {
-    file << internalTemperature(particles, allSpecies) << std::endl;
+    file << calInternalTemperature(particles, allSpecies) << std::endl;
 }
 
 template<typename T>
 void writeRealTemperature(const std::vector<Particle<T>>& particles, const std::vector<Species<T>>& allSpecies, std::ostream& file) {
-    file << rawTemperature(particles, allSpecies) << std::endl;
+    file << calRawTemperature(particles, allSpecies) << std::endl;
 }
 
 template<typename T, typename Potential>
@@ -135,17 +184,17 @@ template<typename T>
 void writeAverageNeighborToFile(const std::vector<Particle<T>>& particles, const std::vector<T>& distances, std::ostream& file, const T& dt, const int& step) {
     file << dt * step << " ";
     for (const T& d : distances) {
-        file << averageNeighbors(particles, d) << " ";
+        file << calAverageNeighbors(particles, d) << " ";
     }
     file << "\n";
 }
 
 template<typename T>
 void writeAverageNeighborToFile(const std::vector<Particle<T>>& particles, const T& distance, std::ostream& file, const T& dt, const int& step) {
-    file << dt * step << " " << averageNeighbors(particles, distance) << "\n";
+    file << dt * step << " " << calAverageNeighbors(particles, distance) << "\n";
 }
 
 template<typename T>
 void writeComVelocityToFile(const std::vector<Particle<T>>& particles, const std::vector<Species<T>>& allSpecies, std::ostream& file, const T& dt, const int& step) {
-    file << dt * step << " " << comVelocity(particles, allSpecies) << "\n";
+    file << dt * step << " " << calCOMVelocity(particles, allSpecies) << "\n";
 }
