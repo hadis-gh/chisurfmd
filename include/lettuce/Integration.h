@@ -89,38 +89,38 @@ Vec<T> calCOMposition(const std::vector<Particle<T>>& particles, const std::vect
 }
 
 template<typename T>
-Vec<T> calAngularMomentum(const std::vector<Particle<T>>& particles, const std::vector<Species<T>>& allSpecies, const Vec<T>& comPos) {
-    Vec<T> L;
+T calAngularMomentum2D(const std::vector<Particle<T>>& particles, const std::vector<Species<T>>& allSpecies, const Vec<T>& comPos) {
+    T L = 0;
     for (const auto& p : particles) {
         const T mass = allSpecies[p.species].mass;
         Vec<T> r_com = p.r - comPos;
-        L += r_com.cross(p.v) * mass;
+        L += mass * (r_com[0] * p.v[1] - r_com[1] * p.v[0]);
     }
     return L;
 }
 
 template<typename T>
-T calMomentOfInertia(const std::vector<Particle<T>>& particles, const std::vector<Species<T>>& allSpecies, const Vec<T>& com) {
+T calMomentOfInertia2D(const std::vector<Particle<T>>& particles, const std::vector<Species<T>>& allSpecies, const Vec<T>& comPos) {
     T I = 0;
     for (const auto& p : particles) {
         const T mass = allSpecies[p.species].mass;
-        Vec<T> r_com = p.r - com;
+        Vec<T> r_com = p.r - comPos;
         I += mass * r_com.abs2();
     }
     return I;
 }
 
 template<typename T>
-void removeCOMvelocityRotation(std::vector<Particle<T>>& particles, const std::vector<Species<T>>& allSpecies) {
+void removeCOMvelocityRotation2D(std::vector<Particle<T>>& particles, const std::vector<Species<T>>& allSpecies) {
     Vec<T> comPos = calCOMposition(particles, allSpecies);
-    Vec<T> angularMomentum = calAngularMomentum(particles, allSpecies, comPos);
-    T momentOfInertia = calMomentOfInertia(particles, allSpecies, comPos);
+    T angularMomentum = calAngularMomentum2D(particles, allSpecies, comPos);
+    T momentOfInertia = calMomentOfInertia2D(particles, allSpecies, comPos);
 
-    Vec<T> angularVelocity = angularMomentum / momentOfInertia;  // Angular velocity ω = L / I
+    T angularVelocity = angularMomentum / momentOfInertia;
 
     for (auto& p : particles) {
         Vec<T> r_com = p.r - comPos;
-        Vec<T> v_rot = angularVelocity.cross(r_com);  // Rotational velocity component
+        Vec<T> v_rot = {(-r_com[1] * angularVelocity, r_com[0] * angularVelocity)};
         p.v -= v_rot;
     }
 }
@@ -197,4 +197,11 @@ void writeAverageNeighborToFile(const std::vector<Particle<T>>& particles, const
 template<typename T>
 void writeComVelocityToFile(const std::vector<Particle<T>>& particles, const std::vector<Species<T>>& allSpecies, std::ostream& file, const T& dt, const int& step) {
     file << dt * step << " " << calCOMVelocity(particles, allSpecies) << "\n";
+}
+
+template<typename T>
+void writeComAngularVelocityToFile(const std::vector<Particle<T>>& particles, const std::vector<Species<T>>& allSpecies, std::ostream& file, const T& dt, const int& step) {
+    Vec<T> comPos = calCOMposition(particles, allSpecies);
+
+    file << dt * step << " " << calAngularMomentum2D(particles, allSpecies, comPos) << "\n";
 }

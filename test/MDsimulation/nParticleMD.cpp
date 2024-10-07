@@ -123,6 +123,7 @@ int main(int argc, char* argv[]) {
     std::ofstream PotentialEnergyFile("N_particle_PotentialEnergyMD.dat", openmode);
     std::ofstream NeighborCountFile("N_particle_NeighborsMD.dat", openmode);
     std::ofstream ComVelocityFile("N_particle_comVelocityMD.dat", openmode);
+    std::ofstream ComAngVelocityFile("N_particle_comAngVelocityMD.dat", openmode);
     std::ofstream TbeforeThermo("N_particle_TbeforeThermo.dat", openmode);
     std::ofstream TafterThermo("N_particle_TafterThermo.dat", openmode);
     std::ofstream realTbeforeThermo("N_particle_realTbeforeThermo.dat", openmode);
@@ -179,6 +180,7 @@ int main(int argc, char* argv[]) {
             writePotentialEToFile(particles, allSpecies, boxPBC, LJPotential, PotentialEnergyFile);
             writeAverageNeighborToFile(particles, neighborDistances, NeighborCountFile, dt, step);
             writeComVelocityToFile(particles, allSpecies, ComVelocityFile, dt, step);
+            writeComAngularVelocityToFile(particles, allSpecies, ComAngVelocityFile, dt, step);
             writeEnergyStep = step + writeEnergyIntervalSteps;
         }
         if constexpr (LETTUCE_THERMOSTAT != ThermostatID::None) {
@@ -188,7 +190,7 @@ int main(int argc, char* argv[]) {
 
                 thermostat(particles, allSpecies);
                 removeCOMVelocity(particles, allSpecies);
-                removeCOMvelocityRotation(particles, allSpecies);
+                removeCOMvelocityRotation2D(particles, allSpecies);
                 thermoStep = step + thermoIntervalSteps;
                 writeTemperature(particles, allSpecies, TafterThermo);
                 writeRealTemperature(particles, allSpecies, realTafterThermo);
