@@ -26,6 +26,7 @@ enum class ThermostatID {
 
 #define STRINGIFY(x) #x
 #define TOSTRING(x) STRINGIFY(x)
+//using Particle = ParticleDot<T>;
 
 namespace po = boost::program_options;
 using Real = double;
@@ -102,7 +103,7 @@ int main(int argc, char* argv[]) {
     LennardJonesForce<Real> LJForce(epsilon, sigma, cutoff);
     LennardJonesPotential<Real> LJPotential(epsilon, sigma, cutoff);
 
-    auto integrationMethod = VelocityVerletStep<Real, LennardJonesForce<Real>>;
+    auto integrationMethod = VelocityVerletStep<Real, LennardJonesForce<Real>, ParticleDot>;
 
     Species<Real> species1 {mass, radius};
     Species<Real> species2 {2.0f * mass, 0.5f * radius};

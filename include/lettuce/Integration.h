@@ -27,8 +27,8 @@ void EulerSymplecticStep(std::vector<Particle<T>>& particles, const std::vector<
     }
 }
 
-template<typename T, typename Force>
-void EulerStep(std::vector<Particle<T>>& particles, const std::vector<Species<T>>& allSpecies, const T& dt, const T& boxPBC, const Force& force) {
+template<typename T, typename Force, template<typename TT> typename TParticle>
+void EulerStep(std::vector<TParticle<T>>& particles, const std::vector<Species<T>>& allSpecies, const T& dt, const T& boxPBC, const Force& force) {
     const auto accelerations = calAllAccelerations(particles, allSpecies, boxPBC, force);
     for (size_t i = 0; i < particles.size(); ++i) {
         particles[i].r += particles[i].v * dt;
@@ -37,17 +37,23 @@ void EulerStep(std::vector<Particle<T>>& particles, const std::vector<Species<T>
     }
 }
 
-template<typename T, typename Force>
-void VelocityVerletStep(std::vector<Particle<T>>& particles, const std::vector<Species<T>>& allSpecies, const T& dt, const T& boxPBC, const Force& force) {
+template<typename T, typename Force, template<typename TT> typename TParticle>
+void VelocityVerletStep(std::vector<TParticle<T>>& particles, const std::vector<Species<T>>& allSpecies, const T& dt, const T& boxPBC, const Force& force) {
     const auto old_accelerations = calAllAccelerations(particles, allSpecies, boxPBC, force);
 
     for (size_t i = 0; i < particles.size(); ++i) {
-        particles[i].r += particles[i].v * dt + old_accelerations[i] * dt * dt / 2.0;
-        implementPBC(particles[i], boxPBC);
+        const auto r = getGeneralizedPositions(particles[i]);
+        const auto v = getGeneralizedVelocities(particles[i]);
+
+        setGeneralizedPositions(particles[i], r + v * dt + old_accelerations[i]*dt*dt/2.);
+
+        //particles[i].r += particles[i].v * dt + old_accelerations[i] * dt * dt / 2.0;
+        implementPBC(particles[i], boxPBC); // should consider phi as well 2 pi
     }
 
     const auto new_accelerations = calAllAccelerations(particles, allSpecies, boxPBC, force);
     for (size_t i = 0; i < particles.size(); ++i) {
+        //get and set generalized velocity
         particles[i].v += (old_accelerations[i] + new_accelerations[i]) * dt / 2.0;
     }
 }
@@ -117,6 +123,7 @@ void removeCOMvelocityRotation2D(std::vector<Particle<T>>& particles, const std:
     T momentOfInertia = calMomentOfInertia2D(particles, allSpecies, comPos);
 
     T angularVelocity = angularMomentum / momentOfInertia;
+// there is possiblity to remove mass from these eqs - try to simplify it
 
     for (auto& p : particles) {
         Vec<T> r_com = p.r - comPos;

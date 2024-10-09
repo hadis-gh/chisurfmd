@@ -14,14 +14,54 @@ struct Species
 };
 
 template<typename T>
-struct Particle
+struct ParticleDot
 {
     Vec<T> r, v;
     unsigned int species;
 };
 
-template<typename T, typename Force>
-Vec<T> calForceTwo(const Particle<T> &p1, const Particle<T> &p2, const T& boxPBC, Force &&force){
+template<typename Particle, typename SFINAE=void>
+struct GetGeneralizedPositions;
+
+template<typename Particle>
+auto getGeneralizedPositions(Particle&& p)
+{
+    return GetGeneralizedPositions<std::decay_t<Particle>>::getGeneralizedPositions(std::forward<Particle>(p));
+}
+
+template<typename T>
+struct GetGeneralizedPositions<ParticleDot<T>>
+{
+    static const Vec<T,2>& getGeneralizedPositions(const ParticleDot<T>& p)
+    {
+        return p.r;
+    }
+};
+
+template<typename T>
+using Particle = ParticleDot<T>;
+
+template<typename T>
+struct ParticleOriented : public ParticleDot<T>
+{
+    T phi, omega;
+};
+
+template<typename T>
+struct GetGeneralizedPositions<ParticleOriented<T>>
+{
+    static const Vec<T,3>& getGeneralizedPositions(const ParticleOriented<T>& p)
+    {
+        Vec<T,3> r;
+        r[0] = p.r[0];
+        r[1] = p.r[1];
+        r[2] = p.phi;
+        return r;
+    }
+};
+
+template<typename T, typename Force> //specific for particle dot
+Vec<T> calForceTwo(const ParticleDot<T> &p1, const ParticleDot<T> &p2, const T& boxPBC, Force &&force){
     Vec<T> dr = p2.r - p1.r;
     
     for (int i = 0; i < 2; ++i) {
