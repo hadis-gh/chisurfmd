@@ -10,6 +10,7 @@
 #include "lettuce/Vec.h"
 #include "lettuce/Circle.h"
 #include "lettuce/Particle.h"
+#include "lettuce/ParticleOriented.h"
 #include "lettuce/Utilities.h"
 #include "lettuce/Integration.h"
 #include "lettuce/Thermostat.h"

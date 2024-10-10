@@ -3,8 +3,6 @@
 #include <vector>
 #include <cmath>
 #include "lettuce/Vec.h"
-#include "lettuce/Circle.h"
-
 
 template<typename T>
 struct Species
@@ -20,12 +18,12 @@ struct ParticleDot
     unsigned int species;
 };
 
+// getting generalized positions
 template<typename Particle, typename SFINAE=void>
 struct GetGeneralizedPositions;
 
 template<typename Particle>
-auto getGeneralizedPositions(Particle&& p)
-{
+auto getGeneralizedPositions(Particle&& p){
     return GetGeneralizedPositions<std::decay_t<Particle>>::getGeneralizedPositions(std::forward<Particle>(p));
 }
 
@@ -38,29 +36,67 @@ struct GetGeneralizedPositions<ParticleDot<T>>
     }
 };
 
-template<typename T>
-using Particle = ParticleDot<T>;
+// setting generalized positions
+template<typename Particle, typename SFINAE = void>
+struct SetGeneralizedPositions;
+
+template<typename Particle>
+auto setGeneralizedPositions(Particle&& p, const auto& new_positions) {
+    return SetGeneralizedPositions<std::decay_t<Particle>>::setGeneralizedPositions(std::forward<Particle>(p), new_positions);
+}
 
 template<typename T>
-struct ParticleOriented : public ParticleDot<T>
+struct SetGeneralizedPositions<ParticleDot<T>>
 {
-    T phi, omega;
-};
-
-template<typename T>
-struct GetGeneralizedPositions<ParticleOriented<T>>
-{
-    static const Vec<T,3>& getGeneralizedPositions(const ParticleOriented<T>& p)
+    static void setGeneralizedPositions(ParticleDot<T>& p, const Vec<T, 2>& new_positions)
     {
-        Vec<T,3> r;
-        r[0] = p.r[0];
-        r[1] = p.r[1];
-        r[2] = p.phi;
-        return r;
+        p.r = new_positions;
     }
 };
 
-template<typename T, typename Force> //specific for particle dot
+// getting generalized velocities
+template<typename Particle, typename SFINAE = void>
+struct GetGeneralizedVelocities;
+
+template<typename Particle>
+auto getGeneralizedVelocities(Particle&& p)
+{
+    return GetGeneralizedVelocities<std::decay_t<Particle>>::getGeneralizedVelocities(std::forward<Particle>(p));
+}
+
+template<typename T>
+struct GetGeneralizedVelocities<ParticleDot<T>>
+{
+    static const Vec<T, 2>& getGeneralizedVelocities(const ParticleDot<T>& p)
+    {
+        return p.v;
+    }
+};
+
+// setting generalized velocities
+template<typename Particle, typename SFINAE = void>
+struct SetGeneralizedVelocities;
+
+template<typename Particle>
+auto setGeneralizedVelocities(Particle&& p, const auto& new_velocities)
+{
+    return SetGeneralizedVelocities<std::decay_t<Particle>>::setGeneralizedVelocities(std::forward<Particle>(p), new_velocities);
+}
+
+template<typename T>
+struct SetGeneralizedVelocities<ParticleDot<T>>
+{
+    static void setGeneralizedVelocities(ParticleDot<T>& p, const Vec<T, 2>& new_velocities)
+    {
+        p.v = new_velocities;
+    }
+};
+
+template<typename T>
+using Particle = ParticleDot<T>;
+
+//Force calculations
+template<typename T, typename Force>
 Vec<T> calForceTwo(const ParticleDot<T> &p1, const ParticleDot<T> &p2, const T& boxPBC, Force &&force){
     Vec<T> dr = p2.r - p1.r;
     
