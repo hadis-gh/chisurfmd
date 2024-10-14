@@ -68,7 +68,8 @@ struct SetGeneralizedVelocities<ParticleOriented<T>>
 template<typename T, typename Force>
 Vec<T> calForceTwo(const ParticleOriented<T>& p1, const ParticleOriented<T>& p2, const T& boxPBC, Force&& force) {
     Vec<T> dr = p2.r - p1.r;
-    
+    T deltaPhi = p2.phi - p1.phi;
+
     for (int i = 0; i < 2; ++i) {
         if (dr[i] > boxPBC / 2) { dr[i] -= boxPBC; }
         else if (dr[i] < -boxPBC / 2) { dr[i] += boxPBC; }
@@ -77,12 +78,12 @@ Vec<T> calForceTwo(const ParticleOriented<T>& p1, const ParticleOriented<T>& p2,
     T r = dr.abs();
     if (r == 0) return {{0, 0}};
     
-    T f = force(r);
+    std::array<T, 2> f = force(r, deltaPhi);
     Vec<T, 3> force_vec;
 
-    force_vec[0] = f * dr[0] / r;
-    force_vec[1] = f * dr[1] / r;
-    // force_vec[2] = torqu(p1.phi, p2.phi);
+    force_vec[0] = f[0] * dr[0] / r;
+    force_vec[1] = f[0] * dr[1] / r;
+    force_vec[2] = f[1];
     
     return force_vec;
 }

@@ -8,6 +8,7 @@
 #include <stdexcept>
 #include "Circle.h"
 #include "lettuce/Particle.h"
+#include "lettuce/ParticleOriented.h"
 #include "lettuce/CirclesIntersectionFuncs.h"
 
 template<typename T>
@@ -234,4 +235,21 @@ std::vector<Particle<T>> initialParticles(const unsigned int& particlesNum, cons
         p.species = speciesNum;
     }
     return particles;
+}
+
+template<typename T>
+std::vector<ParticleOriented<T>> initialParticlesOriented(const unsigned int& particlesNum, const std::vector<Species<T>>& allSpecies, int& speciesNum, const T& L, std::mt19937& gen, const std::string& configuration) {
+    std::vector<ParticleOriented<T>> particlesOriented;
+    std::vector<Particle<T>> particlesDot = initialParticles(particlesNum, allSpecies, speciesNum, L, gen, configuration);
+
+    particlesOriented.resize(particlesDot.size());
+    
+    for (size_t i = 0; i < particlesDot.size(); i++) {
+        particlesOriented[i].r = particlesDot[i].r;
+        particlesOriented[i].v = particlesDot[i].v;
+        particlesOriented[i].species = particlesDot[i].species;
+        particlesOriented[i].phi = 0;
+    }
+    
+    return particlesOriented;
 }

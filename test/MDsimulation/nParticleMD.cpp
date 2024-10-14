@@ -15,6 +15,7 @@
 #include "lettuce/Integration.h"
 #include "lettuce/Thermostat.h"
 #include "lettuce/LennardJones.h"
+#include "lettuce/LennardJonesOriented.h"
 #include "lettuce/CircleDistribution.h"
 
 enum class ThermostatID {
@@ -27,7 +28,6 @@ enum class ThermostatID {
 
 #define STRINGIFY(x) #x
 #define TOSTRING(x) STRINGIFY(x)
-//using Particle = ParticleDot<T>;
 
 namespace po = boost::program_options;
 using Real = double;
@@ -82,7 +82,8 @@ int main(int argc, char* argv[]) {
     constexpr Real sigma = 1;
     constexpr Real epsilon = 1;
     constexpr Real mass = 1;
-// can't we ignore sigma and epsilon and consider them in units of r and u? (modified formula of LJ)
+    constexpr Real phiConst = 1;
+    // can't we ignore sigma and epsilon and consider them in units of r and u? (modified formula of LJ)
     
     const Real radius = vm["exclusionRadius"].as<Real>();
     Real areaL = vm["areaL"].as<Real>();
@@ -103,6 +104,8 @@ int main(int argc, char* argv[]) {
 
     LennardJonesForce<Real> LJForce(epsilon, sigma, cutoff);
     LennardJonesPotential<Real> LJPotential(epsilon, sigma, cutoff);
+    LennardJonesOrientedForce<double> LJOForce(epsilon, sigma, cutoff, phiConst);
+    LennardJonesOrientedPotential<double> LJOPotential(epsilon, sigma, cutoff, phiConst);
 
     auto integrationMethod = VelocityVerletStep<Real, LennardJonesForce<Real>, ParticleDot>;
 
@@ -112,7 +115,9 @@ int main(int argc, char* argv[]) {
     int speciesInd = 0;
 //encapsulation and abstraction of particle species instead of allSpecies + speciesInd + particles in the functions
 
-    std::vector<Particle<Real>> particles = initialParticles(particlesNum, allSpecies, speciesInd, areaL, gen, vm["particlesInit"].as<std::string>());
+    // std::vector<Particle<Real>> particles = initialParticles(particlesNum, allSpecies, speciesInd, areaL, gen, vm["particlesInit"].as<std::string>());
+    std::vector<ParticleOriented<Real>> particles = initialParticlesOriented(particlesNum, allSpecies, speciesInd, areaL, gen, vm["particlesInit"].as<std::string>());
+
     writeInitialParticles(particles, radius);
 
     std::ios::openmode openmode = std::ios::trunc;
@@ -137,13 +142,13 @@ int main(int argc, char* argv[]) {
         if constexpr (LETTUCE_THERMOSTAT == ThermostatID::None)
             return [](auto, auto) { return 1.; };
         else if constexpr (LETTUCE_THERMOSTAT == ThermostatID::VelocityScaling)
-            return VelocityScalingThermostat<Real>(desiredTemperature);
+            return VelocityScalingThermostat<Real, ParticleOriented>(desiredTemperature);
         else if constexpr (LETTUCE_THERMOSTAT == ThermostatID::Berendsen)
-            return BerendsenThermostat<Real>(vm["thermoInterval"].as<Real>(), desiredTemperature, relaxationTime);
+            return BerendsenThermostat<Real, ParticleOriented>(vm["thermoInterval"].as<Real>(), desiredTemperature, relaxationTime);
         else if constexpr (LETTUCE_THERMOSTAT == ThermostatID::NoseHoover)
             return nullptr;
         else if constexpr (LETTUCE_THERMOSTAT == ThermostatID::Andersen) {
-            return AndersenThermostat<Real>(vm["thermoInterval"].as<Real>(), collisionFrequency, desiredTemperature, gen);
+            return AndersenThermostat<Real, ParticleOriented>(vm["thermoInterval"].as<Real>(), collisionFrequency, desiredTemperature, gen);
         }
     }();
 
@@ -170,7 +175,7 @@ int main(int argc, char* argv[]) {
 
     while (step < nsteps) {
         const auto nextEventStep = std::min({writeStateStep, writeEnergyStep, thermoStep, nsteps});
-        integrate(particles, allSpecies, dt, (nextEventStep - step) * dt, boxPBC, LJForce, integrationMethod);
+        integrate(particles, allSpecies, dt, (nextEventStep - step) * dt, boxPBC, LJOForce, integrationMethod);
         step = nextEventStep;
 
         if (step == writeStateStep) {

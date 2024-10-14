@@ -1,0 +1,77 @@
+#pragma once
+
+#include <vector>
+#include <cmath>
+#include "lettuce/Vec.h"
+#include "lettuce/Particle.h"
+
+template<typename T>
+class LennardJonesOrientedForce {
+public:
+    LennardJonesOrientedForce(T epsilon, T sigma, T cutoff, T phiConst) 
+        : epsilon(epsilon), sigma(sigma), cutoff(cutoff), sigma6(std::pow(sigma, 6)), sigma12(sigma6 * sigma6), phiConst(phiConst) {}
+
+    T operator()(const T r, const T deltaPhi) const {
+        std::array<T, 2> forceOriented;
+        LennardJonesForce<T> LjForce(epsilon, sigma, cutoff);
+        
+        return {LjForce(r), 3 * phiConst * sin(3 * deltaPhi)};
+    }
+private:
+    T epsilon;
+    T sigma;
+    T cutoff;
+    T sigma6;
+    T sigma12;
+    T phiConst;
+};
+
+template<typename T>
+class LennardJonesOrientedPotential {
+public:
+    LennardJonesOrientedPotential(T epsilon, T sigma, T cutoff, T phiConst)
+        : epsilon(epsilon), sigma(sigma), cutoff(cutoff), sigma6(std::pow(sigma, 6)), sigma12(sigma6 * sigma6), phiConst(phiConst) {}
+
+    T operator()(const T r, const T deltaPhi) const {
+        if (r == 0) return 0;
+        if (r > cutoff) return 0;
+        
+        const T r6 = std::pow(r, 6);
+        const T r12 = r6 * r6;
+        return 4.0 * epsilon * (sigma12 / r12 - 0.5 * sigma6 / r6) - phiConst * cos(3 * deltaPhi);
+    }
+
+private:
+    T epsilon;
+    T sigma;
+    T cutoff;
+    T sigma6;
+    T sigma12;
+    T phiConst;
+};
+
+/*
+template<typename T>
+class LennardJonesOrientedForce {
+public:
+    LennardJonesOrientedForce(T epsilon, T sigma, T cutoff, T phiConst) 
+        : epsilon(epsilon), sigma(sigma), cutoff(cutoff), sigma6(std::pow(sigma, 6)), sigma12(sigma6 * sigma6), phiConst(phiConst) {}
+
+    T operator()(const T r, const T deltaPhi) const {
+        if (r == 0) return 0;
+        if (r > cutoff) return 0;
+
+        const T r6 = std::pow(r, 6);
+        const T r12 = r6 * r6;
+        return 48.0 * epsilon * (sigma12 / (r12 * r) - 0.5 * sigma6 / (r6 * r)) + 3 * phiConst * sin(3 * deltaPhi);
+    }
+
+private:
+    T epsilon;
+    T sigma;
+    T cutoff;
+    T sigma6;
+    T sigma12;
+    T phiConst;
+};
+*/
