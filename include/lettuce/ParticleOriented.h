@@ -119,3 +119,20 @@ std::vector<Vec<T, 3>> calAllAccelerations(const std::vector<ParticleOriented<T>
     }
     return accelerations;
 }
+
+template<typename T>
+void implementPBC(ParticleOriented<T>& p, const T& boxPBC) {
+    for (int i = 0; i < 2; ++i) {
+        if (p.r[i] > boxPBC) { 
+            p.r[i] -= boxPBC; 
+        } else if (p.r[i] < 0) { 
+            p.r[i] += boxPBC; 
+        }
+    }
+    T phi = p.r[2]; 
+    phi = std::fmod(phi, 360.0);
+    if (phi < 0) {
+        phi += 360.0;
+    }
+    p.r[2] = phi;
+}

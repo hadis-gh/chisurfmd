@@ -67,20 +67,20 @@ private:
     T desiredTemperature;
 };
 
-template<typename T, template<typename TT> typename TParticle>
-T calInternalTemperature(const std::vector<TParticle<T>>& particles, const std::vector<Species<T>>& allSpecies) {
+template<typename T, typename TParticle>
+T calInternalTemperature(const std::vector<TParticle>& particles, const std::vector<Species<T>>& allSpecies) {
     T internalKE = calInternalKineticEnergy(particles, allSpecies);
     return (2 * internalKE) / (constants::boltzmann * particles.size() * 3.0);
 }
 
-template<typename T, template<typename TT> typename TParticle>
-T calRawTemperature(const std::vector<TParticle<T>>& particles, const std::vector<Species<T>>& allSpecies) {
+template<typename T, typename TParticle>
+T calRawTemperature(const std::vector<TParticle>& particles, const std::vector<Species<T>>& allSpecies) {
     T rawKE = calRawKineticEnergy(particles, allSpecies);
     return (2 * rawKE) / (constants::boltzmann * particles.size() * 3.0);
 }
 
-template<typename T, template<typename TT> typename TParticle>
-T calInternalKineticEnergy(const std::vector<TParticle<T>>& particles, const std::vector<Species<T>>& allSpecies) {
+template<typename T, typename TParticle>
+T calInternalKineticEnergy(const std::vector<TParticle>& particles, const std::vector<Species<T>>& allSpecies) {
     Vec<T> comVel = calCOMVelocity(particles, allSpecies);
     T totalKE = 0.0;
     for (const auto& p : particles) {
@@ -90,8 +90,8 @@ T calInternalKineticEnergy(const std::vector<TParticle<T>>& particles, const std
     return totalKE;
 }
 
-template<typename T, template<typename TT> typename TParticle>
-T calRawKineticEnergy(const std::vector<TParticle<T>>& particles, const std::vector<Species<T>>& allSpecies) {
+template<typename T, typename TParticle>
+T calRawKineticEnergy(const std::vector<TParticle>& particles, const std::vector<Species<T>>& allSpecies) {
     T totalKE = 0.0;
     for (const auto& p : particles) {
         totalKE += calParticleKineticEnergy(p, allSpecies);
@@ -99,25 +99,25 @@ T calRawKineticEnergy(const std::vector<TParticle<T>>& particles, const std::vec
     return totalKE;
 }
 
-template<typename T, template<typename TT> typename TParticle>
-T calParticleKineticEnergy(const TParticle<T>& p, const std::vector<Species<T>>& allSpecies) {
+template<typename T, typename TParticle>
+T calParticleKineticEnergy(const TParticle& p, const std::vector<Species<T>>& allSpecies) {
     return 0.5 * allSpecies[p.species].mass * p.v.abs2();
 }
 
-template<typename T, template<typename TT> typename TParticle>
-T calParticleRelativeKineticEnergy(const TParticle<T>& p, const std::vector<Species<T>>& allSpecies, const Vec<T>& relativeVelocity) {
+template<typename T, typename TParticle>
+T calParticleRelativeKineticEnergy(const TParticle& p, const std::vector<Species<T>>& allSpecies, const Vec<T>& relativeVelocity) {
     return 0.5 * allSpecies[p.species].mass * relativeVelocity.abs2();
 }
 
-template<typename T, template<typename TT> typename TParticle>
-void rescaleVelocity(std::vector<TParticle<T>>& particles, const std::vector<Species<T>>& allSpecies, const T lambda) {
+template<typename T, typename TParticle>
+void rescaleVelocity(std::vector<TParticle>& particles, const std::vector<Species<T>>& allSpecies, const T lambda) {
     for (auto& p : particles) {
         p.v *= lambda;
     }
 }
 
-template<typename T, template<typename TT> typename TParticle>
-Vec<T> calCOMVelocity(const std::vector<TParticle<T>>& particles, const std::vector<Species<T>>& allSpecies) {
+template<typename T, typename TParticle>
+Vec<T> calCOMVelocity(const std::vector<TParticle>& particles, const std::vector<Species<T>>& allSpecies) {
     Vec<T> totalMomentum;
     T totalMass = 0.0;
     for (const auto& p : particles) {
@@ -128,8 +128,8 @@ Vec<T> calCOMVelocity(const std::vector<TParticle<T>>& particles, const std::vec
     return totalMomentum / totalMass;
 }
 
-template<typename T, template<typename TT> typename TParticle>
-void removeCOMVelocity(std::vector<TParticle<T>>& particles, const std::vector<Species<T>>& allSpecies) {
+template<typename T, typename TParticle>
+void removeCOMVelocity(std::vector<TParticle>& particles, const std::vector<Species<T>>& allSpecies) {
     Vec<T> comVel = calCOMVelocity(particles, allSpecies);
     for (auto& p : particles) {
         p.v -= comVel;

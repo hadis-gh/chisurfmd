@@ -113,7 +113,7 @@ Vec<T> calForceTwo(const ParticleDot<T> &p1, const ParticleDot<T> &p2, const T& 
 }
 
 template<typename T, typename Force>
-Vec<T> calTotalForce(const Particle<T> &p1, const std::vector<Particle<T>> &particles, const T& boxPBC, Force &&force){
+Vec<T> calTotalForce(const ParticleDot<T> &p1, const std::vector<ParticleDot<T>> &particles, const T& boxPBC, Force &&force){
     Vec<T> f;
     for (auto &p : particles){
         if (p1.r != p.r){
@@ -124,16 +124,27 @@ Vec<T> calTotalForce(const Particle<T> &p1, const std::vector<Particle<T>> &part
 }
 
 template<typename T, typename Force>
-Vec<T> calAccelaration(const Particle<T> &p1, const std::vector<Particle<T>> &particles, const std::vector<Species<T>>& allSpecies, const T& boxPBC, Force &&force){
+Vec<T> calAccelaration(const ParticleDot<T> &p1, const std::vector<ParticleDot<T>> &particles, const std::vector<Species<T>>& allSpecies, const T& boxPBC, Force &&force){
     T mass = allSpecies[p1.species].mass;
     return calTotalForce(p1, particles, boxPBC, std::forward<Force>(force))/ mass;
 }
 
 template<typename T, typename Force>
-std::vector<Vec<T>> calAllAccelerations(const std::vector<Particle<T>> &particles, const std::vector<Species<T>>& allSpecies, const T& boxPBC, Force &&force) {
+std::vector<Vec<T>> calAllAccelerations(const std::vector<ParticleDot<T>> &particles, const std::vector<Species<T>>& allSpecies, const T& boxPBC, Force &&force) {
     std::vector<Vec<T>> accelerations(particles.size());
     for (unsigned int i = 0; i < particles.size(); ++i) {
         accelerations[i] = calAccelaration(particles[i], particles, allSpecies, boxPBC, std::forward<Force>(force));
     }
     return accelerations;
+}
+
+template<typename T>
+void implementPBC(ParticleDot<T>& p, const T& boxPBC) {    
+    for (int i = 0; i < 2; ++i) {
+        if (p.r[i] > boxPBC) { 
+            p.r[i] -= boxPBC; 
+        } else if (p.r[i] < 0) { 
+            p.r[i] += boxPBC; 
+        }
+    }
 }
