@@ -14,8 +14,48 @@ struct Species
 template<typename T>
 struct ParticleDot
 {
-    Vec<T> r, v;
+    using value_type = T;
+
+    Vec<value_type> r, v;
     unsigned int species;
+};
+
+template<typename Particle, typename SFINAE=void>
+struct CreateRandomParticle;
+
+template<typename Particle>
+auto createRandomParticle(std::mt19937& gen){
+    return CreateRandomParticle<Particle>::createRandomParticle(gen);
+}
+
+template<typename T>
+struct CreateRandomParticle<ParticleDot<T>>
+{
+    static ParticleDot<T> createRandomParticle(std::mt19937& gen)
+    {
+        std::uniform_real_distribution<T> randomPos(0, 1);
+        ParticleDot<T> p;
+        p.r[0] = randomPos(gen);
+        p.r[1] = randomPos(gen);
+        return p;
+    }
+};
+
+template<typename Particle, typename SFINAE=void>
+struct DegreesOfFreedom;
+
+template<typename Particle>
+constexpr auto degreesOfFreedom(){
+    return DegreesOfFreedom<std::decay_t<Particle>>::degreesOfFreedom();
+}
+
+template<typename T>
+struct DegreesOfFreedom<ParticleDot<T>>
+{
+    static constexpr int degreesOfFreedom()
+    {
+        return 2;
+    }
 };
 
 // getting generalized positions
@@ -92,8 +132,8 @@ struct SetGeneralizedVelocities<ParticleDot<T>>
     }
 };
 
-template<typename T>
-using Particle = ParticleDot<T>;
+//template<typename T> // remove
+//using Particle = ParticleDot<T>;
 
 //Force calculations
 template<typename T, typename Force>
@@ -129,9 +169,9 @@ Vec<T> calAccelaration(const ParticleDot<T> &p1, const std::vector<ParticleDot<T
     return calTotalForce(p1, particles, boxPBC, std::forward<Force>(force))/ mass;
 }
 
-template<typename T, typename Force>
-std::vector<Vec<T>> calAllAccelerations(const std::vector<ParticleDot<T>> &particles, const std::vector<Species<T>>& allSpecies, const T& boxPBC, Force &&force) {
-    std::vector<Vec<T>> accelerations(particles.size());
+template<typename TParticle, typename Force, typename T = typename TParticle::value_type>
+std::vector<Vec<T>> calAllAccelerations(const std::vector<TParticle> &particles, const std::vector<Species<T>>& allSpecies, const T& boxPBC, Force &&force) {
+    std::vector<Vec<T, degreesOfFreedom<TParticle>()>> accelerations(particles.size());
     for (unsigned int i = 0; i < particles.size(); ++i) {
         accelerations[i] = calAccelaration(particles[i], particles, allSpecies, boxPBC, std::forward<Force>(force));
     }

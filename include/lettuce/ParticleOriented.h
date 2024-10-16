@@ -5,11 +5,33 @@
 #include "lettuce/Vec.h"
 #include "lettuce/Particle.h"
 
-
 template<typename T>
 struct ParticleOriented : public ParticleDot<T>
 {
-    T phi, omega;
+    using typename ParticleDot<T>::value_type;
+
+    value_type phi, omega;
+};
+
+template<typename T>
+struct CreateRandomParticle<ParticleOriented<T>>
+{
+    static ParticleOriented<T> createRandomParticle(std::mt19937& gen)
+    {
+        std::uniform_real_distribution<T> randomPos(0, 1);
+        ParticleOriented p = createRandomParticle<ParticleDot<T>>(gen);
+        p.phi = randomPos(gen) * 2 * M_PI;
+        return p;
+    }
+};
+
+template<typename T>
+struct DegreesOfFreedom<ParticleOriented<T>>
+{
+    static constexpr int degreesOfFreedom()
+    {
+        return 3;
+    }
 };
 
 // getting generalized positions
@@ -70,7 +92,7 @@ Vec<T> calForceTwo(const ParticleOriented<T>& p1, const ParticleOriented<T>& p2,
     Vec<T> dr = p2.r - p1.r;
     T deltaPhi = p2.phi - p1.phi;
 
-    for (int i = 0; i < 2; ++i) {
+    for (int i = 0; i < 2; ++i) {   //make extra func
         if (dr[i] > boxPBC / 2) { dr[i] -= boxPBC; }
         else if (dr[i] < -boxPBC / 2) { dr[i] += boxPBC; }
     }
@@ -111,9 +133,9 @@ Vec<T, 3> calAcceleration(const ParticleOriented<T>& p1, const std::vector<Parti
     return {acceleration[0], acceleration[1], angular_acceleration};
 }
 
-template<typename T, typename Force>
+template<typename T, typename Force> // see Andersen instead of T -> Particle
 std::vector<Vec<T, 3>> calAllAccelerations(const std::vector<ParticleOriented<T>>& particles, const std::vector<Species<T>>& allSpecies, const T& boxPBC, Force&& force) {
-    std::vector<Vec<T, 3>> accelerations(particles.size());
+    std::vector<Vec<T, 3>> accelerations(particles.size()); //use trait for get the degrees of freedom and use one for all partivcles
     for (unsigned int i = 0; i < particles.size(); ++i) {
         accelerations[i] = calAcceleration(particles[i], particles, allSpecies, boxPBC, std::forward<Force>(force));
     }
@@ -122,13 +144,8 @@ std::vector<Vec<T, 3>> calAllAccelerations(const std::vector<ParticleOriented<T>
 
 template<typename T>
 void implementPBC(ParticleOriented<T>& p, const T& boxPBC) {
-    for (int i = 0; i < 2; ++i) {
-        if (p.r[i] > boxPBC) { 
-            p.r[i] -= boxPBC; 
-        } else if (p.r[i] < 0) { 
-            p.r[i] += boxPBC; 
-        }
-    }
+    implementPBC(static_cast<ParticleDot<T>&>(p), boxPBC);
+
     T phi = p.r[2]; 
     phi = std::fmod(phi, 360.0);
     if (phi < 0) {

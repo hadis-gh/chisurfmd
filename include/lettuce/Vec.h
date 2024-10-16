@@ -52,9 +52,13 @@ public:
     Vec<T, D> cross(const Vec<T, D>& other)const;
     T abs2()const;
     T abs()const;
-    
+
+    void fill(T v) {
+        elements.fill(v);
+    }
+
     void invalidate() {
-        elements.fill(NAN);
+        fill(NAN);
     }
 };
 

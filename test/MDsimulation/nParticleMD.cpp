@@ -35,6 +35,8 @@ using Real = double;
 
 // what is char* argv[] ? Does it something to do with lambda functions because of [] or just showing traditional lists?
 
+using ParticleT = ParticleDot<Real>;
+
 int main(int argc, char* argv[]) {
     po::variables_map vm;
     po::options_description desc("Allowed Options");
@@ -107,7 +109,7 @@ int main(int argc, char* argv[]) {
     LennardJonesOrientedForce<Real> LJOForce(epsilon, sigma, cutoff, phiConst);
     LennardJonesOrientedPotential<Real> LJOPotential(epsilon, sigma, cutoff, phiConst);
 
-    auto integrationMethod = VelocityVerletStep<Real, LennardJonesForce<Real>, ParticleDot>;
+    auto integrationMethod = VelocityVerletStep<ParticleT, LennardJonesForce<Real>>;
 
     Species<Real> species1 {mass, radius};
     Species<Real> species2 {2.0f * mass, 0.5f * radius};
@@ -115,7 +117,7 @@ int main(int argc, char* argv[]) {
     int speciesInd = 0;
 //encapsulation and abstraction of particle species instead of allSpecies + speciesInd + particles in the functions
 
-    std::vector<Particle<Real>> particles = initialParticles(particlesNum, allSpecies, speciesInd, areaL, gen, vm["particlesInit"].as<std::string>());
+    auto particles = initialParticles<ParticleT>(particlesNum, allSpecies, speciesInd, areaL, gen, vm["particlesInit"].as<std::string>());
     // std::vector<ParticleOriented<Real>> particles = initialParticlesOriented(particlesNum, allSpecies, speciesInd, areaL, gen, vm["particlesInit"].as<std::string>());
 
     writeInitialParticles(particles, radius);
@@ -142,13 +144,13 @@ int main(int argc, char* argv[]) {
         if constexpr (LETTUCE_THERMOSTAT == ThermostatID::None)
             return [](auto, auto) { return 1.; };
         else if constexpr (LETTUCE_THERMOSTAT == ThermostatID::VelocityScaling)
-            return VelocityScalingThermostat<Real, ParticleDot>(desiredTemperature);
+            return VelocityScalingThermostat<ParticleT>(desiredTemperature);
         else if constexpr (LETTUCE_THERMOSTAT == ThermostatID::Berendsen)
-            return BerendsenThermostat<Real, ParticleDot>(vm["thermoInterval"].as<Real>(), desiredTemperature, relaxationTime);
+            return BerendsenThermostat<ParticleT>(vm["thermoInterval"].as<Real>(), desiredTemperature, relaxationTime);
         else if constexpr (LETTUCE_THERMOSTAT == ThermostatID::NoseHoover)
             return nullptr;
         else if constexpr (LETTUCE_THERMOSTAT == ThermostatID::Andersen) {
-            return AndersenThermostat<Real, ParticleDot>(vm["thermoInterval"].as<Real>(), collisionFrequency, desiredTemperature, gen);
+            return AndersenThermostat<ParticleT>(vm["thermoInterval"].as<Real>(), collisionFrequency, desiredTemperature, gen);
         }
     }();
 

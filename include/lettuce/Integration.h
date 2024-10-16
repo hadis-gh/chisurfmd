@@ -10,8 +10,8 @@
 #include "lettuce/LennardJonesOriented.h"
 #include "lettuce/Thermostat.h"
 
-template<typename T, typename Force, template<typename TT> typename TParticle>
-void EulerSymplecticStep(std::vector<TParticle<T>>& particles, const std::vector<Species<T>>& allSpecies, const T& dt, const T& boxPBC, const Force& force) {
+template<typename TParticle, typename Force, typename T = typename TParticle::value_type>
+void EulerSymplecticStep(std::vector<TParticle>& particles, const std::vector<Species<T>>& allSpecies, const T& dt, const T& boxPBC, const Force& force) {
     const auto accelerations = calAllAccelerations(particles, allSpecies, boxPBC, force);
     for (size_t i = 0; i < particles.size(); ++i) {
         const auto r = getGeneralizedPositions(particles[i]);
@@ -22,8 +22,8 @@ void EulerSymplecticStep(std::vector<TParticle<T>>& particles, const std::vector
     }
 }
 
-template<typename T, typename Force, template<typename TT> typename TParticle>
-void EulerStep(std::vector<TParticle<T>>& particles, const std::vector<Species<T>>& allSpecies, const T& dt, const T& boxPBC, const Force& force) {
+template<typename TParticle, typename Force, typename T = typename TParticle::value_type>
+void EulerStep(std::vector<TParticle>& particles, const std::vector<Species<T>>& allSpecies, const T& dt, const T& boxPBC, const Force& force) {
     const auto accelerations = calAllAccelerations(particles, allSpecies, boxPBC, force);
     for (size_t i = 0; i < particles.size(); ++i) {
         const auto r = getGeneralizedPositions(particles[i]);
@@ -34,8 +34,8 @@ void EulerStep(std::vector<TParticle<T>>& particles, const std::vector<Species<T
     }
 }
 
-template<typename T, typename Force, template<typename TT> typename TParticle>
-void VelocityVerletStep(std::vector<TParticle<T>>& particles, const std::vector<Species<T>>& allSpecies, const T& dt, const T& boxPBC, const Force& force) {
+template<typename TParticle, typename Force, typename T = typename TParticle::value_type>
+void VelocityVerletStep(std::vector<TParticle>& particles, const std::vector<Species<T>>& allSpecies, const T& dt, const T& boxPBC, const Force& force) {
     const auto old_accelerations = calAllAccelerations(particles, allSpecies, boxPBC, force);
 
     for (size_t i = 0; i < particles.size(); ++i) {
@@ -53,8 +53,8 @@ void VelocityVerletStep(std::vector<TParticle<T>>& particles, const std::vector<
     }
 }
 
-template<typename T, typename Integrator, typename Force, template<typename TT> typename TParticle>
-void integrate(std::vector<TParticle<T>>& particles, const std::vector<Species<T>>& allSpecies, T dt, T Time, const T& boxPBC, Force&& force, Integrator&& integrator) {
+template<typename TParticle, typename Integrator, typename Force, typename T = typename TParticle::value_type>
+void integrate(std::vector<TParticle>& particles, const std::vector<Species<T>>& allSpecies, T dt, T Time, const T& boxPBC, Force&& force, Integrator&& integrator) {
     int numSteps = static_cast<int>(Time / dt);
 
     for (int i = 0; i < numSteps; ++i) {
@@ -62,7 +62,7 @@ void integrate(std::vector<TParticle<T>>& particles, const std::vector<Species<T
     }
 }
 
-template<typename T, typename TParticle>
+template<typename TParticle, typename T = typename TParticle::value_type>
 T calAverageNeighbors(const std::vector<TParticle>& particles, const T& distance) {
     T totalNeighbors = 0;
     for (const auto& p1 : particles) {
@@ -77,7 +77,7 @@ T calAverageNeighbors(const std::vector<TParticle>& particles, const T& distance
     return totalNeighbors / particles.size();
 }
 
-template<typename T, typename TParticle>
+template<typename TParticle, typename T = typename TParticle::value_type>
 Vec<T> calCOMposition(const std::vector<TParticle>& particles, const std::vector<Species<T>>& allSpecies) {
     Vec<T> comPos;
     T totalMass = 0;
@@ -89,7 +89,7 @@ Vec<T> calCOMposition(const std::vector<TParticle>& particles, const std::vector
     return comPos / totalMass;
 }
 
-template<typename T, typename TParticle>
+template<typename TParticle, typename T = typename TParticle::value_type>
 T calAngularMomentum2D(const std::vector<TParticle>& particles, const std::vector<Species<T>>& allSpecies, const Vec<T>& comPos) {
     T L = 0;
     for (const auto& p : particles) {
@@ -100,7 +100,7 @@ T calAngularMomentum2D(const std::vector<TParticle>& particles, const std::vecto
     return L;
 }
 
-template<typename T, typename TParticle>
+template<typename TParticle, typename T = typename TParticle::value_type>
 T calMomentOfInertia2D(const std::vector<TParticle>& particles, const std::vector<Species<T>>& allSpecies, const Vec<T>& comPos) {
     T I = 0;
     for (const auto& p : particles) {
@@ -111,7 +111,7 @@ T calMomentOfInertia2D(const std::vector<TParticle>& particles, const std::vecto
     return I;
 }
 
-template<typename T, typename TParticle>
+template<typename TParticle, typename T = typename TParticle::value_type>
 void removeCOMvelocityRotation2D(std::vector<TParticle>& particles, const std::vector<Species<T>>& allSpecies) {
     Vec<T> comPos = calCOMposition(particles, allSpecies);
     T angularMomentum = calAngularMomentum2D(particles, allSpecies, comPos);
@@ -127,7 +127,7 @@ void removeCOMvelocityRotation2D(std::vector<TParticle>& particles, const std::v
     }
 }
 
-template<typename T, typename TParticle>
+template<typename TParticle, typename T = typename TParticle::value_type>
 void writeInitialParticles(const std::vector<TParticle>& particles, const T radius) {
     std::ofstream initialParticles("FirstConfigPlot.dat");
     for (const auto& p : particles) {
@@ -135,7 +135,7 @@ void writeInitialParticles(const std::vector<TParticle>& particles, const T radi
     }
 }
 
-template<typename T, typename TParticle>
+template<typename TParticle, typename T = typename TParticle::value_type>
 void writePositionToFile(const std::vector<TParticle>& particles, std::ostream& file, const T& dt, const int& step) {
     file << dt * step << " ";
     for (const auto& p : particles) {
@@ -144,7 +144,7 @@ void writePositionToFile(const std::vector<TParticle>& particles, std::ostream& 
     file << "\n";
 }
 
-template<typename T, typename TParticle>
+template<typename TParticle, typename T = typename TParticle::value_type>
 void writeKineticEToFile(const std::vector<TParticle>& particles, const std::vector<Species<T>>& allSpecies, std::ostream& file) {
     for (const auto& p : particles) {
         file << calParticleKineticEnergy(p, allSpecies) << " ";
@@ -152,7 +152,7 @@ void writeKineticEToFile(const std::vector<TParticle>& particles, const std::vec
     file << "\n";
 }
 
-template<typename T, typename TParticle>
+template<typename TParticle, typename T = typename TParticle::value_type>
 void writeRelativeKineticEToFile(const std::vector<TParticle>& particles, const std::vector<Species<T>>& allSpecies, std::ostream& file) {
     Vec<T> comVelocity = comVelocity(particles, allSpecies);
 
@@ -163,17 +163,17 @@ void writeRelativeKineticEToFile(const std::vector<TParticle>& particles, const 
     file << "\n";
 }
 
-template<typename T, typename TParticle>
+template<typename TParticle, typename T = typename TParticle::value_type>
 void writeTemperature(const std::vector<TParticle>& particles, const std::vector<Species<T>>& allSpecies, std::ostream& file) {
     file << calInternalTemperature(particles, allSpecies) << std::endl;
 }
 
-template<typename T, typename TParticle>
+template<typename TParticle, typename T = typename TParticle::value_type>
 void writeRealTemperature(const std::vector<TParticle>& particles, const std::vector<Species<T>>& allSpecies, std::ostream& file) {
     file << calRawTemperature(particles, allSpecies) << std::endl;
 }
 
-template<typename T, typename Potential, typename TParticle>
+template<typename TParticle, typename Potential, typename T = typename TParticle::value_type>
 void writePotentialEToFile(const std::vector<TParticle>& particles, const std::vector<Species<T>>& allSpecies, const T& boxPBC, Potential&& potential, std::ostream& file) {
     const auto potentialEnergy = calAllAccelerations(particles, allSpecies, boxPBC, std::forward<Potential>(potential));
     for (const auto& u : potentialEnergy) {
@@ -182,8 +182,8 @@ void writePotentialEToFile(const std::vector<TParticle>& particles, const std::v
     file << "\n";
 }
 
-template<typename T, template<typename TT> typename TParticle>
-void writeAverageNeighborToFile(const std::vector<TParticle<T>>& particles, const std::vector<T>& distances, std::ostream& file, const T& dt, const int& step) {
+template<typename TParticle, typename T = typename TParticle::value_type>
+void writeAverageNeighborToFile(const std::vector<TParticle>& particles, const std::vector<T>& distances, std::ostream& file, const T& dt, const int& step) {
     file << dt * step << " ";
     for (const T& d : distances) {
         file << calAverageNeighbors(particles, d) << " ";
@@ -191,18 +191,18 @@ void writeAverageNeighborToFile(const std::vector<TParticle<T>>& particles, cons
     file << "\n";
 }
 
-template<typename T, template<typename TT> typename TParticle>
-void writeAverageNeighborToFile(const std::vector<TParticle<T>>& particles, const T& distance, std::ostream& file, const T& dt, const int& step) {
+template<typename TParticle, typename T = typename TParticle::value_type>
+void writeAverageNeighborToFile(const std::vector<TParticle>& particles, const T& distance, std::ostream& file, const T& dt, const int& step) {
     file << dt * step << " " << calAverageNeighbors(particles, distance) << "\n";
 }
 
-template<typename T, template<typename TT> typename TParticle>
-void writeComVelocityToFile(const std::vector<TParticle<T>>& particles, const std::vector<Species<T>>& allSpecies, std::ostream& file, const T& dt, const int& step) {
+template<typename TParticle, typename T = typename TParticle::value_type>
+void writeComVelocityToFile(const std::vector<TParticle>& particles, const std::vector<Species<T>>& allSpecies, std::ostream& file, const T& dt, const int& step) {
     file << dt * step << " " << calCOMVelocity(particles, allSpecies) << "\n";
 }
 
-template<typename T, template<typename TT> typename TParticle>
-void writeComAngularVelocityToFile(const std::vector<TParticle<T>>& particles, const std::vector<Species<T>>& allSpecies, std::ostream& file, const T& dt, const int& step) {
+template<typename TParticle, typename T = typename TParticle::value_type>
+void writeComAngularVelocityToFile(const std::vector<TParticle>& particles, const std::vector<Species<T>>& allSpecies, std::ostream& file, const T& dt, const int& step) {
     Vec<T> comPos = calCOMposition(particles, allSpecies);
 
     file << dt * step << " " << calAngularMomentum2D(particles, allSpecies, comPos) << "\n";

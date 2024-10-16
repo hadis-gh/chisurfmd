@@ -80,9 +80,9 @@ std::vector<Circle<T>> distRandomCircles(const int& circlesNum, const T& L, cons
     return circles;
 }
 
-template<typename T>
-std::vector<Particle<T>> distRandomParticles(const int& particlesNum, const T& L, const T& radius, std::mt19937& gen) {
-    std::vector<Particle<T>> randomParticles(particlesNum);
+template<typename TParticle, typename T = typename TParticle::value_type>
+std::vector<TParticle> distRandomParticles(const int& particlesNum, const T& L, const T& radius, std::mt19937& gen) {
+    std::vector<TParticle> randomParticles(particlesNum);
     std::vector<Circle<T>> randomCircles = distRandomCircles(particlesNum, L, radius, gen);
     for (int i = 0; i < particlesNum; ++i) {
         randomParticles[i].r = randomCircles[i].c;
@@ -95,10 +95,10 @@ T packingDensity(const int& number, const T& radius, const T& L) {
     return (number * M_PI * radius * radius) / (L * L);
 }
 
-template<typename T>
-std::vector<Particle<T>> manualRandomParticles(const int& particlesNum, const T& L, const T& radius, std::mt19937& gen) {
+template<typename TParticle, typename T = typename TParticle::value_type>
+std::vector<TParticle> manualRandomParticles(const int& particlesNum, const T& L, const T& radius, std::mt19937& gen) {
     int topSquareRoot = static_cast<int>(std::ceil(std::sqrt(particlesNum)));
-    std::vector<Particle<T>> particles;
+    std::vector<TParticle> particles;
     T currDensity = packingDensity(topSquareRoot * topSquareRoot, radius, L);
     const double maxPackingDensity = 0.7854;
 
@@ -109,23 +109,24 @@ std::vector<Particle<T>> manualRandomParticles(const int& particlesNum, const T&
         throw std::runtime_error("Too many particles for this area!");
     }
 
+    particles.reserve(particlesNum);
+
     T distance = L / (topSquareRoot + 1);
-    Particle<T> newParticle;
+
+    const T dr = distance / 2 - radius;
 
     for (int i = 0; i < topSquareRoot; ++i) {
         for (int j = 0; j < topSquareRoot; ++j) {
             if (particles.size() < particlesNum) {
-                newParticle.r[0] = (i + 1) * distance;
-                newParticle.r[1] = (j + 1) * distance;
+                auto newParticle = createRandomParticle<TParticle>(gen);
+                for(int a = 0; a < 2; ++a)
+                {
+                    newParticle.r[a] = ((newParticle.r[a] * 2) - 1) * dr;
+                    newParticle.r[a] += (i + 1) * distance;
+                }
                 particles.push_back(newParticle);
             }
         }
-    }
-
-    std::uniform_real_distribution<T> randomPos(-distance / 2 + radius, distance / 2 - radius);
-    for (auto &p : particles) {
-        p.r[0] += randomPos(gen);
-        p.r[1] += randomPos(gen);
     }
 
     return particles;
@@ -158,12 +159,13 @@ std::vector<Circle<T>> distCirclesDLA(const int& shootNum, const T& L, const T& 
     return finalCircles;
 }
 
-template<typename T>
-std::vector<Particle<T>> distParticleDLA(const int& shootNum, const T& L, const T& radius, std::mt19937& gen) {
+template<typename TParticle, typename T = typename TParticle::value_type>
+std::vector<TParticle> distParticleDLA(const int& shootNum, const T& L, const T& radius, std::mt19937& gen) {
     std::vector<Circle<T>> finalCircles = distCirclesDLA(shootNum, L, radius, gen);
-    std::vector<Particle<T>> finalParticles(finalCircles.size());
+    std::vector<TParticle> finalParticles(finalCircles.size());
 
     for (size_t i = 0; i < finalCircles.size(); ++i) {
+        finalParticles[i] = createRandomParticle<TParticle>(gen);
         finalParticles[i].r = finalCircles[i].c;
     }
     return finalParticles;
@@ -177,38 +179,38 @@ void writeCircles(T begin, T end, const std::string& fname) {
     }
 }
 
-template<typename T>
-void writeParticle(const std::vector<Particle<T>>& particles, T radius, const std::string& fname) {
+template<typename TParticle, typename T = typename TParticle::value_type>
+void writeParticle(const std::vector<TParticle>& particles, T radius, const std::string& fname) {
     std::ofstream output_file(fname);
     for (const auto& p : particles) {
         output_file << p.r[0] << ", " << p.r[1] << ", " << radius << "\n";
     }
 }
 
-template<typename T>
-std::vector<Particle<T>> initialParticles(const unsigned int& particlesNum, const std::vector<Species<T>>& allSpecies, int& speciesNum, const T& L, std::mt19937& gen, const std::string& configuration) {
-    std::vector<Particle<T>> particles;
+template<typename TParticle, typename T = typename TParticle::value_type>
+std::vector<TParticle> initialParticles(const unsigned int& particlesNum, const std::vector<Species<T>>& allSpecies, int& speciesNum, const T& L, std::mt19937& gen, const std::string& configuration) {
+    std::vector<TParticle> particles;
     
     if (configuration == "RANDOM") {
         // particles = distRandomParticles(particlesNum, L, allSpecies[speciesNum].radius, gen);
-        particles = manualRandomParticles(particlesNum, L, allSpecies[speciesNum].radius, gen);
+        particles = manualRandomParticles<TParticle>(particlesNum, L, allSpecies[speciesNum].radius, gen);
     } else if (configuration == "DLA") {
-        particles = distParticleDLA(particlesNum, L, allSpecies[speciesNum].radius, gen);
-    } else if (configuration == "THREE") {
-        particles.reserve(4);
-        particles.push_back({{{0.0, 0.0}}, {{0.0, 0.0}}, 0});
-        particles.push_back({{{1.2, 0.0}}, {{0.0, 0.0}}, 0});
-        particles.push_back({{{0.0, 1.5}}, {{0.0, 0.0}}, 0});
-        particles.push_back({{{1.2, 1.2}}, {{0.0, 0.0}}, 0});
+        particles = distParticleDLA<TParticle>(particlesNum, L, allSpecies[speciesNum].radius, gen);
     } 
     else {
         particles.reserve(1024);
         std::ifstream config(configuration);
         std::string line;
         while (std::getline(config, line)) {
-            Particle<T> p;
+            TParticle p;
             std::istringstream is(line);
-            is >> p.r[0] >> p.r[1];
+            constexpr int D = degreesOfFreedom<TParticle>();
+            Vec<T, D> q;
+            for(int a = 0; a < D; ++a)
+            {
+                is >> q[a];
+            }
+            setGeneralizedPositions(p, q);
             if (!is) {
                 std::ostringstream os;
                 os << "Invalid particle line " << particles.size() + 1;
@@ -218,10 +220,14 @@ std::vector<Particle<T>> initialParticles(const unsigned int& particlesNum, cons
             if (p.r[0] > L || p.r[0] < 0. || p.r[1] > L || p.r[1] < 0.) {
                 continue;
             }
-            is >> p.v[0] >> p.v[1];
-            if (!is) {
-                p.v = {{0., 0.}};
+            for(int a = 0; a < D; ++a)
+            {
+                is >> q[a];
             }
+            if (!is) {
+                q.fill(0);
+            }
+            setGeneralizedVelocities(p, q);
             if (!is.eof()) {
                 std::ostringstream os;
                 os << "Invalid particle line " << particles.size() + 1 << ": unread characters.";
@@ -237,10 +243,10 @@ std::vector<Particle<T>> initialParticles(const unsigned int& particlesNum, cons
     return particles;
 }
 
-template<typename T>
+template<typename TParticle, typename T = typename TParticle::value_type>
 std::vector<ParticleOriented<T>> initialParticlesOriented(const unsigned int& particlesNum, const std::vector<Species<T>>& allSpecies, int& speciesNum, const T& L, std::mt19937& gen, const std::string& configuration) {
     std::vector<ParticleOriented<T>> particlesOriented;
-    std::vector<Particle<T>> particlesDot = initialParticles(particlesNum, allSpecies, speciesNum, L, gen, configuration);
+    std::vector<TParticle> particlesDot = initialParticles<TParticle>(particlesNum, allSpecies, speciesNum, L, gen, configuration);
 
     particlesOriented.resize(particlesDot.size());
     
