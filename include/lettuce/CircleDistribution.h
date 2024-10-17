@@ -105,32 +105,49 @@ std::vector<TParticle> manualRandomParticles(const int& particlesNum, const T& L
     int maxParticles = static_cast<int>(maxPackingDensity * L * L / (M_PI * radius * radius));
 
     if (currDensity > maxPackingDensity) {
-        std::cout << "maximum possible number for particles is : " << maxParticles << " but you entered: " << particlesNum << std::endl;
+        std::cout << "Maximum possible number of particles is : " << maxParticles << " but you entered: " << particlesNum << std::endl;
         throw std::runtime_error("Too many particles for this area!");
     }
 
     particles.reserve(particlesNum);
-
     T distance = L / (topSquareRoot + 1);
-
     const T dr = distance / 2 - radius;
+
+    std::uniform_real_distribution<T> randomDisplacement(-dr, dr);
 
     for (int i = 0; i < topSquareRoot; ++i) {
         for (int j = 0; j < topSquareRoot; ++j) {
             if (particles.size() < particlesNum) {
-                auto newParticle = createRandomParticle<TParticle>(gen);
-                for(int a = 0; a < 2; ++a)
-                {
-                    newParticle.r[a] = ((newParticle.r[a] * 2) - 1) * dr;
-                    newParticle.r[a] += (i + 1) * distance;
+                TParticle newParticle;
+
+                newParticle.r[0] = (i + 1) * distance;
+                newParticle.r[1] = (j + 1) * distance;
+
+                newParticle.r[0] += randomDisplacement(gen);
+                newParticle.r[1] += randomDisplacement(gen);
+
+                bool hasOverlap = false;
+                for (const auto& existingParticle : particles) {
+                    T dx = newParticle.r[0] - existingParticle.r[0];
+                    T dy = newParticle.r[1] - existingParticle.r[1];
+                    T distSquared = dx * dx + dy * dy;
+                    if (distSquared < 4 * radius * radius) {
+                        hasOverlap = true;
+                        break;
+                    }
                 }
-                particles.push_back(newParticle);
+                if (!hasOverlap) {
+                    particles.push_back(newParticle);
+                } else {
+                    --j;
+                }
             }
         }
     }
 
     return particles;
 }
+
 
 template<typename T>
 std::vector<Circle<T>> distCirclesDLA(const int& shootNum, const T& L, const T& radius, std::mt19937& gen) {
@@ -192,8 +209,9 @@ std::vector<TParticle> initialParticles(const unsigned int& particlesNum, const 
     std::vector<TParticle> particles;
     
     if (configuration == "RANDOM") {
-        // particles = distRandomParticles(particlesNum, L, allSpecies[speciesNum].radius, gen);
         particles = manualRandomParticles<TParticle>(particlesNum, L, allSpecies[speciesNum].radius, gen);
+    } else if (configuration == "RANDOM2") {
+        particles = distRandomParticles<TParticle>(particlesNum, L, allSpecies[speciesNum].radius, gen);
     } else if (configuration == "DLA") {
         particles = distParticleDLA<TParticle>(particlesNum, L, allSpecies[speciesNum].radius, gen);
     } 

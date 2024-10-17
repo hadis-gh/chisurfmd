@@ -35,7 +35,7 @@ using Real = double;
 
 // what is char* argv[] ? Does it something to do with lambda functions because of [] or just showing traditional lists?
 
-using ParticleT = ParticleDot<Real>;
+using ParticleT = ParticleOriented<Real>;
 
 int main(int argc, char* argv[]) {
     po::variables_map vm;
@@ -85,7 +85,6 @@ int main(int argc, char* argv[]) {
     constexpr Real epsilon = 1;
     constexpr Real mass = 1;
     constexpr Real phiConst = 1;
-    // can't we ignore sigma and epsilon and consider them in units of r and u? (modified formula of LJ)
     
     const Real radius = vm["exclusionRadius"].as<Real>();
     Real areaL = vm["areaL"].as<Real>();
@@ -118,7 +117,6 @@ int main(int argc, char* argv[]) {
 //encapsulation and abstraction of particle species instead of allSpecies + speciesInd + particles in the functions
 
     auto particles = initialParticles<ParticleT>(particlesNum, allSpecies, speciesInd, areaL, gen, vm["particlesInit"].as<std::string>());
-    // std::vector<ParticleOriented<Real>> particles = initialParticlesOriented(particlesNum, allSpecies, speciesInd, areaL, gen, vm["particlesInit"].as<std::string>());
 
     writeInitialParticles(particles, radius);
 
