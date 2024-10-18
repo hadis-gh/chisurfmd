@@ -18,9 +18,15 @@ struct CreateRandomParticle<ParticleOriented<T>>
 {
     static ParticleOriented<T> createRandomParticle(std::mt19937& gen)
     {
+        ParticleDot<T> baseParticle = createRandomParticle<ParticleDot<T>>(gen);
+
+        ParticleOriented<T> p;
+        p.r[0] = baseParticle.r[0];
+        p.r[1] = baseParticle.r[1];
+
         std::uniform_real_distribution<T> randomPos(0, 1);
-        ParticleOriented p = createRandomParticle<ParticleDot<T>>(gen);
         p.phi = randomPos(gen) * 2 * M_PI;
+
         return p;
     }
 };
@@ -38,7 +44,7 @@ struct DegreesOfFreedom<ParticleOriented<T>>
 template<typename T>
 struct GetGeneralizedPositions<ParticleOriented<T>>
 {
-    static const Vec<T,3>& getGeneralizedPositions(const ParticleOriented<T>& p)
+    static Vec<T,3> getGeneralizedPositions(const ParticleOriented<T>& p)
     {
         Vec<T,3> r;
         r[0] = p.r[0];
@@ -111,7 +117,7 @@ Vec<T> calForceTwo(const ParticleOriented<T>& p1, const ParticleOriented<T>& p2,
 }
 
 template<typename T, typename Force>
-Vec<T> calTotalForce(const ParticleOriented<T>& p1, const std::vector<ParticleOriented<T>>& particles, const T& boxPBC, Force&& force) {
+Vec<T, 3> calTotalForce(const ParticleOriented<T>& p1, const std::vector<ParticleOriented<T>>& particles, const T& boxPBC, Force&& force) {
     Vec<T, 3> total_force;
     for (const auto& p : particles) {
         if (p1.r != p.r) {
@@ -127,10 +133,10 @@ Vec<T, 3> calAcceleration(const ParticleOriented<T>& p1, const std::vector<Parti
     T moment_of_inertia = mass * std::pow(allSpecies[p1.species].radius, 2) / 2; // Simplified for circular particles
 
     Vec<T, 3> total_force = calTotalForce(p1, particles, boxPBC, std::forward<Force>(force));
-    Vec<T, 2> acceleration = {total_force[0] / mass, total_force[1] / mass}; // Translational acceleration
+    Vec<T, 2> acceleration = {{total_force[0] / mass, total_force[1] / mass}}; // Translational acceleration
     T angular_acceleration = total_force[2] / moment_of_inertia; // Rotational acceleration
 
-    return {acceleration[0], acceleration[1], angular_acceleration};
+    return {{acceleration[0], acceleration[1], angular_acceleration}};
 }
 
 template<typename T, typename Force> // see Andersen instead of T -> Particle
