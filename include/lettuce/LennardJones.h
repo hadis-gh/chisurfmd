@@ -9,6 +9,8 @@
 template<typename T>
 class LennardJonesForce {
 public:
+    using value_type = T;
+    
     LennardJonesForce(T epsilon, T sigma, T cutoff) 
         : epsilon(epsilon), sigma(sigma), cutoff(cutoff), sigma6(std::pow(sigma, 6)), sigma12(sigma6 * sigma6) {}
 

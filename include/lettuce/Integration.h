@@ -139,7 +139,11 @@ template<typename TParticle, typename T = typename TParticle::value_type>
 void writePositionToFile(const std::vector<TParticle>& particles, std::ostream& file, const T& dt, const int& step) {
     file << dt * step << " ";
     for (const auto& p : particles) {
-        file << p.r[0] << " " << p.r[1] << " ";
+        // constexpr int D = degreesOfFreedom<TParticle>();
+        auto q = getGeneralizedPositions(p);
+        for (int a = 0; a < q.size(); ++a) {
+            file << p.r[a] << " ";
+        }
     }
     file << "\n";
 }

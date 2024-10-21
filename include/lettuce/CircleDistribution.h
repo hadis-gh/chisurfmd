@@ -118,7 +118,7 @@ std::vector<TParticle> manualRandomParticles(const int& particlesNum, const T& L
     for (int i = 0; i < topSquareRoot; ++i) {
         for (int j = 0; j < topSquareRoot; ++j) {
             if (particles.size() < particlesNum) {
-                TParticle newParticle;
+                auto newParticle = createRandomParticle<TParticle>(gen);
 
                 newParticle.r[0] = (i + 1) * distance;
                 newParticle.r[1] = (j + 1) * distance;
@@ -238,14 +238,15 @@ std::vector<TParticle> initialParticles(const unsigned int& particlesNum, const 
             if (p.r[0] > L || p.r[0] < 0. || p.r[1] > L || p.r[1] < 0.) {
                 continue;
             }
+            Vec<T, D> qDot;
             for(int a = 0; a < D; ++a)
             {
-                is >> q[a];
+                is >> qDot[a];
             }
             if (!is) {
-                q.fill(0);
+                qDot.fill(0);
             }
-            setGeneralizedVelocities(p, q);
+            setGeneralizedVelocities(p, qDot);
             if (!is.eof()) {
                 std::ostringstream os;
                 os << "Invalid particle line " << particles.size() + 1 << ": unread characters.";

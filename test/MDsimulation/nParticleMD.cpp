@@ -35,7 +35,7 @@ using Real = double;
 
 // what is char* argv[] ? Does it something to do with lambda functions because of [] or just showing traditional lists?
 
-using ParticleT = ParticleOriented<Real>;
+using ParticleT = ParticleDot<Real>;
 
 int main(int argc, char* argv[]) {
     po::variables_map vm;
@@ -214,7 +214,14 @@ int main(int argc, char* argv[]) {
     if (vm.count("saveParticles") > 0) {
         std::ofstream configutation(vm["saveParticles"].as<std::string>());
         for (auto p: particles) {
-            configutation << std::setprecision(13) << std::scientific << p.r[0] << "\t" << p.r[1] << "\t" << p.v[0] << "\t" << p.v[1] << std::endl;
+            auto q = getGeneralizedPositions(p);
+            auto qDot = getGeneralizedVelocities(p);
+            for (int a = 0; a < q.size(); ++a) {
+                configutation << std::setprecision(13) << std::scientific << q[a] << "\t";
+            } for (int a = 0; a < qDot.size(); ++a) {
+                configutation << std::setprecision(13) << std::scientific << qDot[a] << "\t";
+            }
+            configutation << std::endl;
         }
     }
 

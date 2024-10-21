@@ -8,6 +8,11 @@
 template<typename T>
 struct ParticleOriented : public ParticleDot<T>
 {
+    // ParticleOriented (ParticleDot<T> p)    //constructor for ParticleOriented
+    // : ParticleDot<T> (p)
+    // {
+    // }
+
     using typename ParticleDot<T>::value_type;
 
     value_type phi, omega;
@@ -18,7 +23,8 @@ struct CreateRandomParticle<ParticleOriented<T>>
 {
     static ParticleOriented<T> createRandomParticle(std::mt19937& gen)
     {
-        ParticleDot<T> baseParticle = createRandomParticle<ParticleDot<T>>(gen);
+
+        ParticleDot<T> baseParticle = CreateRandomParticle<ParticleDot<T>>::createRandomParticle(gen);
 
         ParticleOriented<T> p;
         p.r[0] = baseParticle.r[0];
@@ -94,8 +100,8 @@ struct SetGeneralizedVelocities<ParticleOriented<T>>
 
 // Force calculations for ParticleOriented
 template<typename T, typename Force>
-Vec<T> calForceTwo(const ParticleOriented<T>& p1, const ParticleOriented<T>& p2, const T& boxPBC, Force&& force) {
-    Vec<T> dr = p2.r - p1.r;
+Vec<T, 3> calForceTwo(const ParticleOriented<T>& p1, const ParticleOriented<T>& p2, const T& boxPBC, Force&& force) {
+    Vec<T, 2> dr = p2.r - p1.r;
     T deltaPhi = p2.phi - p1.phi;
 
     for (int i = 0; i < 2; ++i) {   //make extra func
@@ -106,7 +112,7 @@ Vec<T> calForceTwo(const ParticleOriented<T>& p1, const ParticleOriented<T>& p2,
     T r = dr.abs();
     if (r == 0) return {{0, 0}};
     
-    std::array<T, 2> f = force(r, deltaPhi);
+    Vec<T, 2> f = force(r, deltaPhi);
     Vec<T, 3> force_vec;
 
     force_vec[0] = f[0] * dr[0] / r;
@@ -139,6 +145,8 @@ Vec<T, 3> calAcceleration(const ParticleOriented<T>& p1, const std::vector<Parti
     return {{acceleration[0], acceleration[1], angular_acceleration}};
 }
 
+// template<typename Force, typename T = typename Force::value_type>        // this or the next line?
+// template<typename Force, typename T = typename ParticleOriented::value_type>
 template<typename T, typename Force> // see Andersen instead of T -> Particle
 std::vector<Vec<T, 3>> calAllAccelerations(const std::vector<ParticleOriented<T>>& particles, const std::vector<Species<T>>& allSpecies, const T& boxPBC, Force&& force) {
     std::vector<Vec<T, 3>> accelerations(particles.size()); //use trait for get the degrees of freedom and use one for all partivcles

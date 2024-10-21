@@ -16,6 +16,10 @@ public:
     T& operator[](int index);
 	const T& operator[] (int index) const;
 
+    int size() const {
+        return D;
+    }
+
     Vec<T, D> operator+(const Vec<T, D>& other) const;
     Vec<T, D> operator-(const Vec<T, D>& other) const;
     Vec<T, D> operator-() const;
