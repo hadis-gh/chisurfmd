@@ -23,7 +23,7 @@ enum class ThermostatID {
 };
 
 #ifndef LETTUCE_THERMOSTAT
-#define LETTUCE_THERMOSTAT ThermostatID::None
+#define LETTUCE_THERMOSTAT ThermostatID::VelocityScaling
 #endif
 
 #define STRINGIFY(x) #x
@@ -36,6 +36,7 @@ using Real = double;
 // what is char* argv[] ? Does it something to do with lambda functions because of [] or just showing traditional lists?
 
 using ParticleT = ParticleDot<Real>;
+// using Potential = LennardJones<ParticleT>;
 
 int main(int argc, char* argv[]) {
     po::variables_map vm;
@@ -107,6 +108,11 @@ int main(int argc, char* argv[]) {
     LennardJonesPotential<Real> LJPotential(epsilon, sigma, cutoff);
     LennardJonesOrientedForce<Real> LJOForce(epsilon, sigma, cutoff, phiConst);
     LennardJonesOrientedPotential<Real> LJOPotential(epsilon, sigma, cutoff, phiConst);
+
+    // auto force = Potential::force(epsilon, sigma, cutoff);
+    // auto potential = Potential::potential(epsilon, sigma, cutoff);
+
+    // auto integrationMethod = VelocityVerletStep<ParticleT, Potential>;
 
     auto integrationMethod = VelocityVerletStep<ParticleT, LennardJonesForce<Real>>;
 
@@ -216,12 +222,14 @@ int main(int argc, char* argv[]) {
         for (auto p: particles) {
             auto q = getGeneralizedPositions(p);
             auto qDot = getGeneralizedVelocities(p);
-            for (int a = 0; a < q.size(); ++a) {
+            constexpr int D = degreesOfFreedom<ParticleT>();
+
+            for (int a = 0; a < D; ++a) {
                 configutation << std::setprecision(13) << std::scientific << q[a] << "\t";
-            } for (int a = 0; a < qDot.size(); ++a) {
+            } for (int a = 0; a < D-1; ++a) {
                 configutation << std::setprecision(13) << std::scientific << qDot[a] << "\t";
             }
-            configutation << std::endl;
+            configutation << std::setprecision(13) << std::scientific << qDot[D-1] << std::endl;
         }
     }
 

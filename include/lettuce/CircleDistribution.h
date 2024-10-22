@@ -207,7 +207,7 @@ void writeParticle(const std::vector<TParticle>& particles, T radius, const std:
 template<typename TParticle, typename T = typename TParticle::value_type>
 std::vector<TParticle> initialParticles(const unsigned int& particlesNum, const std::vector<Species<T>>& allSpecies, int& speciesNum, const T& L, std::mt19937& gen, const std::string& configuration) {
     std::vector<TParticle> particles;
-    
+
     if (configuration == "RANDOM") {
         particles = manualRandomParticles<TParticle>(particlesNum, L, allSpecies[speciesNum].radius, gen);
     } else if (configuration == "RANDOM2") {
@@ -218,38 +218,41 @@ std::vector<TParticle> initialParticles(const unsigned int& particlesNum, const 
     else {
         particles.reserve(1024);
         std::ifstream config(configuration);
+
+        if (!config.is_open()) {
+            throw std::runtime_error("Could not open configuration file: " + configuration);
+        }
         std::string line;
         while (std::getline(config, line)) {
             TParticle p;
             std::istringstream is(line);
             constexpr int D = degreesOfFreedom<TParticle>();
+            // Read positions
             Vec<T, D> q;
-            for(int a = 0; a < D; ++a)
-            {
-                is >> q[a];
+            for (int a = 0; a < D; ++a) {
+                if (!(is >> q[a])) {
+                    std::ostringstream os;
+                    os << "Invalid particle position line " << particles.size() + 1;
+                    throw std::runtime_error(std::move(os).str());
+                }
             }
             setGeneralizedPositions(p, q);
-            if (!is) {
-                std::ostringstream os;
-                os << "Invalid particle line " << particles.size() + 1;
-                throw std::runtime_error(std::move(os).str());
-            }
-            // filter out particle outside of LxL box
-            if (p.r[0] > L || p.r[0] < 0. || p.r[1] > L || p.r[1] < 0.) {
+            // Filter out particle outside of LxL box
+            if (q[0] > L || q[0] < 0. || q[1] > L || q[1] < 0.) {
                 continue;
             }
+            // Read velocities
             Vec<T, D> qDot;
-            for(int a = 0; a < D; ++a)
-            {
-                is >> qDot[a];
-            }
-            if (!is) {
-                qDot.fill(0);
+            for (int a = 0; a < D; ++a) {
+                if (!(is >> qDot[a])) {
+                    qDot.fill(0);
+                    break;
+                }
             }
             setGeneralizedVelocities(p, qDot);
             if (!is.eof()) {
                 std::ostringstream os;
-                os << "Invalid particle line " << particles.size() + 1 << ": unread characters.";
+                os << "Invalid particle velocity line " << particles.size() + 1 << ": unread characters.";
                 throw std::runtime_error(std::move(os).str());
             }
             particles.push_back(p);
@@ -259,6 +262,7 @@ std::vector<TParticle> initialParticles(const unsigned int& particlesNum, const 
     for (auto& p : particles) {
         p.species = speciesNum;
     }
+
     return particles;
 }
 
