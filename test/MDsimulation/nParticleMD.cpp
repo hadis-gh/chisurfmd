@@ -17,6 +17,7 @@
 #include "lettuce/LennardJones.h"
 #include "lettuce/LennardJonesOriented.h"
 #include "lettuce/CircleDistribution.h"
+#include "lettuce/LennarJonesParticles.h"
 
 enum class ThermostatID {
     None = 0, VelocityScaling = 1, Berendsen = 2, NoseHoover = 3, Andersen = 4
@@ -24,6 +25,14 @@ enum class ThermostatID {
 
 #ifndef LETTUCE_THERMOSTAT
 #define LETTUCE_THERMOSTAT ThermostatID::VelocityScaling
+#endif
+
+#ifndef LETTUCE_PARTICLE
+#define LETTUCE_PARTICLE ParticleDot
+#endif
+
+#ifndef LETTUCE_POTENTIAL
+#define LETTUCE_POTENTIAL LennardJones<ParticleT>
 #endif
 
 #define STRINGIFY(x) #x
@@ -35,8 +44,8 @@ using Real = double;
 
 // what is char* argv[] ? Does it something to do with lambda functions because of [] or just showing traditional lists?
 
-using ParticleT = ParticleDot<Real>;
-// using Potential = LennardJones<ParticleT>;
+using ParticleT = LETTUCE_PARTICLE<Real>;
+using Potential = LETTUCE_POTENTIAL;
 
 int main(int argc, char* argv[]) {
     po::variables_map vm;
@@ -51,7 +60,6 @@ int main(int argc, char* argv[]) {
         ("temperature,T",         po::value<Real>()->default_value(.4),               "temperature")
         ("particlesInit",         po::value<std::string>()->default_value("RANDOM"),  "particle initialization")
         ("exclusionRadius",       po::value<Real>()->default_value(.8),               "exclusion radius")
-        ("cutoff",                po::value<Real>()->default_value(10.),              "cutoff distance")
         ("seed",                  po::value<unsigned int>(),                          "random seed")
         ("areaL",                 po::value<Real>()->default_value(20.0),             "simulation size")
         ("particlesDensity",      po::value<Real>(),                                  "packing density of particles")
@@ -60,8 +68,12 @@ int main(int argc, char* argv[]) {
         ("particlesNum,n",        po::value<unsigned int>()->default_value(49),       "number of initial particles")
         ("saveParticles",         po::value<std::string>(),                           "file path to save final states")
         ("appendLog",             po::bool_switch(),                                  "append time series outputs")
+        //flag for print or not
         ("relaxationTime",        po::value<Real>()->default_value(40.),              "relaxation time for Berendsen thermostat")
-        ("collisionFr",           po::value<Real>()->default_value(1.0 / 60.0),       "collision frequency for Andersen thermostat");
+        ("collisionFr",           po::value<Real>()->default_value(1.0 / 60.0),       "collision frequency for Andersen thermostat")
+    ;
+
+    Potential::initProgramOptions(desc);
 
     po::store(po::command_line_parser(argc, argv).options(desc).run(), vm);
     po::notify(vm);
@@ -82,10 +94,7 @@ int main(int argc, char* argv[]) {
         }
     }();
 
-    constexpr Real sigma = 1;
-    constexpr Real epsilon = 1;
     constexpr Real mass = 1;
-    constexpr Real phiConst = 1;
     
     const Real radius = vm["exclusionRadius"].as<Real>();
     Real areaL = vm["areaL"].as<Real>();
@@ -96,7 +105,6 @@ int main(int argc, char* argv[]) {
     }
 
     const Real boxPBC = vm["areaL"].as<Real>();
-    const Real cutoff = vm["cutoff"].as<Real>();
     const Real neighborDist = vm["neighborDist"].as<Real>();
     const std::vector<Real> neighborDistances {0.8, 1.0, 1.2, 1.5, 1.8, 2.0, 2.5};
 
@@ -104,17 +112,14 @@ int main(int argc, char* argv[]) {
     const Real collisionFrequency = vm["collisionFr"].as<Real>();
     const Real desiredTemperature = vm["temperature"].as<Real>();
 
-    LennardJonesForce<Real> LJForce(epsilon, sigma, cutoff);
-    LennardJonesPotential<Real> LJPotential(epsilon, sigma, cutoff);
-    LennardJonesOrientedForce<Real> LJOForce(epsilon, sigma, cutoff, phiConst);
-    LennardJonesOrientedPotential<Real> LJOPotential(epsilon, sigma, cutoff, phiConst);
+    auto force = Potential::force(vm);
+    auto potential = Potential::potential(vm);
+    // const auto cutoff = potential.cutoff();
+    const auto& FORCE = Potential::force(vm);;
 
-    // auto force = Potential::force(epsilon, sigma, cutoff);
-    // auto potential = Potential::potential(epsilon, sigma, cutoff);
+    auto integrationMethod = VelocityVerletStep<ParticleT, Potential::ForceType>;
 
-    // auto integrationMethod = VelocityVerletStep<ParticleT, Potential>;
-
-    auto integrationMethod = VelocityVerletStep<ParticleT, LennardJonesForce<Real>>;
+    // auto integrationMethod = VelocityVerletStep<ParticleT, LennardJonesForce<Real>>;
 
     Species<Real> species1 {mass, radius};
     Species<Real> species2 {2.0f * mass, 0.5f * radius};
@@ -142,8 +147,13 @@ int main(int argc, char* argv[]) {
     std::ofstream realTbeforeThermo("N_particle_realTbeforeThermo.dat", openmode);
     std::ofstream realTafterThermo("N_particle_realTafterThermo.dat", openmode);
 
-    std::cout << "thermostat: " << TOSTRING(LETTUCE_THERMOSTAT) << std::endl;    
+    std::cout << "thermostat: " << TOSTRING(LETTUCE_THERMOSTAT) << std::endl;
+    std::cout << "parcticle type: " << TOSTRING(LETTUCE_PARTICLE) << std::endl;
+    std::cout << "potential type: " << TOSTRING(LETTUCE_POTENTIAL) << std::endl;
+    // std::cout << "potential type: " << typeid(Potential).name() << std::endl;
 
+//print temperature
+// same which prints force & potential / particle type (all run time and compile time parameter)
     auto thermostat = [&]() {
         if constexpr (LETTUCE_THERMOSTAT == ThermostatID::None)
             return [](auto, auto) { return 1.; };
@@ -181,7 +191,7 @@ int main(int argc, char* argv[]) {
 
     while (step < nsteps) {
         const auto nextEventStep = std::min({writeStateStep, writeEnergyStep, thermoStep, nsteps});
-        integrate(particles, allSpecies, dt, (nextEventStep - step) * dt, boxPBC, LJForce, integrationMethod);
+        integrate(particles, allSpecies, dt, (nextEventStep - step) * dt, boxPBC, force, integrationMethod);
         step = nextEventStep;
 
         if (step == writeStateStep) {
@@ -190,7 +200,7 @@ int main(int argc, char* argv[]) {
         }
         if (step == writeEnergyStep) {
             writeKineticEToFile(particles, allSpecies, kineticEnergyFile);
-            writePotentialEToFile(particles, allSpecies, boxPBC, LJPotential, PotentialEnergyFile);
+            writePotentialEToFile(particles, allSpecies, boxPBC, potential, PotentialEnergyFile);
             writeAverageNeighborToFile(particles, neighborDistances, NeighborCountFile, dt, step);
             writeComVelocityToFile(particles, allSpecies, ComVelocityFile, dt, step);
             writeComAngularVelocityToFile(particles, allSpecies, ComAngVelocityFile, dt, step);
