@@ -20,8 +20,8 @@ struct LennardJones<ParticleDot<T>>
     static void initProgramOptions(po::options_description &desc) 
     {
         desc.add_options()
-            ("LJepsilon", po::value<T>()->default_value(1), "kkkk")
-            ("LJsigma", po::value<T>()->default_value(1), "Phi for")
+            ("LJepsilon", po::value<T>()->default_value(1), "epsilon in LJ force, potential")
+            ("LJsigma", po::value<T>()->default_value(1), "sigma in LJ force, potential")
             ("LJcutoff", po::value<T>()->default_value(10.), "cutoff distance")
         ;
     }
@@ -46,7 +46,7 @@ struct LennardJones<ParticleOriented<T>>
     {
         LennardJones<ParticleDot<T>>::initProgramOptions(desc);
         desc.add_options()
-            ("LJPhi", po::value<T>()->default_value(1), "Phi for")
+            ("LJPhi", po::value<T>()->default_value(1), "constant multuplicator for cos(deltaPhi)")
         ;
     } 
     static auto force(const po::variables_map &vm)

@@ -17,7 +17,7 @@ public:
         std::array<T, 2> forceOriented;
         LennardJonesForce<T> LjForce(epsilon, sigma, cutoff);
         
-        return {{LjForce(r), 3 * phiConst * sin(3 * deltaPhi)}};
+        return {{LjForce(r), phiConst * sin(3 * deltaPhi)}};
     }
 private:
     T epsilon;

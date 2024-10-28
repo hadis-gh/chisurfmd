@@ -68,7 +68,6 @@ int main(int argc, char* argv[]) {
         ("particlesNum,n",        po::value<unsigned int>()->default_value(49),       "number of initial particles")
         ("saveParticles",         po::value<std::string>(),                           "file path to save final states")
         ("appendLog",             po::bool_switch(),                                  "append time series outputs")
-        //flag for print or not
         ("relaxationTime",        po::value<Real>()->default_value(40.),              "relaxation time for Berendsen thermostat")
         ("collisionFr",           po::value<Real>()->default_value(1.0 / 60.0),       "collision frequency for Andersen thermostat")
     ;
@@ -126,8 +125,9 @@ int main(int argc, char* argv[]) {
     std::vector<Species<Real>> allSpecies {species1, species2};
     int speciesInd = 0;
 //encapsulation and abstraction of particle species instead of allSpecies + speciesInd + particles in the functions
+    auto particlesInit = vm["particlesInit"].as<std::string>(); 
 
-    auto particles = initialParticles<ParticleT>(particlesNum, allSpecies, speciesInd, areaL, gen, vm["particlesInit"].as<std::string>());
+    auto particles = initialParticles<ParticleT>(particlesNum, allSpecies, speciesInd, areaL, gen, particlesInit);
 
     writeInitialParticles(particles, radius);
 
@@ -147,10 +147,11 @@ int main(int argc, char* argv[]) {
     std::ofstream realTbeforeThermo("N_particle_realTbeforeThermo.dat", openmode);
     std::ofstream realTafterThermo("N_particle_realTafterThermo.dat", openmode);
 
-    std::cout << "thermostat: " << TOSTRING(LETTUCE_THERMOSTAT) << std::endl;
+    std::cout << "\nthermostat: " << TOSTRING(LETTUCE_THERMOSTAT) << std::endl;
     std::cout << "parcticle type: " << TOSTRING(LETTUCE_PARTICLE) << std::endl;
     std::cout << "potential type: " << TOSTRING(LETTUCE_POTENTIAL) << std::endl;
-    // std::cout << "potential type: " << typeid(Potential).name() << std::endl;
+    std::cout << "particle numbers: " << particlesNum << std::endl;
+    std::cout << "particle initialization: " << particlesInit << "\n\n";
 
 //print temperature
 // same which prints force & potential / particle type (all run time and compile time parameter)

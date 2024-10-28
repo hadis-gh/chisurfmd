@@ -136,17 +136,18 @@ Vec<T, 3> calTotalForce(const ParticleOriented<T>& p1, const std::vector<Particl
 template<typename T, typename Force>
 Vec<T, 3> calAcceleration(const ParticleOriented<T>& p1, const std::vector<ParticleOriented<T>>& particles, const std::vector<Species<T>>& allSpecies, const T& boxPBC, Force&& force) {
     T mass = allSpecies[p1.species].mass;
-    T moment_of_inertia = mass * std::pow(allSpecies[p1.species].radius, 2) / 2; // Simplified for circular particles
+    T moment_of_inertia = mass * std::pow(allSpecies[p1.species].radius, 2) / 2;
 
     Vec<T, 3> total_force = calTotalForce(p1, particles, boxPBC, std::forward<Force>(force));
-    Vec<T, 2> acceleration = {{total_force[0] / mass, total_force[1] / mass}}; // Translational acceleration
-    T angular_acceleration = total_force[2] / moment_of_inertia; // Rotational acceleration
+    Vec<T, 2> acceleration = {{total_force[0] / mass, total_force[1] / mass}};
+    T angular_acceleration = total_force[2] / moment_of_inertia;
 
     return {{acceleration[0], acceleration[1], angular_acceleration}};
 }
 
 // template<typename Force, typename T = typename Force::value_type>        // this or the next line?
 // template<typename Force, typename T = typename ParticleOriented::value_type>
+
 template<typename T, typename Force> // see Andersen instead of T -> Particle
 std::vector<Vec<T, 3>> calAllAccelerations(const std::vector<ParticleOriented<T>>& particles, const std::vector<Species<T>>& allSpecies, const T& boxPBC, Force&& force) {
     std::vector<Vec<T, 3>> accelerations(particles.size()); //use trait for get the degrees of freedom and use one for all partivcles
@@ -160,10 +161,12 @@ template<typename T>
 void implementPBC(ParticleOriented<T>& p, const T& boxPBC) {
     implementPBC(static_cast<ParticleDot<T>&>(p), boxPBC);
 
-    T phi = p.r[2]; 
-    phi = std::fmod(phi, 360.0);
+    T phi = p.r[2];
+    phi = std::fmod(phi, 2 * M_PI);
     if (phi < 0) {
-        phi += 360.0;
+        phi += 2 * M_PI;
     }
     p.r[2] = phi;
+
+
 }
