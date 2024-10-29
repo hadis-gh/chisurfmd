@@ -3,7 +3,7 @@
 #include <vector>
 #include <cmath>
 #include "lettuce/Vec.h"
-#include "lettuce/Particle.h"
+#include "lettuce/ParticleDot.h"
 
 template<typename T>
 class LennardJonesOrientedForce {

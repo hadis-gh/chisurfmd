@@ -7,7 +7,7 @@
 #include <sstream>
 #include <stdexcept>
 #include "Circle.h"
-#include "lettuce/Particle.h"
+#include "lettuce/ParticleDot.h"
 #include "lettuce/ParticleOriented.h"
 #include "lettuce/CirclesIntersectionFuncs.h"
 

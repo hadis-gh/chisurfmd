@@ -151,7 +151,10 @@ void writePositionToFile(const std::vector<TParticle>& particles, std::ostream& 
 template<typename TParticle, typename T = typename TParticle::value_type>
 void writeKineticEToFile(const std::vector<TParticle>& particles, const std::vector<Species<T>>& allSpecies, std::ostream& file) {
     for (const auto& p : particles) {
-        file << calParticleKineticEnergy(p, allSpecies) << " ";
+        // auto q = getGeneralizedPositions(p);
+        // for (int a = 0; a < q.size() - 1; ++a) {
+            file << calParticleKineticEnergy(p, allSpecies) << " ";
+        // }
     }
     file << "\n";
 }

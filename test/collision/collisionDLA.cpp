@@ -5,7 +5,7 @@
 #include <cmath>
 #include <random>
 #include <algorithm>
-#include "lettuce/Particle.h"
+#include "lettuce/ParticleDot.h"
 #include "lettuce/Vec.h"
 #include "lettuce/Circle.h"
 #include "lettuce/CircleDistribution.h"

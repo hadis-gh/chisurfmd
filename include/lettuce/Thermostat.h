@@ -101,6 +101,8 @@ T calRawKineticEnergy(const std::vector<TParticle>& particles, const std::vector
 
 template<typename TParticle, typename T = typename TParticle::value_type>
 T calParticleKineticEnergy(const TParticle& p, const std::vector<Species<T>>& allSpecies) {
+    // const auto v = getGeneralizedVelocities(p);
+    
     return 0.5 * allSpecies[p.species].mass * p.v.abs2();
 }
 

@@ -4,7 +4,7 @@
 #include <cmath>
 #include <random>
 #include "Circle.h"
-#include "lettuce/Particle.h"
+#include "lettuce/ParticleDot.h"
 
 
 template<typename T>

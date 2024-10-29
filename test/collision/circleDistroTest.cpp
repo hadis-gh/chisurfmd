@@ -1,7 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include "lettuce/CircleDistribution.h"
-#include "lettuce/Particle.h"
+#include "lettuce/ParticleDot.h"
 #include "lettuce/ParticleOriented.h"
 
 int main() {

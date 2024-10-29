@@ -3,7 +3,7 @@
 #include <array>
 #include <cmath>
 #include <random>
-#include "Particle.h"
+#include "ParticleDot.h"
 #include "lettuce/CircleDistribution.h"
 
 // template<typename T>

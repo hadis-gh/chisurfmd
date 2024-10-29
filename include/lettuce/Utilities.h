@@ -3,7 +3,7 @@
 #include <vector>
 #include <cmath>
 #include "lettuce/Vec.h"
-#include "lettuce/Particle.h"
+#include "lettuce/ParticleDot.h"
 
 template<typename T>
 std::vector<T> linspace(const T& start, const T& end, const int& points) {
