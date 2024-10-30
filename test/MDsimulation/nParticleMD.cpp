@@ -116,7 +116,8 @@ int main(int argc, char* argv[]) {
     // const auto cutoff = potential.cutoff();
     const auto& FORCE = Potential::force(vm);;
 
-    auto integrationMethod = VelocityVerletStep<ParticleT, Potential::ForceType>;
+    // auto integrationMethod = VelocityVerletStep<ParticleT, Potential::ForceType>;
+    auto integrationMethod = EulerStep<ParticleT, Potential::ForceType>;
 
     // auto integrationMethod = VelocityVerletStep<ParticleT, LennardJonesForce<Real>>;
 

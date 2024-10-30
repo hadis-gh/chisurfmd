@@ -28,7 +28,7 @@ void EulerStep(std::vector<TParticle>& particles, const std::vector<Species<T>>&
     for (size_t i = 0; i < particles.size(); ++i) {
         const auto r = getGeneralizedPositions(particles[i]);
         const auto v = getGeneralizedVelocities(particles[i]);
-        setGeneralizedPositions(particles[i], r + particles[i].v * dt);
+        setGeneralizedPositions(particles[i], r + v * dt);
         setGeneralizedVelocities(particles[i], v + accelerations[i] * dt);
         implementPBC(particles[i], boxPBC);
     }
