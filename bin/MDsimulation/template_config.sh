@@ -18,3 +18,5 @@ relaxationTime=40.0
 lowTemperature=0.05
 highTemperature=2.00
 stepTemperature=0.05
+
+integration="VelocityVerlet"
