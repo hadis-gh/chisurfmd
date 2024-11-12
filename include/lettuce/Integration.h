@@ -42,8 +42,8 @@ void VelocityVerletStep(std::vector<TParticle>& particles, const std::vector<Spe
         const auto r = getGeneralizedPositions(particles[i]);
         const auto v = getGeneralizedVelocities(particles[i]);
 
-        setGeneralizedPositions(particles[i], r + v * dt + old_accelerations[i]*dt*dt/2.);
-        implementPBC(particles[i], boxPBC); // should consider phi as well 2 pi
+        setGeneralizedPositions(particles[i], r + v * dt + old_accelerations[i] * dt * dt / 2.0);
+        implementPBC(particles[i], boxPBC);
     }
 
     const auto new_accelerations = calAllAccelerations(particles, allSpecies, boxPBC, force);
@@ -118,7 +118,7 @@ void removeCOMvelocityRotation2D(std::vector<TParticle>& particles, const std::v
     T momentOfInertia = calMomentOfInertia2D(particles, allSpecies, comPos);
 
     T angularVelocity = angularMomentum / momentOfInertia;
-// there is possiblity to remove mass from these eqs - try to simplify it
+    // there is possiblity to remove mass from these eqs - try to simplify it
 
     for (auto& p : particles) {
         Vec<T> r_com = p.r - comPos;

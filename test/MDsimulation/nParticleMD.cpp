@@ -28,7 +28,7 @@ enum class ThermostatID {
 #endif
 
 #ifndef LETTUCE_PARTICLE
-#define LETTUCE_PARTICLE ParticleDot
+#define LETTUCE_PARTICLE ParticleOriented
 #endif
 
 #ifndef LETTUCE_POTENTIAL
@@ -40,9 +40,6 @@ enum class ThermostatID {
 
 namespace po = boost::program_options;
 using Real = double;
-// why not typedef double = Real; ?
-
-// what is char* argv[] ? Does it something to do with lambda functions because of [] or just showing traditional lists?
 
 using ParticleT = LETTUCE_PARTICLE<Real>;
 using Potential = LETTUCE_POTENTIAL;
@@ -52,24 +49,25 @@ int main(int argc, char* argv[]) {
     po::options_description desc("Allowed Options");
     desc.add_options()
         ("help,h", "print help")
-        ("time,t",                po::value<Real>()->default_value(10.0),             "max simulation time")
-        ("dt",                    po::value<Real>()->default_value(.01),              "integration step size")
-        ("writeStateInterval",    po::value<Real>()->default_value(.05),              "measurement State interval")
-        ("writeEnergyInterval",   po::value<Real>()->default_value(.5),               "measurement Energy interval")
-        ("thermoInterval",        po::value<Real>()->default_value(.1),               "interval after which to apply thermostat")
-        ("temperature,T",         po::value<Real>()->default_value(.4),               "temperature")
-        ("particlesInit",         po::value<std::string>()->default_value("RANDOM"),  "particle initialization")
-        ("exclusionRadius",       po::value<Real>()->default_value(.8),               "exclusion radius")
-        ("seed",                  po::value<unsigned int>(),                          "random seed")
-        ("areaL",                 po::value<Real>()->default_value(20.0),             "simulation size")
-        ("particlesDensity",      po::value<Real>(),                                  "packing density of particles")
-        ("neighborDist",          po::value<Real>()->default_value(1.2),              "Distance for counting neighbors")
-        ("neighborDistances",     po::value<std::vector<Real>>(),                     "Distances for counting neighbors")
-        ("particlesNum,n",        po::value<unsigned int>()->default_value(49),       "number of initial particles")
-        ("saveParticles",         po::value<std::string>(),                           "file path to save final states")
-        ("appendLog",             po::bool_switch(),                                  "append time series outputs")
-        ("relaxationTime",        po::value<Real>()->default_value(40.),              "relaxation time for Berendsen thermostat")
-        ("collisionFr",           po::value<Real>()->default_value(1.0 / 60.0),       "collision frequency for Andersen thermostat")
+        ("time,t",                po::value<Real>()->default_value(10.0),                     "max simulation time")
+        ("dt",                    po::value<Real>()->default_value(.01),                      "integration step size")
+        ("writeStateInterval",    po::value<Real>()->default_value(.05),                      "measurement State interval")
+        ("writeEnergyInterval",   po::value<Real>()->default_value(.5),                       "measurement Energy interval")
+        ("thermoInterval",        po::value<Real>()->default_value(.1),                       "interval after which to apply thermostat")
+        ("temperature,T",         po::value<Real>()->default_value(.4),                       "temperature")
+        ("particlesInit",         po::value<std::string>()->default_value("RANDOM"),          "particle initialization")
+        ("exclusionRadius",       po::value<Real>()->default_value(.8),                       "exclusion radius")
+        ("seed",                  po::value<unsigned int>(),                                  "random seed")
+        ("areaL",                 po::value<Real>()->default_value(20.0),                     "simulation size")
+        ("particlesDensity",      po::value<Real>(),                                          "packing density of particles")
+        ("neighborDist",          po::value<Real>()->default_value(1.2),                      "Distance for counting neighbors")
+        ("neighborDistances",     po::value<std::vector<Real>>(),                             "Distances for counting neighbors")
+        ("particlesNum,n",        po::value<unsigned int>()->default_value(49),               "number of initial particles")
+        ("saveParticles",         po::value<std::string>(),                                   "file path to save final states")
+        ("appendLog",             po::bool_switch(),                                          "append time series outputs")
+        ("relaxationTime",        po::value<Real>()->default_value(40.),                      "relaxation time for Berendsen thermostat")
+        ("collisionFr",           po::value<Real>()->default_value(1.0 / 60.0),               "collision frequency for Andersen thermostat")
+        ("integration",           po::value<std::string>()->default_value("VelocityVerlet"),  "integration method (velocity verlet/ euler)")
     ;
 
     Potential::initProgramOptions(desc);
@@ -107,30 +105,49 @@ int main(int argc, char* argv[]) {
     const Real neighborDist = vm["neighborDist"].as<Real>();
     const std::vector<Real> neighborDistances {0.8, 1.0, 1.2, 1.5, 1.8, 2.0, 2.5};
 
+    const Real dt = vm["dt"].as<Real>();
+    const Real Time = vm["time"].as<Real>();
+
     const Real relaxationTime = vm["relaxationTime"].as<Real>();
     const Real collisionFrequency = vm["collisionFr"].as<Real>();
     const Real desiredTemperature = vm["temperature"].as<Real>();
-
-    auto force = Potential::force(vm);
-    auto potential = Potential::potential(vm);
-    // const auto cutoff = potential.cutoff();
-    const auto& FORCE = Potential::force(vm);;
-
-    // auto integrationMethod = VelocityVerletStep<ParticleT, Potential::ForceType>;
-    auto integrationMethod = EulerStep<ParticleT, Potential::ForceType>;
-
-    // auto integrationMethod = VelocityVerletStep<ParticleT, LennardJonesForce<Real>>;
 
     Species<Real> species1 {mass, radius};
     Species<Real> species2 {2.0f * mass, 0.5f * radius};
     std::vector<Species<Real>> allSpecies {species1, species2};
     int speciesInd = 0;
-//encapsulation and abstraction of particle species instead of allSpecies + speciesInd + particles in the functions
+
     auto particlesInit = vm["particlesInit"].as<std::string>(); 
 
     auto particles = initialParticles<ParticleT>(particlesNum, allSpecies, speciesInd, areaL, gen, particlesInit);
 
     writeInitialParticles(particles, radius);
+
+    auto force = Potential::force(vm);
+    auto potential = Potential::potential(vm);
+    // const auto cutoff = potential.cutoff();     //?
+
+    std::string method = vm["integration"].as<std::string>();
+    auto integrationMethod = VelocityVerletStep<ParticleT, Potential::ForceType>;
+
+    if (method=="VelocityVerlet") {
+        integrationMethod = VelocityVerletStep<ParticleT, Potential::ForceType>;
+    } else if (method=="Euler") {
+        integrationMethod = EulerStep<ParticleT, Potential::ForceType>;
+    }
+    
+    auto thermostat = [&]() {
+        if constexpr (LETTUCE_THERMOSTAT == ThermostatID::None)
+            return [](auto, auto) { return 1.; };
+        else if constexpr (LETTUCE_THERMOSTAT == ThermostatID::VelocityScaling)
+            return VelocityScalingThermostat<ParticleT>(desiredTemperature);
+        else if constexpr (LETTUCE_THERMOSTAT == ThermostatID::Berendsen)
+            return BerendsenThermostat<ParticleT>(vm["thermoInterval"].as<Real>(), desiredTemperature, relaxationTime);
+        else if constexpr (LETTUCE_THERMOSTAT == ThermostatID::NoseHoover)
+            return nullptr;
+        else if constexpr (LETTUCE_THERMOSTAT == ThermostatID::Andersen)
+            return AndersenThermostat<ParticleT>(vm["thermoInterval"].as<Real>(), collisionFrequency, desiredTemperature, gen);
+    }();
 
     std::ios::openmode openmode = std::ios::trunc;
     if (vm["appendLog"].as<bool>()) {
@@ -152,26 +169,8 @@ int main(int argc, char* argv[]) {
     std::cout << "parcticle type: " << TOSTRING(LETTUCE_PARTICLE) << std::endl;
     std::cout << "potential type: " << TOSTRING(LETTUCE_POTENTIAL) << std::endl;
     std::cout << "particle numbers: " << particlesNum << std::endl;
+    std::cout << "Integration method: " << method << std::endl;
     std::cout << "particle initialization: " << particlesInit << "\n\n";
-
-//print temperature
-// same which prints force & potential / particle type (all run time and compile time parameter)
-    auto thermostat = [&]() {
-        if constexpr (LETTUCE_THERMOSTAT == ThermostatID::None)
-            return [](auto, auto) { return 1.; };
-        else if constexpr (LETTUCE_THERMOSTAT == ThermostatID::VelocityScaling)
-            return VelocityScalingThermostat<ParticleT>(desiredTemperature);
-        else if constexpr (LETTUCE_THERMOSTAT == ThermostatID::Berendsen)
-            return BerendsenThermostat<ParticleT>(vm["thermoInterval"].as<Real>(), desiredTemperature, relaxationTime);
-        else if constexpr (LETTUCE_THERMOSTAT == ThermostatID::NoseHoover)
-            return nullptr;
-        else if constexpr (LETTUCE_THERMOSTAT == ThermostatID::Andersen) {
-            return AndersenThermostat<ParticleT>(vm["thermoInterval"].as<Real>(), collisionFrequency, desiredTemperature, gen);
-        }
-    }();
-
-    const Real dt = vm["dt"].as<Real>();
-    const Real Time = vm["time"].as<Real>();
 
     const size_t writeStateIntervalSteps = std::ceil(vm["writeStateInterval"].as<Real>() / dt);
     const size_t writeEnergyIntervalSteps = std::ceil(vm["writeEnergyInterval"].as<Real>() / dt);
@@ -187,14 +186,14 @@ int main(int argc, char* argv[]) {
     if constexpr (LETTUCE_THERMOSTAT == ThermostatID::None) {
         thermoStep = 2 * nsteps;
     }
-    // considering line 184: if constexpr (LETTUCE_THERMOSTAT != ThermostatID::None) is not this redundent?
 
     clock_t startTime = clock();
 
     while (step < nsteps) {
         const auto nextEventStep = std::min({writeStateStep, writeEnergyStep, thermoStep, nsteps});
-        integrate(particles, allSpecies, dt, (nextEventStep - step) * dt, boxPBC, force, integrationMethod);
+        integrate(particles, allSpecies, dt, (nextEventStep - step) * dt, boxPBC, force, integrationMethod); //why a few times integration? 1 is not enough?
         step = nextEventStep;
+        removeCOMvelocityRotation2D(particles, allSpecies);
 
         if (step == writeStateStep) {
             writePositionToFile(particles, positionFile, dt, step);

@@ -161,12 +161,10 @@ template<typename T>
 void implementPBC(ParticleOriented<T>& p, const T& boxPBC) {
     implementPBC(static_cast<ParticleDot<T>&>(p), boxPBC);
 
-    T phi = p.r[2];
+    T phi = p.phi;
     phi = std::fmod(phi, 2 * M_PI);
     if (phi < 0) {
         phi += 2 * M_PI;
     }
-    p.r[2] = phi;
-
-
+    p.phi = phi;
 }

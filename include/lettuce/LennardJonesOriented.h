@@ -14,7 +14,6 @@ public:
         : epsilon(epsilon), sigma(sigma), cutoff(cutoff), sigma6(std::pow(sigma, 6)), sigma12(sigma6 * sigma6), phiConst(phiConst) {}
 
     Vec<T, 2> operator()(const T r, const T deltaPhi) const {
-        std::array<T, 2> forceOriented;
         LennardJonesForce<T> LjForce(epsilon, sigma, cutoff);
         
         return {{LjForce(r), phiConst * sin(3 * deltaPhi)}};
