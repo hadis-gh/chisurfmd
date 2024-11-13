@@ -193,7 +193,7 @@ int main(int argc, char* argv[]) {
         const auto nextEventStep = std::min({writeStateStep, writeEnergyStep, thermoStep, nsteps});
         integrate(particles, allSpecies, dt, (nextEventStep - step) * dt, boxPBC, force, integrationMethod); //why a few times integration? 1 is not enough?
         step = nextEventStep;
-        removeCOMvelocityRotation2D(particles, allSpecies);
+        removeCOMvelocityRotation2D(particles, allSpecies); // it can be removed
 
         if (step == writeStateStep) {
             writePositionToFile(particles, positionFile, dt, step);
