@@ -8,11 +8,6 @@
 template<typename T>
 struct ParticleOriented : public ParticleDot<T>
 {
-    // ParticleOriented (ParticleDot<T> p)    //constructor for ParticleOriented
-    // : ParticleDot<T> (p)
-    // {
-    // }
-
     using typename ParticleDot<T>::value_type;
 
     value_type phi, omega;
@@ -145,12 +140,9 @@ Vec<T, 3> calAcceleration(const ParticleOriented<T>& p1, const std::vector<Parti
     return {{acceleration[0], acceleration[1], angular_acceleration}};
 }
 
-// template<typename Force, typename T = typename Force::value_type>        // this or the next line?
-// template<typename Force, typename T = typename ParticleOriented::value_type>
-
-template<typename T, typename Force> // see Andersen instead of T -> Particle
+template<typename T, typename Force>
 std::vector<Vec<T, 3>> calAllAccelerations(const std::vector<ParticleOriented<T>>& particles, const std::vector<Species<T>>& allSpecies, const T& boxPBC, Force&& force) {
-    std::vector<Vec<T, 3>> accelerations(particles.size()); //use trait for get the degrees of freedom and use one for all partivcles
+    std::vector<Vec<T, 3>> accelerations(particles.size());
     for (unsigned int i = 0; i < particles.size(); ++i) {
         accelerations[i] = calAcceleration(particles[i], particles, allSpecies, boxPBC, std::forward<Force>(force));
     }
