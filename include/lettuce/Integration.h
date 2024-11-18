@@ -138,11 +138,14 @@ void writeInitialParticles(const std::vector<TParticle>& particles, const T radi
 template<typename TParticle, typename T = typename TParticle::value_type>
 void writePositionToFile(const std::vector<TParticle>& particles, std::ostream& file, const T& dt, const int& step) {
     file << dt * step << " ";
+    constexpr T RAD_TO_DEG = 180.0 / M_PI;
+
     for (const auto& p : particles) {
-        // constexpr int D = degreesOfFreedom<TParticle>();
         auto q = getGeneralizedPositions(p);
-        for (int a = 0; a < q.size(); ++a) {
-            file << p.r[a] << " ";
+        file << q[0] << " " << q[1] << " ";
+
+        if constexpr (degreesOfFreedom<TParticle>() > 2) {
+            file << q[2] * RAD_TO_DEG << " ";
         }
     }
     file << "\n";
@@ -153,7 +156,7 @@ void writeKineticEToFile(const std::vector<TParticle>& particles, const std::vec
     for (const auto& p : particles) {
         // auto q = getGeneralizedPositions(p);
         // for (int a = 0; a < q.size() - 1; ++a) {
-            file << calParticleKineticEnergy(p, allSpecies) << " ";
+        file << calParticleKineticEnergy(p, allSpecies) << " ";
         // }
     }
     file << "\n";

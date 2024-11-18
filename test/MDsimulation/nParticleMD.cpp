@@ -230,17 +230,25 @@ int main(int argc, char* argv[]) {
 
     if (vm.count("saveParticles") > 0) {
         std::ofstream configutation(vm["saveParticles"].as<std::string>());
+        constexpr Real RAD_TO_DEG = 180.0 / M_PI;
+
         for (auto p: particles) {
             auto q = getGeneralizedPositions(p);
             auto qDot = getGeneralizedVelocities(p);
             constexpr int D = degreesOfFreedom<ParticleT>();
 
             for (int a = 0; a < D; ++a) {
-                configutation << std::setprecision(13) << std::scientific << q[a] << "\t";
-            } for (int a = 0; a < D-1; ++a) {
+                if (a == D - 1 && D > 2) {
+                    configutation << std::setprecision(13) << std::scientific << q[a] * RAD_TO_DEG << "\t";
+                } else {
+                    configutation << std::setprecision(13) << std::scientific << q[a] << "\t";
+                }
+            }
+
+            for (int a = 0; a < D - 1; ++a) {
                 configutation << std::setprecision(13) << std::scientific << qDot[a] << "\t";
             }
-            configutation << std::setprecision(13) << std::scientific << qDot[D-1] << std::endl;
+            configutation << std::setprecision(13) << std::scientific << qDot[D - 1] << std::endl;
         }
     }
 
