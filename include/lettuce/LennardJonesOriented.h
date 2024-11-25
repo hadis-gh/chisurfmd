@@ -16,7 +16,7 @@ public:
     Vec<T, 2> operator()(const T r, const T deltaPhi) const {
         LennardJonesForce<T> LjForce(epsilon, sigma, cutoff);
         
-        return {{LjForce(r), phiConst * sin(deltaPhi)}};
+        return {{LjForce(r), phiConst * sin(4 * deltaPhi)}};
     }
 private:
     T epsilon;
@@ -39,7 +39,7 @@ public:
         
         const T r6 = std::pow(r, 6);
         const T r12 = r6 * r6;
-        return 4.0 * epsilon * (sigma12 / r12 - 0.5 * sigma6 / r6) - phiConst * cos(deltaPhi);
+        return 4.0 * epsilon * (sigma12 / r12 - 0.5 * sigma6 / r6) - phiConst * cos(4 * deltaPhi);
     }
 
 private:
