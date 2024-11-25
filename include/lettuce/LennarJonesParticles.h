@@ -46,7 +46,7 @@ struct LennardJones<ParticleOriented<T>>
     {
         LennardJones<ParticleDot<T>>::initProgramOptions(desc);
         desc.add_options()
-            ("LJPhi", po::value<T>()->default_value(1), "constant multuplicator for cos(deltaPhi)")
+            ("LJPhi", po::value<T>()->default_value(.01), "constant multuplicator for cos(deltaPhi)")
         ;
     } 
     static auto force(const po::variables_map &vm)
