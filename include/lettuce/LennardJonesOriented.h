@@ -35,6 +35,67 @@ private:
     T phiConst;
 };
 
+//***************************/ new section that should be discussed/***************************
+
+template<typename T>
+class AdditivePotentialForce {
+public:
+    AdditivePotentialForce(T epsilon, T sigma, T cutoff, T n) 
+        : epsilon(epsilon), sigma(sigma), cutoff(cutoff), sigma6(std::pow(sigma, 6)), sigma12(sigma6 * sigma6), n(n) {}
+
+    Vec<T, 2> operator()(const T r, const T deltaPhi) const {
+        if (r == 0 || r > cutoff) return {{0, 0}};
+
+        const T dA_dr = 0; // Ar
+
+        // LennardJonesForce<T> LjForce(epsilon, sigma, cutoff);
+        // const T radialForce = LjForce(r) + dA_dr * std::cos(n * deltaPhi);
+
+        const T radialForce = -4.0 * epsilon * (-12.0 * std::pow(sigma / r, 12) / r + 6.0 * std::pow(sigma / r, 6) / r) + dA_dr * std::cos(n * deltaPhi);
+
+        const T angularForce = n * A(r) * std::sin(n * deltaPhi);
+
+        return {{radialForce, angularForce}};
+    }
+
+private:
+    T epsilon;
+    T sigma;
+    T cutoff;
+    T n;
+};
+
+template<typename T>
+class MultiplicativePotentialForce {
+public:
+    MultiplicativePotentialForce(T epsilon, T sigma, T cutoff, T n) 
+        : epsilon(epsilon), sigma(sigma), cutoff(cutoff), n(n) {}
+
+    Vec<T, 2> operator()(const T r, const T deltaPhi) const {
+        if (r == 0 || r > cutoff) return {{0, 0}};
+
+        // LennardJonesPotential<T> LjPotential(epsilon, sigma, cutoff);
+        // const T radialPotential = LjPotential(r);
+
+        const T radialPotential = 4.0 * epsilon * (std::pow(sigma / r, 12) - std::pow(sigma / r, 6));
+
+        const T dRadialPotential_dr = -4.0 * epsilon * (-12.0 * std::pow(sigma / r, 12) / r + 6.0 * std::pow(sigma / r, 6) / r);
+        const T radialForce = dRadialPotential_dr * std::cos(n * deltaPhi);
+
+        const T angularForce = n * radialPotential * std::sin(n * deltaPhi);
+
+        return {{radialForce, angularForce}};
+    }
+
+private:
+    T epsilon;
+    T sigma;
+    T cutoff;
+    T n;       // Angular periodicity
+};
+
+//***************************/ new section that should be discussed/***************************
+
 template<typename T>
 class LennardJonesOrientedPotential {
 public:
@@ -47,7 +108,10 @@ public:
         
         const T r6 = std::pow(r, 6);
         const T r12 = r6 * r6;
-        return 4.0 * epsilon * (sigma12 / r12 - 0.5 * sigma6 / r6) * phiConst * cos(4 * deltaPhi);
+        return 4.0 * epsilon * (sigma12 / r12 - sigma6 / r6) * phiConst * cos(4 * deltaPhi);
+
+        // LennardJonesPotential<T> LjPotential(epsilon, sigma, cutoff);
+        // return LjPotential(r) * cos(4 * deltaPhi);
     }
 
 private:

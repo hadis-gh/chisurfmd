@@ -43,7 +43,7 @@ public:
         
         const T r6 = std::pow(r, 6);
         const T r12 = r6 * r6;
-        return 4.0 * epsilon * (sigma12 / r12 - 0.5 * sigma6 / r6);
+        return 4.0 * epsilon * (sigma12 / r12 - sigma6 / r6);
     }
 
 private:
