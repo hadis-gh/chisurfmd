@@ -169,8 +169,8 @@ int main(int argc, char* argv[]) {
     std::cout << "potential type: " << TOSTRING(LETTUCE_POTENTIAL) << std::endl;
     std::cout << "particle numbers: " << particlesNum << std::endl;
     std::cout << "Integration method: " << method << std::endl;
-    std::cout << "particle initialization: " << particlesInit << "\n\n";
-    std::cout << "angular orientation order: " << vm["writeEnergyInterval"].as<int>() << "\n\n";
+    std::cout << "particle initialization: " << particlesInit << std::endl;
+    std::cout << "angular orientation order: " << vm["LJPhiOrder"].as<int>() << "\n\n";
 
     const size_t writeStateIntervalSteps = std::ceil(vm["writeStateInterval"].as<Real>() / dt);
     const size_t writeEnergyIntervalSteps = std::ceil(vm["writeEnergyInterval"].as<Real>() / dt);
@@ -230,18 +230,7 @@ int main(int argc, char* argv[]) {
 
     if (vm.count("saveParticles") > 0) {
         std::ofstream configutation(vm["saveParticles"].as<std::string>());
-        for (auto p: particles) {
-            auto q = getGeneralizedPositions(p);
-            auto qDot = getGeneralizedVelocities(p);
-            constexpr int D = degreesOfFreedom<ParticleT>();
-
-            for (int a = 0; a < D; ++a) {
-                configutation << std::setprecision(13) << std::scientific << q[a] << "\t";
-            } for (int a = 0; a < D-1; ++a) {
-                configutation << std::setprecision(13) << std::scientific << qDot[a] << "\t";
-            }
-            configutation << std::setprecision(13) << std::scientific << qDot[D-1] << std::endl;
-        }
+        saveParticlesWithVelocities(configutation, particles);
     }
 
     return 0;

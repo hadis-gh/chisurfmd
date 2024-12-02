@@ -1,9 +1,12 @@
 #pragma once
 
+#include <iostream>
+#include <fstream>
 #include <vector>
 #include <cmath>
-#include <stdexcept>
-#include <string>
+#include <random>
+#include <iomanip>
+
 #include "lettuce/Vec.h"
 #include "lettuce/Circle.h"
 #include "lettuce/LennardJones.h"
@@ -213,4 +216,21 @@ void writeComAngularVelocityToFile(const std::vector<TParticle>& particles, cons
     Vec<T> comPos = calCOMposition(particles, allSpecies);
 
     file << dt * step << " " << calAngularMomentum2D(particles, allSpecies, comPos) << "\n";
+}
+
+template<typename TParticle, typename T = typename TParticle::value_type>
+void saveParticlesWithVelocities(std::ostream& output, const std::vector<TParticle>& particles) {
+    for (const auto& p : particles) {
+        auto q = getGeneralizedPositions(p);
+        auto qDot = getGeneralizedVelocities(p);
+        constexpr int D = degreesOfFreedom<TParticle>();
+
+        for (int a = 0; a < D; ++a) {
+            output << std::setprecision(13) << std::scientific << q[a] << "\t";
+        }
+        for (int a = 0; a < D - 1; ++a) {
+            output << std::setprecision(13) << std::scientific << qDot[a] << "\t";
+        }
+        output << std::setprecision(13) << std::scientific << qDot[D - 1] << std::endl;
+    }
 }
