@@ -47,15 +47,18 @@ struct LennardJones<ParticleOriented<T>>
         LennardJones<ParticleDot<T>>::initProgramOptions(desc);
         desc.add_options()
             ("LJPhi", po::value<T>()->default_value(.01), "constant multuplicator for cos(deltaPhi)")
+            ("LJPhiOrder", po::value<int>()->default_value(2), "rotational order")
         ;
     } 
     static auto force(const po::variables_map &vm)
     {
-        return LennardJonesOrientedForce(vm["LJepsilon"].as<T>(), vm["LJsigma"].as<T>(), vm["LJcutoff"].as<T>(), vm["LJPhi"].as<T>());
+        return LennardJonesOrientedForce(vm["LJepsilon"].as<T>(), vm["LJsigma"].as<T>()
+            , vm["LJcutoff"].as<T>(), vm["LJPhi"].as<T>(), vm["LJPhiOrder"].as<int>());
     }
     static auto potential(const po::variables_map &vm)
     {
-        return LennardJonesOrientedPotential(vm["LJepsilon"].as<T>(), vm["LJsigma"].as<T>(), vm["LJcutoff"].as<T>(), vm["LJPhi"].as<T>());
+        return LennardJonesOrientedPotential(vm["LJepsilon"].as<T>(), vm["LJsigma"].as<T>()
+            , vm["LJcutoff"].as<T>(), vm["LJPhi"].as<T>(), vm["LJPhiOrder"].as<int>());
     }
 
     using ForceType = LennardJonesOrientedForce<T>;
