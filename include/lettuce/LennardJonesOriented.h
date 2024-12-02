@@ -31,7 +31,7 @@ public:
             + dA_dr * std::cos(m_phiOrder * deltaPhi);
 
         const T angularForce = m_phiOrder * A * std::sin(m_phiOrder * deltaPhi);
-
+        
         return {{radialForce, angularForce}};
     }
 

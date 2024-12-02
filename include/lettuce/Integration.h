@@ -145,7 +145,7 @@ void writePositionToFile(const std::vector<TParticle>& particles, std::ostream& 
         // constexpr int D = degreesOfFreedom<TParticle>();
         auto q = getGeneralizedPositions(p);
         for (int a = 0; a < q.size(); ++a) {
-            file << p.r[a] << " ";
+            file << q[a] << " ";
         }
     }
     file << "\n";
