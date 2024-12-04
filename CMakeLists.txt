@@ -7,6 +7,25 @@ set(CMAKE_CXX_STANDARD 20)
 find_package(Boost COMPONENTS program_options REQUIRED)
 #find_package(Adios2)
 
+set(lettuce_md_THERMOSTAT_IDs
+	"ThermostatID::VelocityScaling"
+	"ThermostatID::Berendsen"
+	"ThermostatID::Andersen"
+	"ThermostatID::None"
+	)
+set(lettuce_md_THERMOSTAT "ThermostatID::None" CACHE STRING "Thermostat")
+set_property(CACHE lettuce_md_THERMOSTAT PROPERTY STRINGS ${lettuce_md_THERMOSTAT_IDs})
+
+set(lettuce_md_PARTICLE_IDs
+	"ParticleDot"
+	"ParticleOriented"
+	)
+set(lettuce_md_PARTICLE "ParticleOriented" CACHE STRING "Particle type")
+set_property(CACHE lettuce_md_PARTICLE PROPERTY STRINGS ${lettuce_md_PARTICLE_IDs})
+
+add_definitions("-DLETTUCE_THERMOSTAT=${lettuce_md_THERMOSTAT}")
+add_definitions("-DLETTUCE_PARTICLE=${lettuce_md_PARTICLE}")
+
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Werror")
 include_directories(
 	${CMAKE_CURRENT_SOURCE_DIR}/include
