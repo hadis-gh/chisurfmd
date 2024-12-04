@@ -22,15 +22,24 @@ public:
         const T r6 = r * r * r * r * r * r;
         const T r12 = r6 * r6;
 
-        const T A = 5 / r12;
+        const T A = 5 / r6;
 
         const T dA_dr = -A * 6 / r;
-
+                
         const T radialForce 
             = -4.0 * m_epsilon * (-12.0 * (m_sigma12 / r12) / r + 6.0 * (m_sigma6 / r6) / r) 
             + dA_dr * std::cos(m_phiOrder * deltaPhi);
 
-        const T angularForce = m_phiOrder * A * std::sin(m_phiOrder * deltaPhi);
+        // const T angularForce = m_phiOrder * A * std::sin(m_phiOrder * deltaPhi);
+
+        T wrappedDeltaPhi = std::fmod(deltaPhi + 2 * M_PI, 2 * M_PI);
+        if (wrappedDeltaPhi > M_PI) {
+            wrappedDeltaPhi -= 2 * M_PI;
+        } // edit this probably remove
+
+        const T angularForce = m_phiOrder * A * std::sin(m_phiOrder * wrappedDeltaPhi);
+        
+        // std::cout   << "deltaPhi: " << deltaPhi << ", Angular Force: " << angularForce << std::endl;
         
         return {{radialForce, angularForce}};
     }

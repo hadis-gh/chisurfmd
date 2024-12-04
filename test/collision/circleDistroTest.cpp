@@ -9,8 +9,8 @@ int main() {
     double areaL = 20.0;
     double radius = .8;
     double mass = 1;
-    Species<double> species1 {mass, radius};
-    Species<double> species2 {2.0f * mass, 0.5f * radius};
+    Species<double> species1 {mass, 0, radius};
+    Species<double> species2 {2.0f * mass, 0, 0.5f * radius};
     std::vector<Species<double>> allSpecies {species1, species2};
     int speciesInd = 0;
 

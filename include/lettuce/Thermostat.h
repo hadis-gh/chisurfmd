@@ -60,7 +60,7 @@ public:
     void operator () (std::vector<TParticle>& particles, const std::vector<Species<T>>& allSpecies) const {
         const T currentTemperature = calInternalTemperature(particles, allSpecies); 
         const auto lambda = std::sqrt(desiredTemperature / currentTemperature);
-        rescaleVelocity(particles, allSpecies, lambda);
+        rescaleVelocities(particles, allSpecies, lambda);
     }
 
 private:
@@ -99,11 +99,29 @@ T calRawKineticEnergy(const std::vector<TParticle>& particles, const std::vector
     return totalKE;
 }
 
+// template<typename TParticle, typename T = typename TParticle::value_type>
+// T calParticleKineticEnergy(const TParticle& p, const std::vector<Species<T>>& allSpecies) {
+//     // const auto v = getGeneralizedVelocities(p);
+    
+//     return 0.5 * allSpecies[p.species].mass * p.v.abs2();
+// }
+
 template<typename TParticle, typename T = typename TParticle::value_type>
 T calParticleKineticEnergy(const TParticle& p, const std::vector<Species<T>>& allSpecies) {
-    // const auto v = getGeneralizedVelocities(p);
-    
-    return 0.5 * allSpecies[p.species].mass * p.v.abs2();
+    T kineticEnergy = 0.0;
+    const T mass = allSpecies[p.species].mass;
+    const T momentOfInertia = allSpecies[p.species].momentOfInertia;
+    auto generalizedVel = getGeneralizedVelocities(p);
+
+    for (size_t i = 0; i < generalizedVel.size(); ++i) {
+        if (i < 2) {
+            kineticEnergy += 0.5 * mass * generalizedVel[i] * generalizedVel[i];
+        } else {
+            kineticEnergy += 0.5 * momentOfInertia * generalizedVel[i] * generalizedVel[i];
+        }
+    }
+
+    return kineticEnergy;
 }
 
 template<typename TParticle, typename T = typename TParticle::value_type>
@@ -112,9 +130,13 @@ T calParticleRelativeKineticEnergy(const TParticle& p, const std::vector<Species
 }
 
 template<typename TParticle, typename T = typename TParticle::value_type>
-void rescaleVelocity(std::vector<TParticle>& particles, const std::vector<Species<T>>& allSpecies, const T lambda) {
+void rescaleVelocities(std::vector<TParticle>& particles, const std::vector<Species<T>>& allSpecies, const T lambda) {
     for (auto& p : particles) {
-        p.v *= lambda;
+        auto generalizedVel = getGeneralizedVelocities(p);
+        for (size_t i = 0; i < generalizedVel.size(); ++i) {
+            generalizedVel[i] *= lambda;
+        }
+        setGeneralizedVelocities(p, generalizedVel);
     }
 }
 

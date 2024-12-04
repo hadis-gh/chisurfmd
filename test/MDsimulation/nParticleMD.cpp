@@ -48,6 +48,7 @@ int main(int argc, char* argv[]) {
     po::variables_map vm;
     po::options_description desc("Allowed Options");
     desc.add_options()
+        ("momentI",               po::value<Real>()->default_value(1.0),                      "moment of inersia")
         ("help,h", "print help")
         ("time,t",                po::value<Real>()->default_value(10.0),                     "max simulation time")
         ("dt",                    po::value<Real>()->default_value(.01),                      "integration step size")
@@ -112,15 +113,15 @@ int main(int argc, char* argv[]) {
     const Real collisionFrequency = vm["collisionFr"].as<Real>();
     const Real desiredTemperature = vm["temperature"].as<Real>();
 
-    Species<Real> species1 {mass, radius};
-    Species<Real> species2 {2.0f * mass, 0.5f * radius};
+    Species<Real> species1 {mass, vm["momentI"].as<Real>(), radius};
+    Species<Real> species2 {2.0f * mass, vm["momentI"].as<Real>(), 0.5f * radius};
     std::vector<Species<Real>> allSpecies {species1, species2};
     int speciesInd = 0;
 
     auto particlesInit = vm["particlesInit"].as<std::string>(); 
 
     auto particles = initialParticles<ParticleT>(particlesNum, allSpecies, speciesInd, areaL, gen, particlesInit);
-
+    
     writeInitialParticles(particles, radius);
 
     auto force = Potential::force(vm);
