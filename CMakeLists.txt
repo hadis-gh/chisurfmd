@@ -5,7 +5,7 @@ set(CMAKE_CXX_STANDARD 20)
 
 #find_package(Boost CONFIG)
 find_package(Boost COMPONENTS program_options REQUIRED)
-#find_package(Adios2)
+find_package(Adios2)
 
 set(lettuce_md_THERMOSTAT_IDs
 	"ThermostatID::VelocityScaling"
