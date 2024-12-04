@@ -7,6 +7,8 @@
 #include <random>
 #include <iomanip>
 
+#include <adios2.h>
+
 #include "lettuce/Vec.h"
 #include "lettuce/Circle.h"
 #include "lettuce/LennardJones.h"
@@ -152,14 +154,14 @@ void writePositionToFile(const std::vector<TParticle>& particles, std::ostream& 
 }
 
 template<typename TParticle, typename T = typename TParticle::value_type>
-void writeKineticEToFile(const std::vector<TParticle>& particles, const std::vector<Species<T>>& allSpecies, std::ostream& file) {
-    for (const auto& p : particles) {
-        // auto q = getGeneralizedPositions(p);
-        // for (int a = 0; a < q.size() - 1; ++a) {
-        file << calParticleKineticEnergy(p, allSpecies) << " ";
-        // }
+void writeKineticEToFile(const std::vector<TParticle>& particles, const std::vector<Species<T>>& allSpecies, adios2::fstream& oStream) {
+	
+	std::vector<T> eKin(particles.size());
+    for (int a = 0; a < particles.size(); ++a) {
+        eKin[a] = calParticleKineticEnergy(particles[a], allSpecies);
     }
-    file << "\n";
+	oStream.write("kineticEnergy", eKin.data(), {particles.size()},
+			{std::size_t(0u)}, {particles.size()});
 }
 
 template<typename TParticle, typename T = typename TParticle::value_type>

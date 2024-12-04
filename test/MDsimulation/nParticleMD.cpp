@@ -7,6 +7,8 @@
 
 #include <boost/program_options.hpp>
 
+#include <adios2.h>
+
 #include "lettuce/Vec.h"
 #include "lettuce/Circle.h"
 #include "lettuce/ParticleDot.h"
@@ -69,6 +71,7 @@ int main(int argc, char* argv[]) {
         ("relaxationTime",        po::value<Real>()->default_value(40.),                      "relaxation time for Berendsen thermostat")
         ("collisionFr",           po::value<Real>()->default_value(1.0 / 60.0),               "collision frequency for Andersen thermostat")
         ("integration",           po::value<std::string>()->default_value("VelocityVerlet"),  "integration method (velocity verlet/ euler)")
+        ("saveAdios",         	  po::value<std::string>()->default_value("adios.bp"),        "file path to adios output file")
     ;
 
     Potential::initProgramOptions(desc);
@@ -149,6 +152,8 @@ int main(int argc, char* argv[]) {
             return AndersenThermostat<ParticleT>(vm["thermoInterval"].as<Real>(), collisionFrequency, desiredTemperature, gen);
     }();
 
+	adios2::fstream oStream(vm["saveAdios"].as<std::string>(), adios2::fstream::out);
+
     std::ios::openmode openmode = std::ios::trunc;
     if (vm["appendLog"].as<bool>()) {
         openmode = std::ios::app;
@@ -201,7 +206,7 @@ int main(int argc, char* argv[]) {
             writeStateStep = step + writeStateIntervalSteps;
         }
         if (step == writeEnergyStep) {
-            writeKineticEToFile(particles, allSpecies, kineticEnergyFile);
+            writeKineticEToFile(particles, allSpecies, oStream);
             writePotentialEToFile(particles, allSpecies, boxPBC, potential, PotentialEnergyFile);
             writeAverageNeighborToFile(particles, neighborDistances, NeighborCountFile, dt, step);
             writeComVelocityToFile(particles, allSpecies, ComVelocityFile, dt, step);
@@ -222,6 +227,10 @@ int main(int argc, char* argv[]) {
             }
         //deposition rate  (adding one particle to the list) -> make the option (by adding collisiotn frequency parameter) for running anderson thermostat after adding particle (but this one collistion frequency should be larger)
         }
+
+		// oStream.write<double>("time", dt * step, adios2::end_step);
+		oStream.write<double>("time", dt * step);
+		oStream.end_step();
     }
 
     clock_t endTime = clock();
@@ -233,6 +242,8 @@ int main(int argc, char* argv[]) {
         std::ofstream configutation(vm["saveParticles"].as<std::string>());
         saveParticlesWithVelocities(configutation, particles);
     }
+
+	oStream.close();
 
     return 0;
 }

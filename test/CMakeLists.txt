@@ -8,5 +8,6 @@ add_executable(testStopperRandomCircles collision/otherMethods/circleStopperRand
 add_executable(testCollisionRandomCircles collision/collisionRandomCircles.cpp)
 add_executable(testCollisionDLA collision/collisionDLA.cpp)
 add_executable(testNParticleMD MDsimulation/nParticleMD.cpp)
-target_link_libraries(testNParticleMD Boost::program_options)
+target_link_libraries(testNParticleMD Boost::program_options adios2::cxx11)
 add_executable(testPlotForcePotential MDsimulation/plotForcePotential.cpp)
+target_link_libraries(testPlotForcePotential adios2::cxx11)
