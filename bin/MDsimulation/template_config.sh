@@ -20,3 +20,6 @@ highTemperature=1.00
 stepTemperature=0.02
 
 integration="VelocityVerlet"
+
+LJPhiOrder=2
+momentI=1
