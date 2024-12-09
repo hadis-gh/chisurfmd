@@ -26,6 +26,7 @@ targetT=${targetT:-1}
 
 LJPhiOrder=${LJPhiOrder:-2}
 momentI=${momentI:-1}
+LJangularScale=${LJangularScale:-5}
 
 saveParticles="N_Config"
 
@@ -35,6 +36,6 @@ $MD_EXE -T "$targetT" --particlesInit "$particlesInit" --saveParticles "${savePa
     --seed "$seed" -t "$timeSim" --areaL "$areaL" --exclusionRadius "$exclusionRadius" \
     --thermoInterval "$thermoInterval"  --writeStateInterval "$writeStateInterval" --writeEnergyInterval "$writeEnergyInterval" \
     --integration "$integration" --LJPhiOrder "$LJPhiOrder" \
-    --momentI "$momentI" 
+    --momentI "$momentI" --LJangularScale "$LJangularScale"
 
 echo "done"

@@ -10,11 +10,11 @@ class LennardJonesOrientedForce {
 public:
     using value_type = T;
 
-    LennardJonesOrientedForce(T epsilon, T sigma, T cutoff, int phiOrder)
+    LennardJonesOrientedForce(T epsilon, T sigma, T cutoff, int phiOrder, T angularScale)
         : m_epsilon(epsilon), m_sigma(sigma), m_cutoff(cutoff)
         , m_sigma6(sigma * sigma * sigma * sigma * sigma * sigma)
         , m_sigma12(m_sigma6 * m_sigma6)
-        , m_phiOrder(phiOrder) {}
+        , m_phiOrder(phiOrder), m_angularScale(angularScale) {}
 
     Vec<T, 2> operator()(const T r, const T deltaPhi) const {
         if (r == 0 || r > m_cutoff) return {{0, 0}};
@@ -22,8 +22,7 @@ public:
         const T r6 = r * r * r * r * r * r;
         const T r12 = r6 * r6;
 
-        constexpr T A_factor = 5;
-        const T A = A_factor / r12;
+        const T A = m_angularScale / r12;
 
         const T dA_dr = -A * 6 / r;
         
@@ -43,16 +42,17 @@ private:
     T m_sigma6;
     T m_sigma12;
     int m_phiOrder;
+    T m_angularScale;
 };
 
 template<typename T>
 class LennardJonesOrientedPotential {
 public:
-    LennardJonesOrientedPotential(T epsilon, T sigma, T cutoff, int phiOrder)
+    LennardJonesOrientedPotential(T epsilon, T sigma, T cutoff, int phiOrder, T angularScale)
         : m_epsilon(epsilon), m_sigma(sigma), m_cutoff(cutoff)
         , m_sigma6(sigma * sigma * sigma * sigma * sigma * sigma)
         , m_sigma12(m_sigma6 * m_sigma6)
-        , m_phiOrder(phiOrder) {}
+        , m_phiOrder(phiOrder), m_angularScale(angularScale) {}
 
     T operator()(const T r, const T deltaPhi) const {
         if (r == 0 || r > m_cutoff) return 0;
@@ -60,8 +60,7 @@ public:
         const T r6 = r * r * r * r * r * r;
         const T r12 = r6 * r6;
 
-        constexpr T A_factor = 5;
-        const T A = A_factor / r12;
+        const T A = m_angularScale / r12;
 
         return 4.0 * m_epsilon * (m_sigma12 / r12 - m_sigma6 / r6) 
                + A * std::cos(m_phiOrder * deltaPhi);
@@ -74,4 +73,5 @@ private:
     T m_sigma6;
     T m_sigma12;
     int m_phiOrder;
+    T m_angularScale;
 };

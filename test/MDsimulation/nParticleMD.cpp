@@ -179,7 +179,9 @@ int main(int argc, char* argv[]) {
     std::cout << "particle numbers: " << particlesNum << std::endl;
     std::cout << "Integration method: " << method << std::endl;
     std::cout << "particle initialization: " << particlesInit << std::endl;
+    std::cout << "scale of orientation: " << vm["LJangularScale"].as<Real>() << std::endl;
     std::cout << "angular orientation order: " << vm["LJPhiOrder"].as<int>() << "\n\n";
+
 
     const size_t writeStateIntervalSteps = std::ceil(vm["writeStateInterval"].as<Real>() / dt);
     const size_t writeEnergyIntervalSteps = std::ceil(vm["writeEnergyInterval"].as<Real>() / dt);

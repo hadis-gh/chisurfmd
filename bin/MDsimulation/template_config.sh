@@ -23,3 +23,4 @@ integration="VelocityVerlet"
 
 LJPhiOrder=2
 momentI=1
+LJangularScale=5
