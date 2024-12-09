@@ -132,11 +132,11 @@ Vec<T, 3> calTotalForce(const ParticleOriented<T>& p1, const std::vector<Particl
 template<typename T, typename Force>
 Vec<T, 3> calAcceleration(const ParticleOriented<T>& p1, const std::vector<ParticleOriented<T>>& particles, const std::vector<Species<T>>& allSpecies, const T& boxPBC, Force&& force) {
     T mass = allSpecies[p1.species].mass;
-    T moment_of_inertia = mass * std::pow(allSpecies[p1.species].radius, 2) / 2;
+    T MI = allSpecies[p1.species].momentOfInertia;
 
     Vec<T, 3> total_force = calTotalForce(p1, particles, boxPBC, std::forward<Force>(force));
     Vec<T, 2> acceleration = {{total_force[0] / mass, total_force[1] / mass}};
-    T angular_acceleration = total_force[2] / moment_of_inertia;
+    T angular_acceleration = total_force[2] / MI;
 
     return {{acceleration[0], acceleration[1], angular_acceleration}};
 }

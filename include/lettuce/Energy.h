@@ -43,14 +43,14 @@ template<typename TParticle, typename T = typename TParticle::value_type>
 T calParticleKineticEnergy(const TParticle& p, const std::vector<Species<T>>& allSpecies) {
     T kineticEnergy = 0.0;
     const T mass = allSpecies[p.species].mass;
-    const T momentOfInertia = allSpecies[p.species].momentOfInertia;
+    const T MI = allSpecies[p.species].momentOfInertia;
     auto vel = getGeneralizedVelocities(p);
 
     for (size_t i = 0; i < vel.size(); ++i) {
         if (i < 2) {
             kineticEnergy += 0.5 * mass * vel[i] * vel[i];
         } else {
-            kineticEnergy += 0.5 * momentOfInertia * vel[i] * vel[i];
+            kineticEnergy += 0.5 * MI * vel[i] * vel[i];
         }
     }
 
