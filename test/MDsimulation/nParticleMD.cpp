@@ -14,6 +14,8 @@
 #include "lettuce/ParticleDot.h"
 #include "lettuce/ParticleOriented.h"
 #include "lettuce/Utilities.h"
+#include "lettuce/Energy.h"
+#include "lettuce/FileIO.h"
 #include "lettuce/Integration.h"
 #include "lettuce/Thermostat.h"
 #include "lettuce/LennardJones.h"
@@ -161,6 +163,7 @@ int main(int argc, char* argv[]) {
 
     std::ofstream positionFile("N_particle_PosMD.dat", openmode);
     std::ofstream kineticEnergyFile("N_particle_KineticEnergyMD.dat", openmode);
+    std::ofstream kEsAveFile("N_particle_KEsAveMD.dat", openmode);
     std::ofstream PotentialEnergyFile("N_particle_PotentialEnergyMD.dat", openmode);
     std::ofstream NeighborCountFile("N_particle_NeighborsMD.dat", openmode);
     std::ofstream ComVelocityFile("N_particle_comVelocityMD.dat", openmode);
@@ -207,6 +210,7 @@ int main(int argc, char* argv[]) {
         }
         if (step == writeEnergyStep) {
             writeKineticEToFile(particles, allSpecies, oStream);
+            writeAverageKineticEnergies(particles, allSpecies, kEsAveFile);
             writePotentialEToFile(particles, allSpecies, boxPBC, potential, PotentialEnergyFile);
             writeAverageNeighborToFile(particles, neighborDistances, NeighborCountFile, dt, step);
             writeComVelocityToFile(particles, allSpecies, ComVelocityFile, dt, step);

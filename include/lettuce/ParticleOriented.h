@@ -26,7 +26,8 @@ struct CreateRandomParticle<ParticleOriented<T>>
         p.r[1] = baseParticle.r[1];
 
         std::uniform_real_distribution<T> randomPos(0, 1);
-        p.phi = randomPos(gen) * 2 * M_PI;
+        // p.phi = M_PI / 2;
+        p.phi = randomPos(gen) * 2 * M_PI - M_PI;
 
         return p;
     }

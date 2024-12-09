@@ -17,4 +17,5 @@ relaxationTime=40.0
 integration="VelocityVerlet"
 targetT=1
 
-LJPhiOrder=1
+LJPhiOrder=2
+momentI=1

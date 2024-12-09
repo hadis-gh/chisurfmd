@@ -25,6 +25,7 @@ integration=${integration:-"VelocityVerlet"}
 targetT=${targetT:-1}
 
 LJPhiOrder=${LJPhiOrder:-2}
+momentI=${momentI:-1}
 
 saveParticles="N_Config"
 
