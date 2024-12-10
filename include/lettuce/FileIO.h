@@ -49,7 +49,6 @@ void writeAverageKineticEnergies(const std::vector<TParticle>& particles, const 
     T totalKE_phi = 0.0;
 
     size_t numParticles = particles.size();
-    bool hasRotationalComponent = false;
 
     for (const auto& p : particles) {
         const T mass = allSpecies[p.species].mass;
@@ -61,21 +60,17 @@ void writeAverageKineticEnergies(const std::vector<TParticle>& particles, const 
         totalKE_y += 0.5 * mass * vel[1] * vel[1];
 
         if (vel.size() > 2) {
-            hasRotationalComponent = true;
             totalKE_phi += 0.5 * MOI * vel[2] * vel[2];
         }
     }
 
     T avgKE_x = totalKE_x / numParticles;
     T avgKE_y = totalKE_y / numParticles;
-    T avgKE_phi = hasRotationalComponent ? (totalKE_phi / numParticles) : 0.0;
+    T avgKE_phi = (totalKE_phi > 0) ? (totalKE_phi / numParticles) : 0.0;
 
-    if (hasRotationalComponent) {
-        file << avgKE_x << " " << avgKE_y << " " << avgKE_phi << "\n";
-    } else {
-        file << avgKE_x << " " << avgKE_y << "\n";
-    }
+    file << avgKE_x << " " << avgKE_y << " " << avgKE_phi << "\n";
 }
+
 
 template<typename TParticle, typename T = typename TParticle::value_type>
 void writeRelativeKineticEToFile(const std::vector<TParticle>& particles, const std::vector<Species<T>>& allSpecies, std::ostream& file) {

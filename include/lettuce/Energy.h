@@ -7,10 +7,33 @@
 #include "lettuce/Vec.h"
 #include "lettuce/constants.h"
 
+// template<typename TParticle, typename T = typename TParticle::value_type>
+// T calInternalTemperature(const std::vector<TParticle>& particles, const std::vector<Species<T>>& allSpecies) {
+//     T internalKE = calInternalKineticEnergy(particles, allSpecies);
+//     return (2 * internalKE) / (constants::boltzmann * particles.size() * 3.0);
+// }
+
 template<typename TParticle, typename T = typename TParticle::value_type>
 T calInternalTemperature(const std::vector<TParticle>& particles, const std::vector<Species<T>>& allSpecies) {
-    T internalKE = calInternalKineticEnergy(particles, allSpecies);
-    return (2 * internalKE) / (constants::boltzmann * particles.size() * 3.0);
+    T totalKE = 0.0;
+    size_t degreesOfFreedom = 0;
+
+    for (const auto& p : particles) {
+        const T mass = allSpecies[p.species].mass;
+        const T MI = allSpecies[p.species].momentOfInertia;
+        auto vel = getGeneralizedVelocities(p);
+
+        for (size_t i = 0; i < vel.size(); ++i) {
+            if (i < 2) {
+                totalKE += 0.5 * mass * vel[i] * vel[i];
+            } else {
+                totalKE += 0.5 * MI * vel[i] * vel[i];
+            }
+        }
+        degreesOfFreedom += vel.size();
+    }
+
+    return (2 * totalKE) / (constants::boltzmann * degreesOfFreedom);
 }
 
 template<typename TParticle, typename T = typename TParticle::value_type>
@@ -53,7 +76,6 @@ T calParticleKineticEnergy(const TParticle& p, const std::vector<Species<T>>& al
             kineticEnergy += 0.5 * MI * vel[i] * vel[i];
         }
     }
-
     return kineticEnergy;
 }
 

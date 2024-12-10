@@ -18,8 +18,19 @@ public:
     void operator () (std::vector<TParticle>& particles, const std::vector<Species<T>>& allSpecies) {
         for (auto& p : particles) {
             if (dist(gen) < collisionFrequency * dt) {
-                T mass = allSpecies[p.species].mass;
-                p.v = maxwellDist(gen) / std::sqrt(mass);
+                const T mass = allSpecies[p.species].mass;
+                const T MI = allSpecies[p.species].momentOfInertia;
+                auto generalizedVel = getGeneralizedVelocities(p);
+
+                for (size_t i = 0; i < generalizedVel.size(); ++i) {
+                    if (i < 2) {
+                        generalizedVel[i] = maxwellDist(gen) / std::sqrt(mass);
+                    } else {
+                        generalizedVel[i] = maxwellDist(gen) / std::sqrt(MI);
+                    }
+                }
+
+                setGeneralizedVelocities(p, generalizedVel);
             }
         }
     }
@@ -71,8 +82,15 @@ template<typename TParticle, typename T = typename TParticle::value_type>
 void rescaleVelocities(std::vector<TParticle>& particles, const std::vector<Species<T>>& allSpecies, const T lambda) {
     for (auto& p : particles) {
         auto generalizedVel = getGeneralizedVelocities(p);
+        const T mass = allSpecies[p.species].mass;
+        const T MI = allSpecies[p.species].momentOfInertia;
+
         for (size_t i = 0; i < generalizedVel.size(); ++i) {
-            generalizedVel[i] *= lambda;
+            if (i < 2) {
+                generalizedVel[i] *= std::sqrt(lambda / mass);
+            } else {
+                generalizedVel[i] *= std::sqrt(lambda / MI);
+            }
         }
         setGeneralizedVelocities(p, generalizedVel);
     }
