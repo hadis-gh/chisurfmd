@@ -126,21 +126,20 @@ std::vector<TParticle> manualRandomParticles(const int& particlesNum, const T& L
                 newParticle.r[0] += randomDisplacement(gen);
                 newParticle.r[1] += randomDisplacement(gen);
 
-                bool hasOverlap = false;
                 for (const auto& existingParticle : particles) {
                     T dx = newParticle.r[0] - existingParticle.r[0];
                     T dy = newParticle.r[1] - existingParticle.r[1];
                     T distSquared = dx * dx + dy * dy;
                     if (distSquared < 4 * radius * radius) {
-                        hasOverlap = true;
-                        break;
+                        std::ostringstream os;
+                        os << "Random Grid placment failed. Found overlaping particles: "
+                            << existingParticle.r << " vs. " << newParticle.r;
+                        std::cerr << os.str() << "\n";
+                        throw std::logic_error(std::move(os).str());
                     }
                 }
-                if (!hasOverlap) {
-                    particles.push_back(newParticle);
-                } else {
-                    --j;
-                }
+
+                particles.push_back(newParticle);
             }
         }
     }

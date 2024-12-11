@@ -6,7 +6,11 @@ seed=15
 
 timeCooling=100
 timeHeating=100
+
+timeSim=1000
+
 dt=0.001
+
 writeStateInterval=0.05
 writeEnergyInterval=0.5
 thermoInterval=0.1
@@ -18,6 +22,8 @@ relaxationTime=40.0
 lowTemperature=0.02
 highTemperature=1.00
 stepTemperature=0.02
+
+targetT=0.7
 
 integration="VelocityVerlet"
 

@@ -53,7 +53,7 @@ public:
     void operator () (std::vector<TParticle>& particles, const std::vector<Species<T>>& allSpecies) const {
         const T currentTemperature = calInternalTemperature(particles, allSpecies); 
         const auto lambda = std::sqrt(1 + dt / relaxationTime * (desiredTemperature / currentTemperature - 1));
-        rescaleVelocity(particles, allSpecies, lambda);
+        rescaleVelocities(particles, allSpecies, lambda);
     }
 
 private:

@@ -32,10 +32,12 @@ saveParticles="N_Config"
 
 MD_EXE=../test/testNParticleMD
 
-$MD_EXE -T "$targetT" --particlesInit "$particlesInit" --saveParticles "${saveParticles}.dat" --dt "$dt" -n "$particleNum" \
-    --seed "$seed" -t "$timeSim" --areaL "$areaL" --exclusionRadius "$exclusionRadius" \
-    --thermoInterval "$thermoInterval"  --writeStateInterval "$writeStateInterval" --writeEnergyInterval "$writeEnergyInterval" \
-    --integration "$integration" --LJPhiOrder "$LJPhiOrder" \
-    --momentI "$momentI" --LJangularScale "$LJangularScale"
+CMD="$MD_EXE -T '$targetT' --particlesInit '$particlesInit' --saveParticles '${saveParticles}.dat' --dt '$dt' -n '$particleNum' \
+    --seed '$seed' -t '$timeSim' --areaL '$areaL' --exclusionRadius '$exclusionRadius' \
+    --thermoInterval '$thermoInterval'  --writeStateInterval '$writeStateInterval' --writeEnergyInterval '$writeEnergyInterval' \
+    --integration '$integration' --LJPhiOrder '$LJPhiOrder' \
+    --momentI '$momentI' --LJangularScale '$LJangularScale' "
+echo "$CMD"
+eval $CMD
 
 echo "done"
