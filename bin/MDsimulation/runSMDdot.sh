@@ -24,10 +24,6 @@ collisionFr=$(echo "scale=4; 1 / 60" | bc -l)
 integration=${integration:-"VelocityVerlet"}
 targetT=${targetT:-1}
 
-LJPhiOrder=${LJPhiOrder:-2}
-momentI=${momentI:-1}
-LJangularScale=${LJangularScale:-5}
-
 saveParticles="N_Config"
 
 MD_EXE=../test/testNParticleMD
@@ -35,7 +31,8 @@ MD_EXE=../test/testNParticleMD
 CMD="$MD_EXE -T '$targetT' --particlesInit '$particlesInit' --saveParticles '${saveParticles}.dat' --dt '$dt' -n '$particleNum' \
     --seed '$seed' -t '$timeSim' --areaL '$areaL' --exclusionRadius '$exclusionRadius' \
     --thermoInterval '$thermoInterval'  --writeStateInterval '$writeStateInterval' --writeEnergyInterval '$writeEnergyInterval' \
-    --integration '$integration' "
+    --integration '$integration' --LJepsilon 1.0 --LJsigma 1.0 --LJcutoff 10.0"
+
 echo "$CMD"
 eval $CMD
 

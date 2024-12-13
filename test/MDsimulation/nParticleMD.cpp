@@ -75,6 +75,10 @@ int main(int argc, char* argv[]) {
         ("integration",           po::value<std::string>()->default_value("VelocityVerlet"),  "integration method (velocity verlet/ euler)")
         ("saveAdios",         	  po::value<std::string>()->default_value("adios.bp"),        "file path to adios output file")
     ;
+    
+    for (const auto& opt : vm) {
+        std::cout << "Option: " << opt.first << ", Value: " << opt.second << "\n";
+    }
 
     Potential::initProgramOptions(desc);
 
