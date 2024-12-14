@@ -19,15 +19,18 @@ public:
     Vec<T, 2> operator()(const T r, const T deltaPhi) const {
         if (r == 0 || r > m_cutoff) return {{0, 0}};
 
-        const T r6 = r * r * r * r * r * r;
+        const T min_distance = m_sigma * 0.5;
+        const T effective_r = std::max(r, min_distance);
+
+        const T r6 = effective_r * effective_r * effective_r * effective_r * effective_r * effective_r;
         const T r12 = r6 * r6;
 
         const T A = m_angularScale / r12;
 
-        const T dA_dr = -A * 6 / r;
+        const T dA_dr = -A * 6 / effective_r;
         
         const T radialForce 
-            = -4.0 * m_epsilon * (-12.0 * (m_sigma12 / r12) / r + 6.0 * (m_sigma6 / r6) / r) 
+            = -4.0 * m_epsilon * (-12.0 * (m_sigma12 / r12) / effective_r + 6.0 * (m_sigma6 / r6) / effective_r) 
             + dA_dr * std::cos(m_phiOrder * deltaPhi);
 
         const T angularForce = m_phiOrder * A * std::sin(m_phiOrder * deltaPhi);

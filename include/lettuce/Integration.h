@@ -66,3 +66,13 @@ void integrate(std::vector<TParticle>& particles, const std::vector<Species<T>>&
         integrator(particles, allSpecies, dt, boxPBC, std::forward<Force>(force));
     }
 }
+
+// template<typename TParticle>
+// void capVelocity(TParticle& particle, const T max_velocity) {
+//     auto v = getGeneralizedVelocities(particle);
+//     T speed = v.abs();
+//     if (speed > max_velocity) {
+//         v *= max_velocity / speed;
+//         setGeneralizedVelocities(particle, v);
+//     }
+// }
