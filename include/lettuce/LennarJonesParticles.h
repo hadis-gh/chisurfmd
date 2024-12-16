@@ -22,7 +22,8 @@ struct LennardJones<ParticleDot<T>>
         desc.add_options()
             ("LJepsilon", po::value<T>()->default_value(1.),     "epsilon in Lennard-Jones force and potential")
             ("LJsigma",   po::value<T>()->default_value(1.),     "sigma in Lennard-Jones force and potential")
-            ("LJcutoff",  po::value<T>()->default_value(10.),   "cutoff distance for Lennard-Jones interactions");
+            ("LJcutoff",  po::value<T>()->default_value(10.),   "cutoff distance for Lennard-Jones interactions")
+        ;
     }
 
     static auto force(const po::variables_map &vm) {
@@ -61,7 +62,8 @@ struct LennardJones<ParticleOriented<T>>
         LennardJones<ParticleDot<T>>::initProgramOptions(desc); // Reuse base options
         desc.add_options()
             ("LJPhiOrder", po::value<int>()->default_value(4), "rotational order for orientation-dependent interactions")
-            ("LJangularScale", po::value<T>()->default_value(5.0), "scaling factor for the orientation-dependent interaction");
+            ("LJangularScale", po::value<T>()->default_value(5.0), "scaling factor for the orientation-dependent interaction")
+        ;
     }
 
     static auto force(const po::variables_map &vm) {

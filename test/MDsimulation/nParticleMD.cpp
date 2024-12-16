@@ -81,6 +81,12 @@ int main(int argc, char* argv[]) {
     po::store(po::command_line_parser(argc, argv).options(desc).run(), vm);
     po::notify(vm);
 
+    // auto force = LennardJonesForce<Real>(1.0, 1.0, 10.0);
+    // auto potential = LennardJonesPotential<Real>(1.0, 1.0, 10.0);
+
+    auto force = Potential::force(vm);
+    auto potential = Potential::potential(vm);
+
     if (vm.count("help") > 0) {
         std::cout << desc << std::endl;
         return 0;
@@ -128,9 +134,6 @@ int main(int argc, char* argv[]) {
     auto particles = initialParticles<ParticleT>(particlesNum, allSpecies, speciesInd, areaL, gen, particlesInit);
     
     writeInitialParticles(particles, radius);
-
-    auto force = Potential::force(vm);
-    auto potential = Potential::potential(vm);
 
     std::string method = vm["integration"].as<std::string>();
     auto integrationMethod = VelocityVerletStep<ParticleT, Potential::ForceType>;
