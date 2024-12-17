@@ -75,6 +75,9 @@ struct LennardJones<ParticleOriented<T>>
                 vm["LJPhiOrder"].as<int>(),
                 vm["LJangularScale"].as<T>()
             );
+            std::cout << "scale of orientation: " << vm["LJangularScale"].as<T>() << std::endl;
+            std::cout << "angular orientation order: " << vm["LJPhiOrder"].as<int>() << "\n\n";
+
         } catch (const boost::bad_any_cast& e) {
             std::cerr << "Error initializing LennardJonesOrientedForce: " << e.what() << std::endl;
             throw;

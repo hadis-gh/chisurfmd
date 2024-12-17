@@ -74,15 +74,15 @@ int main(int argc, char* argv[]) {
         ("collisionFr",           po::value<Real>()->default_value(1.0 / 60.0),               "collision frequency for Andersen thermostat")
         ("integration",           po::value<std::string>()->default_value("VelocityVerlet"),  "integration method (velocity verlet/ euler)")
         ("saveAdios",         	  po::value<std::string>()->default_value("adios.bp"),        "file path to adios output file")
-    ;
+        ("enableCapVelocity",     po::bool_switch()->default_value(false),                    "Enable capping of velocities")
+        ("maxVelocity",           po::value<std::vector<Real>>()->multitoken()->default_value(std::vector<Real>{1e5, 1e3}, "1e5 1e3"),
+                                                                                              "capping amount for velocity {x-y, omega}")
+;
 
     Potential::initProgramOptions(desc);
 
     po::store(po::command_line_parser(argc, argv).options(desc).run(), vm);
     po::notify(vm);
-
-    // auto force = LennardJonesForce<Real>(1.0, 1.0, 10.0);
-    // auto potential = LennardJonesPotential<Real>(1.0, 1.0, 10.0);
 
     auto force = Potential::force(vm);
     auto potential = Potential::potential(vm);
@@ -116,6 +116,9 @@ int main(int argc, char* argv[]) {
     const Real boxPBC = vm["areaL"].as<Real>();
     const Real neighborDist = vm["neighborDist"].as<Real>();
     const std::vector<Real> neighborDistances {0.8, 1.0, 1.2, 1.5, 1.8, 2.0, 2.5};
+    
+    const bool enableCapVelocity = vm["enableCapVelocity"].as<bool>();
+    const std::vector<Real> maxVelocity = vm["maxVelocity"].as<std::vector<Real>>();
 
     const Real dt = vm["dt"].as<Real>();
     const Real Time = vm["time"].as<Real>();
@@ -181,10 +184,7 @@ int main(int argc, char* argv[]) {
     std::cout << "potential type: " << TOSTRING(LETTUCE_POTENTIAL) << std::endl;
     std::cout << "particle numbers: " << particlesNum << std::endl;
     std::cout << "Integration method: " << method << std::endl;
-    std::cout << "particle initialization: " << particlesInit << std::endl;
-    std::cout << "scale of orientation: " << vm["LJangularScale"].as<Real>() << std::endl;
-    std::cout << "angular orientation order: " << vm["LJPhiOrder"].as<int>() << "\n\n";
-
+    std::cout << "particle initialization: " << particlesInit << "\n" << std::endl;
 
     const size_t writeStateIntervalSteps = std::ceil(vm["writeStateInterval"].as<Real>() / dt);
     const size_t writeEnergyIntervalSteps = std::ceil(vm["writeEnergyInterval"].as<Real>() / dt);
@@ -208,7 +208,9 @@ int main(int argc, char* argv[]) {
         integrate(particles, allSpecies, dt, (nextEventStep - step) * dt, boxPBC, force, integrationMethod); //why a few times integration? 1 is not enough?
         step = nextEventStep;
         removeCOMvelocityRotation2D(particles, allSpecies); // it can be removed
-
+        if (enableCapVelocity) {
+            capVelocity(particles, maxVelocity);
+        }
         if (step == writeStateStep) {
             writePositionToFile(particles, positionFile, dt, step);
             writeStateStep = step + writeStateIntervalSteps;

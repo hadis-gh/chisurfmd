@@ -96,57 +96,53 @@ T packingDensity(const int& number, const T& radius, const T& L) {
 }
 
 template<typename TParticle, typename T = typename TParticle::value_type>
-std::vector<TParticle> manualRandomParticles(const int& particlesNum, const T& L, const T& radius, std::mt19937& gen) {
-    int topSquareRoot = static_cast<int>(std::ceil(std::sqrt(particlesNum)));
-    std::vector<TParticle> particles;
-    T currDensity = packingDensity(topSquareRoot * topSquareRoot, radius, L);
-    const double maxPackingDensity = 0.7854;
+std::vector<TParticle> manualRandomParticles(const int& particlesNum, T L, const T& radius, std::mt19937& gen) {
+    constexpr double maxPackingDensity = 0.7854;
 
-    int maxParticles = static_cast<int>(maxPackingDensity * L * L / (M_PI * radius * radius));
+    T requiredAreaL = std::sqrt(particlesNum * M_PI * radius * radius / maxPackingDensity);
 
-    if (currDensity > maxPackingDensity) {
-        std::cout << "Maximum possible number of particles is : " << maxParticles << " but you entered: " << particlesNum << std::endl;
-        throw std::runtime_error("Too many particles for this area!");
+    if (L < requiredAreaL) {
+        std::cout << "The specified area (" << L << ") is too small for " << particlesNum 
+                  << " particles with radius " << radius << ".\n";
+        std::cout << "Minimum required areaL: " << requiredAreaL << std::endl;
+        throw std::runtime_error("Insufficient area for particle placement.");
     }
 
+    int topSquareRoot = static_cast<int>(std::ceil(std::sqrt(particlesNum)));
+    std::vector<TParticle> particles;
     particles.reserve(particlesNum);
+
     T distance = L / (topSquareRoot + 1);
     const T dr = distance / 2 - radius;
-
     std::uniform_real_distribution<T> randomDisplacement(-dr, dr);
 
     for (int i = 0; i < topSquareRoot; ++i) {
         for (int j = 0; j < topSquareRoot; ++j) {
             if (particles.size() < particlesNum) {
                 auto newParticle = createRandomParticle<TParticle>(gen);
+                newParticle.r[0] = (i + 1) * distance + randomDisplacement(gen);
+                newParticle.r[1] = (j + 1) * distance + randomDisplacement(gen);
 
-                newParticle.r[0] = (i + 1) * distance;
-                newParticle.r[1] = (j + 1) * distance;
-
-                newParticle.r[0] += randomDisplacement(gen);
-                newParticle.r[1] += randomDisplacement(gen);
-
+                bool overlap = false;
                 for (const auto& existingParticle : particles) {
                     T dx = newParticle.r[0] - existingParticle.r[0];
                     T dy = newParticle.r[1] - existingParticle.r[1];
-                    T distSquared = dx * dx + dy * dy;
-                    if (distSquared < 4 * radius * radius) {
-                        std::ostringstream os;
-                        os << "Random Grid placment failed. Found overlaping particles: "
-                            << existingParticle.r << " vs. " << newParticle.r;
-                        std::cerr << os.str() << "\n";
-                        throw std::logic_error(std::move(os).str());
+                    if ((dx * dx + dy * dy) < (4 * radius * radius)) {
+                        overlap = true;
+                        break;
                     }
                 }
-
-                particles.push_back(newParticle);
+                if (!overlap) {
+                    particles.push_back(newParticle);
+                } else {
+                    --j;
+                }
             }
         }
     }
 
     return particles;
 }
-
 
 template<typename T>
 std::vector<Circle<T>> distCirclesDLA(const int& shootNum, const T& L, const T& radius, std::mt19937& gen) {

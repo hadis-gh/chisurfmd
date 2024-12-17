@@ -67,12 +67,26 @@ void integrate(std::vector<TParticle>& particles, const std::vector<Species<T>>&
     }
 }
 
-// template<typename TParticle>
-// void capVelocity(TParticle& particle, const T max_velocity) {
-//     auto v = getGeneralizedVelocities(particle);
-//     T speed = v.abs();
-//     if (speed > max_velocity) {
-//         v *= max_velocity / speed;
-//         setGeneralizedVelocities(particle, v);
-//     }
-// }
+template<typename T, typename Particle>
+void capVelocity(std::vector<Particle>& particles, const std::vector<T>& capV) {
+    for (auto& particle : particles) {
+        auto velocities = getGeneralizedVelocities(particle);
+
+        const T translationalCap = capV[0];
+        for (size_t i = 0; i < 2; ++i) {
+            if (std::abs(velocities[i]) > translationalCap) {
+                velocities[i] = (velocities[i] > 0 ? 1 : -1) * translationalCap;
+            }
+        }
+
+        if (velocities.size() > 2) {
+            const T rotationalCap = capV[1];
+            if (std::abs(velocities[2]) > rotationalCap) {
+                velocities[2] = (velocities[2] > 0 ? 1 : -1) * rotationalCap;
+            }
+        }
+
+        setGeneralizedVelocities(particle, velocities);
+    }
+}
+
