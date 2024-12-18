@@ -91,7 +91,9 @@ int main(int argc, char* argv[]) {
         std::cout << desc << std::endl;
         return 0;
     }
-   
+    
+    //printr all of vm...
+
     unsigned int particlesNum = vm["particlesNum"].as<unsigned int>();
 
     auto gen = [&]() {
@@ -145,6 +147,11 @@ int main(int argc, char* argv[]) {
         integrationMethod = VelocityVerletStep<ParticleT, Potential::ForceType>;
     } else if (method=="Euler") {
         integrationMethod = EulerStep<ParticleT, Potential::ForceType>;
+    } else if (method=="SEuler") {
+        integrationMethod = EulerSymplecticStep<ParticleT, Potential::ForceType>;
+    } else {
+        std::cout << method << " integration wrong!";
+        return 1;
     }
     
     auto thermostat = [&]() {

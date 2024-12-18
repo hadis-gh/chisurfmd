@@ -31,7 +31,7 @@ MD_EXE=../test/testNParticleMD
 CMD="$MD_EXE -T '$targetT' --particlesInit '$particlesInit' --saveParticles '${saveParticles}.dat' --dt '$dt' -n '$particleNum' \
     --seed '$seed' -t '$timeSim' --areaL '$areaL' --exclusionRadius '$exclusionRadius' \
     --thermoInterval '$thermoInterval'  --writeStateInterval '$writeStateInterval' --writeEnergyInterval '$writeEnergyInterval' \
-    --integration '$integration' --LJepsilon 1.0 --LJsigma 1.0 --LJcutoff 10.0"
+    --integration '$integration'"
 
 echo "$CMD"
 eval $CMD

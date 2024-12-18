@@ -6,6 +6,7 @@
 #include <cmath>
 #include <random>
 #include <iomanip>
+#include <cstdlib>
 
 #include <adios2.h>
 
