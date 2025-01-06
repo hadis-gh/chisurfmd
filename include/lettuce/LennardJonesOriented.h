@@ -27,11 +27,11 @@ public:
 
         const T A = m_angularScale / r12;
 
-        const T dA_dr = -A * 6 / effective_r;
+        const T dA_dr = -A * 12 / effective_r;
         
         const T radialForce 
             = -4.0 * m_epsilon * (-12.0 * (m_sigma12 / r12) / effective_r + 6.0 * (m_sigma6 / r6) / effective_r) 
-            + dA_dr * std::cos(m_phiOrder * deltaPhi);
+            - dA_dr * std::cos(m_phiOrder * deltaPhi);
 
         const T angularForce = m_phiOrder * A * std::sin(m_phiOrder * deltaPhi);
                 

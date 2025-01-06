@@ -137,9 +137,6 @@ struct SetGeneralizedVelocities<ParticleDot<T>>
     }
 };
 
-//template<typename T> // remove
-//using Particle = ParticleDot<T>;
-
 //Force calculations
 template<typename T, typename Force>
 Vec<T> calForceTwo(const ParticleDot<T> &p1, const ParticleDot<T> &p2, const T& boxPBC, Force &&force){
