@@ -81,6 +81,22 @@ void removeCOMvelocityRotation2D(std::vector<TParticle>& particles, const std::v
 }
 
 template<typename TParticle, typename T = typename TParticle::value_type>
+void removeCOMvelocityRotation2D_wholeCenter(std::vector<TParticle>& particles, const std::vector<Species<T>>& allSpecies, const T& areaL) {
+    Vec<T> comPos{{areaL/2, areaL/2}};
+    T angularMomentum = calAngularMomentum2D(particles, allSpecies, comPos);
+    T momentOfInertia = calMomentOfInertia2D(particles, allSpecies, comPos);
+
+    T angularVelocity = angularMomentum / momentOfInertia;
+    // there is possiblity to remove mass from these eqs - try to simplify it
+
+    for (auto& p : particles) {
+        Vec<T> r_com = p.r - comPos;
+        Vec<T> v_rot = {(-r_com[1] * angularVelocity, r_com[0] * angularVelocity)};
+        p.v -= v_rot;
+    }
+}
+
+template<typename TParticle, typename T = typename TParticle::value_type>
 Vec<T> calCOMVelocity(const std::vector<TParticle>& particles, const std::vector<Species<T>>& allSpecies) {
     Vec<T> totalMomentum;
     T totalMass = 0.0;

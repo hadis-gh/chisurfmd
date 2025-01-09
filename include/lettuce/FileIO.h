@@ -95,23 +95,26 @@ void writeRealTemperature(const std::vector<TParticle>& particles, const std::ve
 
 template<typename TParticle, typename Potential, typename T = typename TParticle::value_type>
 void writePotentialEToFile(const std::vector<TParticle>& particles, const std::vector<Species<T>>& allSpecies, const T& boxPBC, Potential&& potential, std::ostream& file) {
-    // const auto potentialEnergy = calAllAccelerations(particles, allSpecies, boxPBC, std::forward<Potential>(potential));
     for (auto &p1 : particles) {
         double pot = 0.;
-        //accelerations[i] = calAccelaration(particles[i], particles, allSpecies, boxPBC, std::forward<Force>(force));
-        for (auto &p : particles){
-            if (p1.r != p.r){
+        for (auto &p : particles) {
+            if (p1.r != p.r) {
                 Vec<T> dr = p.r - p1.r;
-                
+
                 for (int i = 0; i < 2; ++i) {
                     if (dr[i] > boxPBC / 2) { dr[i] -= boxPBC; }
                     else if (dr[i] < -boxPBC / 2) { dr[i] += boxPBC; }
                 }
-                
+
                 const T r = dr.abs();
                 if (r == 0) continue;
-                
-                pot += potential(r);
+
+                if constexpr (std::is_same_v<TParticle, ParticleOriented<T>>) {
+                    T deltaPhi = p.phi - p1.phi;
+                    pot += potential(r, deltaPhi);
+                } else {
+                    pot += potential(r);
+                }
             }
         }
         file << pot << "\t";

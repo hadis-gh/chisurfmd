@@ -212,9 +212,9 @@ int main(int argc, char* argv[]) {
 
     while (step < nsteps) {
         const auto nextEventStep = std::min({writeStateStep, writeEnergyStep, thermoStep, nsteps});
-        integrate(particles, allSpecies, dt, (nextEventStep - step) * dt, boxPBC, force, integrationMethod); //why a few times integration? 1 is not enough?
+        integrate(particles, allSpecies, dt, (nextEventStep - step) * dt, boxPBC, force, integrationMethod);
         step = nextEventStep;
-
+        // removeCOMvelocityRotation2D_wholeCenter(particles, allSpecies, areaL);
         if (enableCapVelocity) {
             capVelocity(particles, maxVelocity);
         }
@@ -237,13 +237,15 @@ int main(int argc, char* argv[]) {
                 writeRealTemperature(particles, allSpecies, realTbeforeThermo);
 
                 thermostat(particles, allSpecies);
-                removeCOMVelocity(particles, allSpecies);
-                removeCOMvelocityRotation2D(particles, allSpecies);
+                // removeCOMVelocity(particles, allSpecies);
+                // removeCOMvelocityRotation2D(particles, allSpecies);
+                // removeCOMvelocityRotation2D_wholeCenter(particles, allSpecies, areaL);
                 thermoStep = step + thermoIntervalSteps;
                 writeTemperature(particles, allSpecies, TafterThermo);
                 writeRealTemperature(particles, allSpecies, realTafterThermo);
             }
-        //deposition rate  (adding one particle to the list) -> make the option (by adding collisiotn frequency parameter) for running anderson thermostat after adding particle (but this one collistion frequency should be larger)
+        //deposition rate  (adding one particle to the list) 
+        //-> make the option (by adding collisiotn frequency parameter) for running anderson thermostat after adding particle (but this one collistion frequency should be larger)
         }
 
 		// oStream.write<double>("time", dt * step, adios2::end_step);

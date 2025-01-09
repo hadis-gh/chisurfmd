@@ -23,7 +23,7 @@ void EulerSymplecticStep(std::vector<TParticle>& particles, const std::vector<Sp
         const auto r = getGeneralizedPositions(particles[i]);
         const auto v = getGeneralizedVelocities(particles[i]);
         setGeneralizedVelocities(particles[i], v + accelerations[i] * dt);
-        setGeneralizedPositions(particles[i], r + particles[i].v * dt);
+        setGeneralizedPositions(particles[i], r + v * dt);
         implementPBC(particles[i], boxPBC);
     }
 }
