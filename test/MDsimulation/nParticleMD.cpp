@@ -48,6 +48,31 @@ using Real = double;
 using ParticleT = LETTUCE_PARTICLE<Real>;
 using Potential = LETTUCE_POTENTIAL;
 
+void printOptions(const po::variables_map& vm) {
+    std::cout << "\nCompile-time options:\n";
+    std::cout << std::left << std::setw(20) << "Thermostat:" << TOSTRING(LETTUCE_THERMOSTAT) << "\n"
+              << std::setw(20) << "Particle type:" << TOSTRING(LETTUCE_PARTICLE) << "\n"
+              << std::setw(20) << "Potential type:" << TOSTRING(LETTUCE_POTENTIAL) << "\n";
+
+    if (vm["printOptions"].as<bool>()) {
+        std::cout << "\nRuntime options:\n";
+        for (const auto& option : vm) {
+            const auto& value = option.second.value();
+            std::cout << std::left << std::setw(20) << option.first << ": ";
+            if (value.type() == typeid(std::string)) {
+                std::cout << option.second.as<std::string>();
+            } else if (value.type() == typeid(double)) {
+                std::cout << option.second.as<double>();
+            } else if (value.type() == typeid(unsigned int)) {
+                std::cout << option.second.as<unsigned int>();
+            } else if (value.type() == typeid(bool)) {
+                std::cout << std::boolalpha << option.second.as<bool>();
+            }
+            std::cout << std::endl;
+        }
+    }
+}
+
 int main(int argc, char* argv[]) {
     po::variables_map vm;
     po::options_description desc("Allowed Options");
@@ -85,47 +110,25 @@ int main(int argc, char* argv[]) {
     po::store(po::command_line_parser(argc, argv).options(desc).run(), vm);
     po::notify(vm);
 
-    auto force = Potential::force(vm);
-    auto potential = Potential::potential(vm);
+    if (vm.count("help") > 0) {std::cout << desc << std::endl; return 0;}
+    printOptions(vm);
 
-    if (vm.count("help") > 0) {
-        std::cout << desc << std::endl;
-        return 0;
-    }
-
-    if (vm["printOptions"].as<bool>()) {
-        std::cout << "\nCompiletime options set:" << std::endl;
-        std::cout << std::left << std::setw(20) << "thermostat: " << TOSTRING(LETTUCE_THERMOSTAT) << std::endl;
-        std::cout << std::left << std::setw(20) << "parcticle type: " << TOSTRING(LETTUCE_PARTICLE) << std::endl;
-        std::cout << std::left << std::setw(20) << "potential type: " << TOSTRING(LETTUCE_POTENTIAL) << std::endl;
-
-        std::cout << "\nRuntime options set:" << std::endl;
-        for (const auto& option : vm) {
-            const auto& value = option.second.value();
-            std::cout << std::left << std::setw(20) << option.first;
-            std::cout << ": ";
-
-            if (value.type() == typeid(std::string)) {
-                std::cout << option.second.as<std::string>();
-            } else if (value.type() == typeid(double)) {
-                std::cout << option.second.as<double>();
-            } else if (value.type() == typeid(unsigned int)) {
-                std::cout << option.second.as<unsigned int>();
-            } else if (value.type() == typeid(bool)) {
-                std::cout << std::boolalpha << option.second.as<bool>();
-            } else if (value.type() == typeid(std::vector<double>)) {
-                auto vec = option.second.as<std::vector<double>>();
-                for (const auto& v : vec) {
-                    std::cout << v << " ";
-                }
-            } else {
-                std::cout << "[Unknown Type]";
-            }
-            std::cout << std::endl;
-        }
-    }
-    
+    //simulation parameters
+    constexpr Real mass = 1;
+    const Real radius = vm["exclusionRadius"].as<Real>();
     unsigned int particlesNum = vm["particlesNum"].as<unsigned int>();
+        if (vm.count("particlesDensity") > 0) {
+        const Real density = vm["particlesDensity"].as<Real>();
+        const Real areaL = sqrt(particlesNum * M_PI * radius * radius / (density));
+    }
+    Real areaL = vm["areaL"].as<Real>();
+    const Real boxPBC = vm["areaL"].as<Real>();
+
+    Species<Real> species1 {mass, vm["momentI"].as<Real>(), radius};
+    Species<Real> species2 {2.0f * mass, vm["momentI"].as<Real>(), 0.5f * radius};
+    std::vector<Species<Real>> allSpecies {species1, species2};
+    int speciesInd = 0;
+    auto particlesInit = vm["particlesInit"].as<std::string>(); 
 
     auto gen = [&]() {
         if (vm.count("seed") > 0) {
@@ -135,55 +138,29 @@ int main(int argc, char* argv[]) {
             return std::mt19937(rd());
         }
     }();
+    auto particles = initialParticles<ParticleT>(particlesNum, allSpecies, speciesInd, areaL, gen, particlesInit);
+    writeInitialParticles(particles, radius);
 
-    constexpr Real mass = 1;
-    
-    const Real radius = vm["exclusionRadius"].as<Real>();
-    Real areaL = vm["areaL"].as<Real>();
+    auto force = Potential::force(vm);
+    auto potential = Potential::potential(vm);
 
-    if (vm.count("particlesDensity") > 0) {
-        const Real density = vm["particlesDensity"].as<Real>();
-        const Real areaL = sqrt(particlesNum * M_PI * radius * radius / (density));
-    }
-
-    const Real boxPBC = vm["areaL"].as<Real>();
     const Real neighborDist = vm["neighborDist"].as<Real>();
     const std::vector<Real> neighborDistances {0.8, 1.0, 1.2, 1.5, 1.8, 2.0, 2.5};
     
     const bool enableCapVelocity = vm["enableCapVelocity"].as<bool>();
     const std::vector<Real> maxVelocity = vm["maxVelocity"].as<std::vector<Real>>();
 
-    const Real dt = vm["dt"].as<Real>();
-    const Real Time = vm["time"].as<Real>();
-
     const Real relaxationTime = vm["relaxationTime"].as<Real>();
     const Real collisionFrequency = vm["collisionFr"].as<Real>();
     const Real desiredTemperature = vm["temperature"].as<Real>();
 
-    Species<Real> species1 {mass, vm["momentI"].as<Real>(), radius};
-    Species<Real> species2 {2.0f * mass, vm["momentI"].as<Real>(), 0.5f * radius};
-    std::vector<Species<Real>> allSpecies {species1, species2};
-    int speciesInd = 0;
-
-    auto particlesInit = vm["particlesInit"].as<std::string>(); 
-
-    auto particles = initialParticles<ParticleT>(particlesNum, allSpecies, speciesInd, areaL, gen, particlesInit);
-    
-    writeInitialParticles(particles, radius);
-
     std::string method = vm["integration"].as<std::string>();
     auto integrationMethod = VelocityVerletStep<ParticleT, Potential::ForceType>;
 
-    if (method=="VelocityVerlet") {
-        integrationMethod = VelocityVerletStep<ParticleT, Potential::ForceType>;
-    } else if (method=="Euler") {
-        integrationMethod = EulerStep<ParticleT, Potential::ForceType>;
-    } else if (method=="SEuler") {
-        integrationMethod = EulerSymplecticStep<ParticleT, Potential::ForceType>;
-    } else {
-        std::cout << method << " integration wrong!";
-        return 1;
-    }
+    if (method=="VelocityVerlet") {integrationMethod = VelocityVerletStep<ParticleT, Potential::ForceType>;} 
+    else if (method=="Euler")     {integrationMethod = EulerStep<ParticleT, Potential::ForceType>;} 
+    else if (method=="SEuler")    {integrationMethod = EulerSymplecticStep<ParticleT, Potential::ForceType>;} 
+    else {std::cout << method << " integration wrong!"; return 1;}
 
     auto thermostat = [&]() {
         if constexpr (LETTUCE_THERMOSTAT == ThermostatID::None)
@@ -198,12 +175,11 @@ int main(int argc, char* argv[]) {
             return AndersenThermostat<ParticleT>(vm["thermoInterval"].as<Real>(), collisionFrequency, desiredTemperature, gen);
     }();
 
-	adios2::fstream oStream(vm["saveAdios"].as<std::string>(), adios2::fstream::out);
-
+    //output files
     std::ios::openmode openmode = std::ios::trunc;
-    if (vm["appendLog"].as<bool>()) {
-        openmode = std::ios::app;
-    }
+    if (vm["appendLog"].as<bool>()) {openmode = std::ios::app;}
+
+	adios2::fstream oStream(vm["saveAdios"].as<std::string>(), adios2::fstream::out);
 
     std::ofstream positionFile("N_particle_PosMD.dat", openmode);
     std::ofstream kineticEnergyFile("N_particle_KineticEnergyMD.dat", openmode);
@@ -216,6 +192,10 @@ int main(int argc, char* argv[]) {
     std::ofstream TafterThermo("N_particle_TafterThermo.dat", openmode);
     std::ofstream realTbeforeThermo("N_particle_realTbeforeThermo.dat", openmode);
     std::ofstream realTafterThermo("N_particle_realTafterThermo.dat", openmode);
+
+    //time intervals
+    const Real dt = vm["dt"].as<Real>();
+    const Real Time = vm["time"].as<Real>();
 
     const size_t writeStateIntervalSteps = std::ceil(vm["writeStateInterval"].as<Real>() / dt);
     const size_t writeEnergyIntervalSteps = std::ceil(vm["writeEnergyInterval"].as<Real>() / dt);
@@ -233,7 +213,8 @@ int main(int argc, char* argv[]) {
     }
 
     clock_t startTime = clock();
-
+    
+    //main loop
     while (step < nsteps) {
         const auto nextEventStep = std::min({writeStateStep, writeEnergyStep, thermoStep, nsteps});
         integrate(particles, allSpecies, dt, (nextEventStep - step) * dt, boxPBC, force, integrationMethod);
