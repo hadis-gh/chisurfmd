@@ -77,6 +77,7 @@ int main(int argc, char* argv[]) {
         ("enableCapVelocity",     po::bool_switch()->default_value(false),                    "Enable capping of velocities")
         ("maxVelocity",           po::value<std::vector<Real>>()->multitoken()->default_value(std::vector<Real>{1e5, 1e3}, "1e5 1e3"),
                                                                                               "capping amount for velocity {x-y, omega}")
+        ("printOptions",          po::bool_switch()->default_value(true),                     "Print all runtime options")
 ;
 
     Potential::initProgramOptions(desc);
@@ -91,9 +92,39 @@ int main(int argc, char* argv[]) {
         std::cout << desc << std::endl;
         return 0;
     }
-    
-    //printr all of vm...
 
+    if (vm["printOptions"].as<bool>()) {
+        std::cout << "\nCompiletime options set:" << std::endl;
+        std::cout << std::left << std::setw(20) << "thermostat: " << TOSTRING(LETTUCE_THERMOSTAT) << std::endl;
+        std::cout << std::left << std::setw(20) << "parcticle type: " << TOSTRING(LETTUCE_PARTICLE) << std::endl;
+        std::cout << std::left << std::setw(20) << "potential type: " << TOSTRING(LETTUCE_POTENTIAL) << std::endl;
+
+        std::cout << "\nRuntime options set:" << std::endl;
+        for (const auto& option : vm) {
+            const auto& value = option.second.value();
+            std::cout << std::left << std::setw(20) << option.first;
+            std::cout << ": ";
+
+            if (value.type() == typeid(std::string)) {
+                std::cout << option.second.as<std::string>();
+            } else if (value.type() == typeid(double)) {
+                std::cout << option.second.as<double>();
+            } else if (value.type() == typeid(unsigned int)) {
+                std::cout << option.second.as<unsigned int>();
+            } else if (value.type() == typeid(bool)) {
+                std::cout << std::boolalpha << option.second.as<bool>();
+            } else if (value.type() == typeid(std::vector<double>)) {
+                auto vec = option.second.as<std::vector<double>>();
+                for (const auto& v : vec) {
+                    std::cout << v << " ";
+                }
+            } else {
+                std::cout << "[Unknown Type]";
+            }
+            std::cout << std::endl;
+        }
+    }
+    
     unsigned int particlesNum = vm["particlesNum"].as<unsigned int>();
 
     auto gen = [&]() {
@@ -153,7 +184,7 @@ int main(int argc, char* argv[]) {
         std::cout << method << " integration wrong!";
         return 1;
     }
-    
+
     auto thermostat = [&]() {
         if constexpr (LETTUCE_THERMOSTAT == ThermostatID::None)
             return [](auto, auto) { return 1.; };
@@ -185,13 +216,6 @@ int main(int argc, char* argv[]) {
     std::ofstream TafterThermo("N_particle_TafterThermo.dat", openmode);
     std::ofstream realTbeforeThermo("N_particle_realTbeforeThermo.dat", openmode);
     std::ofstream realTafterThermo("N_particle_realTafterThermo.dat", openmode);
-
-    std::cout << "\nthermostat: " << TOSTRING(LETTUCE_THERMOSTAT) << std::endl;
-    std::cout << "parcticle type: " << TOSTRING(LETTUCE_PARTICLE) << std::endl;
-    std::cout << "potential type: " << TOSTRING(LETTUCE_POTENTIAL) << std::endl;
-    std::cout << "particle numbers: " << particlesNum << std::endl;
-    std::cout << "Integration method: " << method << std::endl;
-    std::cout << "particle initialization: " << particlesInit << "\n" << std::endl;
 
     const size_t writeStateIntervalSteps = std::ceil(vm["writeStateInterval"].as<Real>() / dt);
     const size_t writeEnergyIntervalSteps = std::ceil(vm["writeEnergyInterval"].as<Real>() / dt);

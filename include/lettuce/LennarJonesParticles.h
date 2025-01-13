@@ -61,8 +61,8 @@ struct LennardJones<ParticleOriented<T>>
     static void initProgramOptions(po::options_description &desc) {
         LennardJones<ParticleDot<T>>::initProgramOptions(desc); // Reuse base options
         desc.add_options()
-            ("LJPhiOrder", po::value<int>()->default_value(4), "rotational order for orientation-dependent interactions")
-            ("LJangularScale", po::value<T>()->default_value(5.0), "scaling factor for the orientation-dependent interaction")
+            ("LJPhiOrder",      po::value<unsigned int>()   ->default_value(4),     "rotational order for orientation-dependent interactions")
+            ("LJangularScale",  po::value<T>()              ->default_value(5.0),   "scaling factor for the orientation-dependent interaction")
         ;
     }
 
@@ -72,11 +72,11 @@ struct LennardJones<ParticleOriented<T>>
                 vm["LJepsilon"].as<T>(), 
                 vm["LJsigma"].as<T>(), 
                 vm["LJcutoff"].as<T>(), 
-                vm["LJPhiOrder"].as<int>(),
+                vm["LJPhiOrder"].as<unsigned int>(),
                 vm["LJangularScale"].as<T>()
             );
             std::cout << "scale of orientation: " << vm["LJangularScale"].as<T>() << std::endl;
-            std::cout << "angular orientation order: " << vm["LJPhiOrder"].as<int>() << "\n\n";
+            std::cout << "angular orientation order: " << vm["LJPhiOrder"].as<unsigned int>() << "\n\n";
 
         } catch (const boost::bad_any_cast& e) {
             std::cerr << "Error initializing LennardJonesOrientedForce: " << e.what() << std::endl;
@@ -90,7 +90,7 @@ struct LennardJones<ParticleOriented<T>>
                 vm["LJepsilon"].as<T>(), 
                 vm["LJsigma"].as<T>(), 
                 vm["LJcutoff"].as<T>(), 
-                vm["LJPhiOrder"].as<int>(),
+                vm["LJPhiOrder"].as<unsigned int>(),
                 vm["LJangularScale"].as<T>()
             );
         } catch (const boost::bad_any_cast& e) {
