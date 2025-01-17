@@ -15,25 +15,31 @@
 
 template<typename TParticle, typename T = typename TParticle::value_type>
 T calInternalTemperature(const std::vector<TParticle>& particles, const std::vector<Species<T>>& allSpecies) {
-    T totalKE = 0.0;
-    size_t degreesOfFreedom = 0;
-
+    T translationalKE = 0.0;
+    T rotationalKE = 0.0;
+    size_t numParticles = particles.size();
+    
     for (const auto& p : particles) {
         const T mass = allSpecies[p.species].mass;
         const T MI = allSpecies[p.species].momentOfInertia;
         auto vel = getGeneralizedVelocities(p);
 
-        for (size_t i = 0; i < vel.size(); ++i) {
-            if (i < 2) {
-                totalKE += 0.5 * mass * vel[i] * vel[i];
-            } else {
-                totalKE += 0.5 * MI * vel[i] * vel[i];
-            }
+        for (size_t i = 0; i < 2; ++i) {
+            translationalKE += 0.5 * mass * vel[i] * vel[i];
         }
-        degreesOfFreedom += vel.size();
+
+        if (vel.size() > 2) {
+            rotationalKE += 0.5 * MI * vel[2] * vel[2];
+        }
     }
 
-    return (2 * totalKE) / (constants::boltzmann * degreesOfFreedom);
+    // Each degree of freedom contributes 1/2 kB T to the energy: equipartition theorem
+    T totalDOF = 2 * numParticles;  // 2 translational DOF per particle
+    if (DegreesOfFreedom<TParticle>::degreesOfFreedom() > 2) {
+        totalDOF += numParticles;    // Add 1 rotational DOF per particle if present
+    }
+
+    return 2.0 * (translationalKE + rotationalKE) / (constants::boltzmann * totalDOF);
 }
 
 template<typename TParticle, typename T = typename TParticle::value_type>

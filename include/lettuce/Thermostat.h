@@ -13,7 +13,10 @@ class AndersenThermostat {
 public:
     AndersenThermostat(T dt, T collisionFrequency, T desiredTemperature, std::mt19937 gen)
         : dt(dt), collisionFrequency(collisionFrequency), desiredTemperature(desiredTemperature),
-          dist(0.0, 1.0), maxwellDist(0.0, std::sqrt(constants::boltzmann * desiredTemperature)) {}
+          dist(0.0, 1.0),
+          translationalDist(0.0, std::sqrt(constants::boltzmann * desiredTemperature)),
+          rotationalDist(0.0, std::sqrt(constants::boltzmann * desiredTemperature)),
+          gen(gen) {}
 
     void operator () (std::vector<TParticle>& particles, const std::vector<Species<T>>& allSpecies) {
         for (auto& p : particles) {
@@ -22,16 +25,12 @@ public:
                 const T MI = allSpecies[p.species].momentOfInertia;
                 auto generalizedVel = getGeneralizedVelocities(p);
 
-                for (size_t i = 0; i < generalizedVel.size(); ++i) {
-                    if (i < 2) {
-                        // generalizedVel[i] = maxwellDist(gen) / std::sqrt(mass);
-                        // generalizedVel[i] = maxwellDist(gen) * std::sqrt(constants::boltzmann * desiredTemperature / mass);
-                        generalizedVel[i] = maxwellDist(gen) * std::sqrt(2.0 * constants::boltzmann * desiredTemperature / mass);
+                for (size_t i = 0; i < 2; ++i) {
+                    generalizedVel[i] = translationalDist(gen) * std::sqrt(1.0 / mass);
+                }
 
-                    } else {
-                        // generalizedVel[i] = maxwellDist(gen) / std::sqrt(MI);
-                        generalizedVel[i] = maxwellDist(gen) * std::sqrt(2.0 * constants::boltzmann * desiredTemperature / MI);
-                    }
+                if (generalizedVel.size() > 2) {
+                    generalizedVel[2] = rotationalDist(gen) * std::sqrt(1.0 / MI);
                 }
 
                 setGeneralizedVelocities(p, generalizedVel);
@@ -45,7 +44,8 @@ private:
     T desiredTemperature;
     std::mt19937 gen;
     std::uniform_real_distribution<T> dist;
-    std::normal_distribution<T> maxwellDist;
+    std::normal_distribution<T> translationalDist;
+    std::normal_distribution<T> rotationalDist;
 };
 
 template<typename TParticle, typename T = typename TParticle::value_type>
