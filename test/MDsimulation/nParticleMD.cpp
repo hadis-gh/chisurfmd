@@ -261,7 +261,7 @@ int main(int argc, char* argv[]) {
     clock_t endTime = clock();
 
     Real timeTaken = Real(endTime - startTime) / CLOCKS_PER_SEC;
-    std::cout << "Time taken: " << timeTaken << " seconds\n";
+    std::cout << "\nTime taken: " << timeTaken << " seconds\n";
 
     if (vm.count("saveParticles") > 0) {
         std::ofstream configutation(vm["saveParticles"].as<std::string>());
