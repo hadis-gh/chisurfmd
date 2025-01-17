@@ -24,9 +24,13 @@ public:
 
                 for (size_t i = 0; i < generalizedVel.size(); ++i) {
                     if (i < 2) {
-                        generalizedVel[i] = maxwellDist(gen) / std::sqrt(mass);
+                        // generalizedVel[i] = maxwellDist(gen) / std::sqrt(mass);
+                        // generalizedVel[i] = maxwellDist(gen) * std::sqrt(constants::boltzmann * desiredTemperature / mass);
+                        generalizedVel[i] = maxwellDist(gen) * std::sqrt(2.0 * constants::boltzmann * desiredTemperature / mass);
+
                     } else {
-                        generalizedVel[i] = maxwellDist(gen) / std::sqrt(MI);
+                        // generalizedVel[i] = maxwellDist(gen) / std::sqrt(MI);
+                        generalizedVel[i] = maxwellDist(gen) * std::sqrt(2.0 * constants::boltzmann * desiredTemperature / MI);
                     }
                 }
 
