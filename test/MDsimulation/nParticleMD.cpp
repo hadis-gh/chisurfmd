@@ -219,7 +219,6 @@ int main(int argc, char* argv[]) {
         const auto nextEventStep = std::min({writeStateStep, writeEnergyStep, thermoStep, nsteps});
         integrate(particles, allSpecies, dt, (nextEventStep - step) * dt, boxPBC, force, integrationMethod);
         step = nextEventStep;
-        // removeCOMvelocityRotation2D_wholeCenter(particles, allSpecies, areaL);
         if (enableCapVelocity) {
             capVelocity(particles, maxVelocity);
         }
@@ -242,10 +241,10 @@ int main(int argc, char* argv[]) {
                 writeRealTemperature(particles, allSpecies, realTbeforeThermo);
 
                 thermostat(particles, allSpecies);
-                // removeCOMVelocity(particles, allSpecies);
-                // removeCOMvelocityRotation2D(particles, allSpecies);
-                // removeCOMvelocityRotation2D_wholeCenter(particles, allSpecies, areaL);
                 thermoStep = step + thermoIntervalSteps;
+                removeCOMVelocity(particles, allSpecies);
+                removeCOMvelocityRotation2D(particles, allSpecies, areaL);
+                
                 writeTemperature(particles, allSpecies, TafterThermo);
                 writeRealTemperature(particles, allSpecies, realTafterThermo);
             }
