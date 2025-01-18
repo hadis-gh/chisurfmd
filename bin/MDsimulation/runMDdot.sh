@@ -48,16 +48,28 @@ calNeighbors() {
     local fileName="$4"
     local time="$5"
     local configDir="$6"
-    prevT=$startT
-    for tp in $(seq $(echo "$startT + $stepT" | bc) "$stepT" "$endT"); do
-        echo -n -e "${tp}\t" >> "$fileName"
+    local prevT="$startT"
+    for tp in $(seq "$startT" "$stepT" "$endT"); do
+        echo "Processing temperature $tp with input ${configDir}/${saveParticles}_${prevT}.dat"
 
+        if [ ! -f "${configDir}/${saveParticles}_${prevT}.dat" ]; then
+            echo "Error: Input file not found: ${configDir}/${saveParticles}_${prevT}.dat"
+            exit 1
+        fi
+
+        echo -n -e "${tp}\t" >> "$fileName"
+    
         $MD_EXE -T "$tp" --particlesInit "${configDir}/${saveParticles}_${prevT}.dat" \
             --saveParticles "${configDir}/${saveParticles}_${tp}.dat" --appendLog --dt "$dt" \
             -n "$particleNum" --seed "$seed" -t "$time" --areaL "$areaL" --exclusionRadius "$exclusionRadius" \
             --thermoInterval "$thermoInterval" --writeStateInterval "$writeStateInterval" --collisionFr "$collisionFr"\
             --writeEnergyInterval "$writeEnergyInterval" --integration "$integration"
-
+        
+        if [ ! -f "${configDir}/${saveParticles}_${tp}.dat" ]; then
+            echo "Error: Output file not created: ${configDir}/${saveParticles}_${tp}.dat"
+            exit 1
+        fi
+        
         NearestNeighbors=$(tail -n 7 "$neighborFile" | awk '
             {
                 for (i = 2; i <= NF; i++) {
@@ -86,12 +98,20 @@ $MD_EXE -T "$highTemperature" --particlesInit "$particlesInit" --saveParticles "
     --thermoInterval "$thermoInterval"  --writeStateInterval "$writeStateInterval" --writeEnergyInterval "$writeEnergyInterval" --collisionFr "$collisionFr" \
     --integration "$integration" 
 
-echo "done for temperature: $highTemperature"
+if [ ! -f "${coolingDir}/${saveParticles}_${highTemperature}.dat" ]; then
+    echo "Error: Initial cooling configuration file not created."
+    exit 1
+fi
 
 echo "Start Cooling Process"
 calNeighbors "$highTemperature" "-$stepTemperature" "$lowTemperature" "B_NeighborsCount.dat" "$timeCooling" "$coolingDir"  --integration "$integration"
 
 lastCoolingConfig="${coolingDir}/${saveParticles}_${lowTemperature}.dat"
+if [ ! -f "$lastCoolingConfig" ]; then
+    echo "Error: Last cooling configuration file not found: $lastCoolingConfig"
+    exit 1
+fi
+
 echo "Start Heating Process from last cooling configuration: $lastCoolingConfig"
 
 $MD_EXE -T "$lowTemperature" --particlesInit "$lastCoolingConfig" --saveParticles "${heatingDir}/${saveParticles}_${lowTemperature}.dat" \
