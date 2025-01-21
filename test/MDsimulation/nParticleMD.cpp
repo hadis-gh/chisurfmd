@@ -176,22 +176,34 @@ int main(int argc, char* argv[]) {
     }();
 
     //output files
+    adios2::ADIOS adios;
+    adios2::IO io = adios.DeclareIO("SimulationOutput");
+    constexpr int D = degreesOfFreedom<ParticleT>();
+
+    adios2::Variable<Real> varT = io.DefineVariable<Real>("time");
+    adios2::Variable<Real> varPositions = io.DefineVariable<Real>("positions", {particlesNum, D}, {0, 0}, {particlesNum, D});
+    adios2::Variable<Real> varVelocities = io.DefineVariable<Real>("velocities", {particlesNum, D}, {0, 0}, {particlesNum, D});
+    adios2::Variable<Real> varKineticEnergy = io.DefineVariable<Real>("kinetic energy", {1, D}, {0, 0}, {1, D});
+    adios2::Variable<Real> varPotentialEnergy = io.DefineVariable<Real>("potential energy");
+
+    adios2::Engine engine = io.Open("SimulationOutput.bp", adios2::Mode::Write);
+
     std::ios::openmode openmode = std::ios::trunc;
     if (vm["appendLog"].as<bool>()) {openmode = std::ios::app;}
 
-	adios2::fstream oStream(vm["saveAdios"].as<std::string>(), adios2::fstream::out);
+	// adios2::fstream oStream(vm["saveAdios"].as<std::string>(), adios2::fstream::out);
 
-    std::ofstream positionFile("N_particle_PosMD.dat", openmode);
-    std::ofstream kineticEnergyFile("N_particle_KineticEnergyMD.dat", openmode);
-    std::ofstream kEsAveFile("N_particle_KEsAveMD.dat", openmode);
-    std::ofstream PotentialEnergyFile("N_particle_PotentialEnergyMD.dat", openmode);
-    std::ofstream NeighborCountFile("N_particle_NeighborsMD.dat", openmode);
-    std::ofstream ComVelocityFile("N_particle_comVelocityMD.dat", openmode);
-    std::ofstream ComAngVelocityFile("N_particle_comAngVelocityMD.dat", openmode);
-    std::ofstream TbeforeThermo("N_particle_TbeforeThermo.dat", openmode);
-    std::ofstream TafterThermo("N_particle_TafterThermo.dat", openmode);
-    std::ofstream realTbeforeThermo("N_particle_realTbeforeThermo.dat", openmode);
-    std::ofstream realTafterThermo("N_particle_realTafterThermo.dat", openmode);
+    // std::ofstream positionFile("N_particle_PosMD.dat", openmode);
+    // std::ofstream kineticEnergyFile("N_particle_KineticEnergyMD.dat", openmode);
+    // std::ofstream kEsAveFile("N_particle_KEsAveMD.dat", openmode);
+    // std::ofstream PotentialEnergyFile("N_particle_PotentialEnergyMD.dat", openmode);
+    // std::ofstream NeighborCountFile("N_particle_NeighborsMD.dat", openmode);
+    // std::ofstream ComVelocityFile("N_particle_comVelocityMD.dat", openmode);
+    // std::ofstream ComAngVelocityFile("N_particle_comAngVelocityMD.dat", openmode);
+    // std::ofstream TbeforeThermo("N_particle_TbeforeThermo.dat", openmode);
+    // std::ofstream TafterThermo("N_particle_TafterThermo.dat", openmode);
+    // std::ofstream realTbeforeThermo("N_particle_realTbeforeThermo.dat", openmode);
+    // std::ofstream realTafterThermo("N_particle_realTafterThermo.dat", openmode);
 
     //time intervals
     const Real dt = vm["dt"].as<Real>();
@@ -212,51 +224,66 @@ int main(int argc, char* argv[]) {
         thermoStep = 2 * nsteps;
     }
 
+    std::vector<Real> particlesVec(particlesNum * D);
+    std::vector<Real> velocitiesVec(particlesNum * D);
+
     clock_t startTime = clock();
-    
+    engine.BeginStep();
+
     //main loop
     while (step < nsteps) {
         const auto nextEventStep = std::min({writeStateStep, writeEnergyStep, thermoStep, nsteps});
         integrate(particles, allSpecies, dt, (nextEventStep - step) * dt, boxPBC, force, integrationMethod);
         step = nextEventStep;
+        engine.Put(varT, dt * step);
         if (enableCapVelocity) {
             capVelocity(particles, maxVelocity);
         }
         if (step == writeStateStep) {
-            writePositionToFile(particles, positionFile, dt, step);
+            // writePositionToFile(particles, positionFile, dt, step);
+            engine.Put(varPositions, particlesVec.data());
+            engine.Put(varVelocities, particlesVec.data());
             writeStateStep = step + writeStateIntervalSteps;
         }
         if (step == writeEnergyStep) {
-            writeKineticEToFile(particles, allSpecies, oStream);
-            writeAverageKineticEnergies(particles, allSpecies, kEsAveFile);
-            writePotentialEToFile(particles, allSpecies, boxPBC, potential, PotentialEnergyFile);
-            writeAverageNeighborToFile(particles, neighborDistances, NeighborCountFile, dt, step);
-            writeComVelocityToFile(particles, allSpecies, ComVelocityFile, dt, step);
-            writeComAngularVelocityToFile(particles, allSpecies, ComAngVelocityFile, dt, step);
+            // writeKineticEToFile(particles, allSpecies, oStream);
+            // writeAverageKineticEnergies(particles, allSpecies, kEsAveFile);
+            // writePotentialEToFile(particles, allSpecies, boxPBC, potential, PotentialEnergyFile);
+            // writeAverageNeighborToFile(particles, neighborDistances, NeighborCountFile, dt, step);
+            // writeComVelocityToFile(particles, allSpecies, ComVelocityFile, dt, step);
+            // writeComAngularVelocityToFile(particles, allSpecies, ComAngVelocityFile, dt, step);
+            auto kineticE = calInternalKineticEnergy(particles, allSpecies);
+            auto potentialE = calPotentialEnergy(particles, allSpecies);
+            engine.Put(varKineticEnergy, kineticE);
+            engine.Put(varPotentialEnergy, potentialE);
             writeEnergyStep = step + writeEnergyIntervalSteps;
         }
         if constexpr (LETTUCE_THERMOSTAT != ThermostatID::None) {
             if (step == thermoStep) {
-                writeTemperature(particles, allSpecies, TbeforeThermo);
-                writeRealTemperature(particles, allSpecies, realTbeforeThermo);
+                // writeTemperature(particles, allSpecies, TbeforeThermo);
+                // writeRealTemperature(particles, allSpecies, realTbeforeThermo);
 
                 thermostat(particles, allSpecies);
                 thermoStep = step + thermoIntervalSteps;
-                removeCOMVelocity(particles, allSpecies);
-                removeCOMvelocityRotation2D(particles, allSpecies, areaL);
+                if constexpr (LETTUCE_THERMOSTAT == ThermostatID::VelocityScaling) {
+                    removeCOMVelocity(particles, allSpecies);
+                    removeCOMvelocityRotation2D(particles, allSpecies, areaL);
+                }
                 
-                writeTemperature(particles, allSpecies, TafterThermo);
-                writeRealTemperature(particles, allSpecies, realTafterThermo);
+                // writeTemperature(particles, allSpecies, TafterThermo);
+                // writeRealTemperature(particles, allSpecies, realTafterThermo);
             }
         //deposition rate  (adding one particle to the list) 
         //-> make the option (by adding collisiotn frequency parameter) for running anderson thermostat after adding particle (but this one collistion frequency should be larger)
         }
 
 		// oStream.write<double>("time", dt * step, adios2::end_step);
-		oStream.write<double>("time", dt * step);
-		oStream.end_step();
+		// oStream.write<double>("time", dt * step);
+		// oStream.end_step();
     }
-
+    engine.EndStep();
+    engine.Close();
+    
     clock_t endTime = clock();
 
     Real timeTaken = Real(endTime - startTime) / CLOCKS_PER_SEC;
@@ -267,7 +294,7 @@ int main(int argc, char* argv[]) {
         saveParticlesWithVelocities(configutation, particles);
     }
 
-	oStream.close();
+	// oStream.close();
 
     return 0;
 }
