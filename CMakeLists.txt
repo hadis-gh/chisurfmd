@@ -5,7 +5,8 @@ set(CMAKE_CXX_STANDARD 20)
 
 #find_package(Boost CONFIG)
 find_package(Boost COMPONENTS program_options REQUIRED)
-find_package(Adios2)
+set(Adios2_DIR "/opt/pkg/adios2/lib/cmake/adios2")
+find_package(Adios2 REQUIRED)
 
 set(lettuce_md_THERMOSTAT_IDs
 	"ThermostatID::VelocityScaling"
