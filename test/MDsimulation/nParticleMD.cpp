@@ -183,7 +183,7 @@ int main(int argc, char* argv[]) {
     adios2::Variable<Real> varT = io.DefineVariable<Real>("time");
     adios2::Variable<Real> varPositions = io.DefineVariable<Real>("positions", {particlesNum, D}, {0, 0}, {particlesNum, D});
     adios2::Variable<Real> varVelocities = io.DefineVariable<Real>("velocities", {particlesNum, D}, {0, 0}, {particlesNum, D});
-    adios2::Variable<Real> varKineticEnergy = io.DefineVariable<Real>("kinetic energy", {1, D}, {0, 0}, {1, D});
+    adios2::Variable<Real> varKineticEnergy = io.DefineVariable<Real>("kinetic energy", {1, 3}, {0, 0}, {1, 3});
     adios2::Variable<Real> varPotentialEnergy = io.DefineVariable<Real>("potential energy");
 
     adios2::Engine engine = io.Open("SimulationOutput.bp", adios2::Mode::Write);
@@ -224,25 +224,41 @@ int main(int argc, char* argv[]) {
         thermoStep = 2 * nsteps;
     }
 
-    std::vector<Real> particlesVec(particlesNum * D);
+    std::vector<Real> positionsVec(particlesNum * D);
     std::vector<Real> velocitiesVec(particlesNum * D);
 
     clock_t startTime = clock();
-    engine.BeginStep();
 
     //main loop
     while (step < nsteps) {
+        engine.BeginStep();
+
         const auto nextEventStep = std::min({writeStateStep, writeEnergyStep, thermoStep, nsteps});
+        Real currentTime = step * dt;
         integrate(particles, allSpecies, dt, (nextEventStep - step) * dt, boxPBC, force, integrationMethod);
+
         step = nextEventStep;
-        engine.Put(varT, dt * step);
+
+        engine.Put(varT, currentTime);
+
         if (enableCapVelocity) {
             capVelocity(particles, maxVelocity);
         }
         if (step == writeStateStep) {
             // writePositionToFile(particles, positionFile, dt, step);
-            engine.Put(varPositions, particlesVec.data());
-            engine.Put(varVelocities, particlesVec.data());
+            positionsVec.clear();
+            velocitiesVec.clear();
+            for (auto &p : particles) {
+                auto pos = getGeneralizedPositions(p);
+                auto vel = getGeneralizedVelocities(p);
+                for (int i = 0; i < D; ++i) {
+                    positionsVec.push_back(pos[i]);
+                    velocitiesVec.push_back(vel[i]);
+                }
+            }
+
+            engine.Put(varPositions, positionsVec.data());
+            engine.Put(varVelocities, velocitiesVec.data());
             writeStateStep = step + writeStateIntervalSteps;
         }
         if (step == writeEnergyStep) {
@@ -252,9 +268,9 @@ int main(int argc, char* argv[]) {
             // writeAverageNeighborToFile(particles, neighborDistances, NeighborCountFile, dt, step);
             // writeComVelocityToFile(particles, allSpecies, ComVelocityFile, dt, step);
             // writeComAngularVelocityToFile(particles, allSpecies, ComAngVelocityFile, dt, step);
-            auto kineticE = calInternalKineticEnergy(particles, allSpecies);
-            auto potentialE = calPotentialEnergy(particles, allSpecies);
-            engine.Put(varKineticEnergy, kineticE);
+            auto kineticE = calKineticEnergy(particles, allSpecies);
+            auto potentialE = calPotentialEnergy(particles, allSpecies, boxPBC, potential);
+            engine.Put(varKineticEnergy, kineticE.data());
             engine.Put(varPotentialEnergy, potentialE);
             writeEnergyStep = step + writeEnergyIntervalSteps;
         }
@@ -280,8 +296,8 @@ int main(int argc, char* argv[]) {
 		// oStream.write<double>("time", dt * step, adios2::end_step);
 		// oStream.write<double>("time", dt * step);
 		// oStream.end_step();
+        engine.EndStep();
     }
-    engine.EndStep();
     engine.Close();
     
     clock_t endTime = clock();
