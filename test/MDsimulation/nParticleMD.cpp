@@ -283,7 +283,7 @@ int main(int argc, char* argv[]) {
                 thermoStep = step + thermoIntervalSteps;
                 if constexpr (LETTUCE_THERMOSTAT == ThermostatID::VelocityScaling) {
                     removeCOMVelocity(particles, allSpecies);
-                    removeCOMvelocityRotation2D(particles, allSpecies, areaL);
+                    // removeCOMvelocityRotation2D(particles, allSpecies, areaL); //dangeraous in some cases
                 }
                 
                 // writeTemperature(particles, allSpecies, TafterThermo);
