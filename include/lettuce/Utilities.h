@@ -31,6 +31,26 @@ T calAverageNeighbors(const std::vector<TParticle>& particles, const T& distance
 }
 
 template<typename TParticle, typename T = typename TParticle::value_type>
+auto calAveNeighborList(const std::vector<TParticle>& particles, const std::vector<T>& distances) {
+    T totalNeighbors = 0;
+    std::vector<T> neighborsList;
+    for (auto &d : distances) {
+        T totalNeighbors = 0;
+        for (const auto& p1 : particles) {
+            int eachParticleNeighbors = 0;
+            for (const auto& p2 : particles) {
+                if (p1.r != p2.r && (p1.r - p2.r).abs() <= d) {
+                    ++eachParticleNeighbors;
+                }
+            }
+            totalNeighbors += eachParticleNeighbors;
+        }
+        neighborsList.push_back(totalNeighbors / particles.size());
+    }
+    return neighborsList;
+}
+
+template<typename TParticle, typename T = typename TParticle::value_type>
 Vec<T> calCOMposition(const std::vector<TParticle>& particles, const std::vector<Species<T>>& allSpecies) {
     Vec<T> comPos;
     T totalMass = 0;
@@ -72,8 +92,9 @@ Vec<T> calCOMpositionPBC(const std::vector<TParticle>& particles,
 }
 
 template<typename TParticle, typename T = typename TParticle::value_type>
-T calAngularMomentum2D(const std::vector<TParticle>& particles, const std::vector<Species<T>>& allSpecies, const Vec<T>& comPos) {
+T calAngularMomentum2D(const std::vector<TParticle>& particles, const std::vector<Species<T>>& allSpecies, const T& boxPBC) {
     T L = 0;
+    auto comPos = calCOMpositionPBC(particles, allSpecies, boxPBC);
     for (const auto& p : particles) {
         const T mass = allSpecies[p.species].mass;
         Vec<T> r_com = p.r - comPos;
@@ -96,7 +117,7 @@ T calMomentOfInertia2D(const std::vector<TParticle>& particles, const std::vecto
 template<typename TParticle, typename T = typename TParticle::value_type>
 void removeCOMvelocityRotation2D(std::vector<TParticle>& particles, const std::vector<Species<T>>& allSpecies, const T& areaL) {
     Vec<T> comPos = calCOMpositionPBC(particles, allSpecies, areaL);
-    T angularMomentum = calAngularMomentum2D(particles, allSpecies, comPos);
+    T angularMomentum = calAngularMomentum2D(particles, allSpecies, areaL);
     T momentOfInertia = calMomentOfInertia2D(particles, allSpecies, comPos);
 
     T angularVelocity = angularMomentum / momentOfInertia;
@@ -113,7 +134,7 @@ void removeCOMvelocityRotation2D_wholeCenter(std::vector<TParticle>& particles,
                                             const std::vector<Species<T>>& allSpecies, 
                                             const T& areaL) {
     Vec<T> comPos{{areaL/2, areaL/2}};
-    T angularMomentum = calAngularMomentum2D(particles, allSpecies, comPos);
+    T angularMomentum = calAngularMomentum2D(particles, allSpecies, areaL);
     T momentOfInertia = calMomentOfInertia2D(particles, allSpecies, comPos);
 
     T angularVelocity = angularMomentum / momentOfInertia;
@@ -135,6 +156,23 @@ Vec<T> calCOMVelocity(const std::vector<TParticle>& particles, const std::vector
         totalMass += mass;
     }
     return totalMomentum / totalMass;
+}
+
+template<typename TParticle, typename T = typename TParticle::value_type>
+std::vector<T> calCOMvelocity(const std::vector<TParticle>& particles, const std::vector<Species<T>>& allSpecies) {
+    Vec<T> totalMomentum = {{0.0, 0.0}};
+    std::vector<T> totalMomentumVec;
+    T totalMass = 0.0;
+    for (int i = 0; i < 2; ++i) {
+        for (const auto& p : particles) {
+            T mass = allSpecies[p.species].mass;
+            totalMomentum[i] += mass * p.v[i];
+            totalMass += mass;
+        }
+        totalMomentumVec.push_back(totalMomentum[i] / totalMass);
+    }
+
+    return totalMomentumVec;
 }
 
 template<typename TParticle, typename T = typename TParticle::value_type>
