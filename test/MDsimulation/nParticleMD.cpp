@@ -101,8 +101,6 @@ int main(int argc, char* argv[]) {
         ("relaxationTime",        po::value<Real>()->default_value(40.),                      "relaxation time for Berendsen thermostat")
         ("collisionFr",           po::value<Real>()->default_value(1.0 / 60.0),               "collision frequency for Andersen thermostat")
         ("integration",           po::value<std::string>()->default_value("VelocityVerlet"),  "integration method (velocity verlet/ euler)")
-        ("saveAdios",         	  po::value<std::string>()->default_value("adios.bp"),        "file path to adios output file")
-        ("saveFolder",            po::value<std::string>()->default_value("./"),              "folder to save simulation outputs")
         ("enableCapVelocity",     po::bool_switch()->default_value(false),                    "Enable capping of velocities")
         ("maxVelocity",           po::value<std::vector<Real>>()->multitoken()->default_value(std::vector<Real>{1e5, 1e3}, "1e5 1e3"),
                                                                                               "capping amount for velocity {x-y, omega}")
@@ -143,7 +141,6 @@ int main(int argc, char* argv[]) {
         }
     }();
     auto particles = initialParticles<ParticleT>(particlesNum, allSpecies, speciesInd, areaL, gen, particlesInit);
-    writeInitialParticles(particles, radius);
 
     auto force = Potential::force(vm);
     auto potential = Potential::potential(vm);
@@ -183,7 +180,7 @@ int main(int argc, char* argv[]) {
     unsigned int runIndex = vm["runIndex"].as<unsigned int>();
 
     std::ostringstream buf;
-    buf << "simulation_run_" << runIndex << ".bp";
+    buf << "output_run_" << runIndex << ".bp";
     std::string adiosOutput = buf.str();
 
     adios2::ADIOS adios;
@@ -301,11 +298,6 @@ int main(int argc, char* argv[]) {
 
     Real timeTaken = Real(endTime - startTime) / CLOCKS_PER_SEC;
     std::cout << "\nTime taken: " << timeTaken << " seconds\n";
-
-    if (vm.count("saveParticles") > 0) {
-        std::ofstream configutation(vm["saveParticles"].as<std::string>());
-        saveParticlesWithVelocities(configutation, particles);
-    }
 
     return 0;
 }
