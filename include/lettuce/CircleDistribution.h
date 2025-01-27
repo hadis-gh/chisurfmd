@@ -215,7 +215,7 @@ std::vector<TParticle> initialParticles(const unsigned int& particlesNum, const 
     } 
     else if (configuration.ends_with(".bp")) {
         particles.reserve(particlesNum);
-
+        std::cout << "Reading configuration from file: " << configuration << std::endl;
         adios2::ADIOS adios;
         adios2::IO io = adios.DeclareIO("ReadConfig");
         adios2::Engine engine = io.Open(configuration, adios2::Mode::Read);
