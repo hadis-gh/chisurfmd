@@ -6,6 +6,9 @@
 #include <random>
 #include <sstream>
 #include <stdexcept>
+#include <adios2.h>
+
+#include "Vec.h"
 #include "Circle.h"
 #include "lettuce/ParticleDot.h"
 #include "lettuce/ParticleOriented.h"
@@ -210,7 +213,59 @@ std::vector<TParticle> initialParticles(const unsigned int& particlesNum, const 
     } else if (configuration == "DLA") {
         particles = distParticleDLA<TParticle>(particlesNum, L, allSpecies[speciesNum].radius, gen);
     } 
-    else {
+    else if (configuration.ends_with(".bp")) {
+        particles.reserve(particlesNum);
+
+        adios2::ADIOS adios;
+        adios2::IO io = adios.DeclareIO("ReadConfig");
+        adios2::Engine engine = io.Open(configuration, adios2::Mode::Read);
+
+        engine.BeginStep();
+        adios2::Variable<T> varPositions = io.InquireVariable<T>("positions");
+        adios2::Variable<T> varVelocities = io.InquireVariable<T>("velocities");
+
+        if (!varPositions || !varVelocities) {
+            throw std::runtime_error("Missing 'positions' or 'velocities' in ADIOS2 file: " + configuration);
+        }
+
+        size_t totalSteps = varPositions.Steps();
+        if (totalSteps == 0) {
+            throw std::runtime_error("No steps found in ADIOS2 file.");
+        }
+        const size_t lastStep = totalSteps - 1;
+
+        varPositions.SetStepSelection({lastStep, 1});
+        varVelocities.SetStepSelection({lastStep, 1});
+
+        std::vector<size_t> shape = varPositions.Shape();
+        if (shape[0] != particlesNum || shape[1] != degreesOfFreedom<TParticle>()) {
+            throw std::runtime_error("Shape of positions in ADIOS file does not match expected number of particles or degrees of freedom.");
+        }
+
+        std::vector<T> positions(shape[0] * shape[1]);
+        std::vector<T> velocities(shape[0] * shape[1]);
+
+        engine.Get(varPositions, positions.data());
+        engine.Get(varVelocities, velocities.data());
+        engine.PerformGets();
+        engine.EndStep();
+        engine.Close();
+
+        for (size_t i = 0; i < shape[0]; ++i) {
+            TParticle p;
+            constexpr int D = degreesOfFreedom<TParticle>();
+            Vec<T, D> q, qDot;
+            for (int a = 0; a < shape[1]; ++a) {
+                q[a] = positions[i * shape[1] + a];
+                qDot[a] = velocities[i * shape[1] + a];
+            }
+
+            setGeneralizedPositions(p, q);
+            setGeneralizedVelocities(p, qDot);
+            particles.push_back(p);
+        }
+    }  
+    else { // Old .dat format
         particles.reserve(1024);
         std::ifstream config(configuration);
 
