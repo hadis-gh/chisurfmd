@@ -214,101 +214,55 @@ std::vector<TParticle> initialParticles(const unsigned int& particlesNum, const 
         particles = distParticleDLA<TParticle>(particlesNum, L, allSpecies[speciesNum].radius, gen);
     } 
     else if (configuration.ends_with(".bp")) {
-        particles.reserve(particlesNum);
-        std::cout << "Reading configuration from file: " << configuration << std::endl;
+
         adios2::ADIOS adios;
         adios2::IO io = adios.DeclareIO("ReadConfig");
-        adios2::Engine engine = io.Open(configuration, adios2::Mode::Read);
 
-        engine.BeginStep();
+        adios2::Engine engine = io.Open(configuration, adios2::Mode::ReadRandomAccess);
+
         adios2::Variable<T> varPositions = io.InquireVariable<T>("positions");
         adios2::Variable<T> varVelocities = io.InquireVariable<T>("velocities");
-
         if (!varPositions || !varVelocities) {
-            throw std::runtime_error("Missing 'positions' or 'velocities' in ADIOS2 file: " + configuration);
+            throw std::runtime_error("Missing required variables in file: " + configuration);
         }
 
         size_t totalSteps = varPositions.Steps();
-        if (totalSteps == 0) {
-            throw std::runtime_error("No steps found in ADIOS2 file.");
-        }
-        const size_t lastStep = totalSteps - 1;
-
+        size_t lastStep = totalSteps - 1;
+        std::cout << "Reading final step " << lastStep << " of " << totalSteps << std::endl;
+        
         varPositions.SetStepSelection({lastStep, 1});
         varVelocities.SetStepSelection({lastStep, 1});
 
         std::vector<size_t> shape = varPositions.Shape();
-        if (shape[0] != particlesNum || shape[1] != degreesOfFreedom<TParticle>()) {
-            throw std::runtime_error("Shape of positions in ADIOS file does not match expected number of particles or degrees of freedom.");
-        }
+        const size_t num_particles = shape[0];
+        const size_t dimensions = shape[1];
 
-        std::vector<T> positions(shape[0] * shape[1]);
-        std::vector<T> velocities(shape[0] * shape[1]);
+        std::vector<T> positions(num_particles * dimensions);
+        std::vector<T> velocities(num_particles * dimensions);
 
-        engine.Get(varPositions, positions.data());
-        engine.Get(varVelocities, velocities.data());
-        engine.PerformGets();
-        engine.EndStep();
+        engine.Get(varPositions, positions.data(), adios2::Mode::Sync);
+        engine.Get(varVelocities, velocities.data(), adios2::Mode::Sync);
         engine.Close();
 
-        for (size_t i = 0; i < shape[0]; ++i) {
+        for (size_t i = 0; i < num_particles; ++i) {
             TParticle p;
             constexpr int D = degreesOfFreedom<TParticle>();
+            
             Vec<T, D> q, qDot;
-            for (int a = 0; a < shape[1]; ++a) {
-                q[a] = positions[i * shape[1] + a];
-                qDot[a] = velocities[i * shape[1] + a];
+            for (int a = 0; a < D; ++a) {
+                q[a] = positions[i * dimensions + a];
+                qDot[a] = velocities[i * dimensions + a];
             }
 
-            setGeneralizedPositions(p, q);
-            setGeneralizedVelocities(p, qDot);
-            particles.push_back(p);
+            if (q[0] <= L && q[0] >= 0. && q[1] <= L && q[1] >= 0.) {
+                setGeneralizedPositions(p, q);
+                setGeneralizedVelocities(p, qDot);
+                particles.push_back(p);
+            }
         }
-    }  
-    else { // Old .dat format
-        particles.reserve(1024);
-        std::ifstream config(configuration);
-
-        if (!config.is_open()) {
-            throw std::runtime_error("Could not open configuration file: " + configuration);
-        }
-        std::string line;
-        while (std::getline(config, line)) {
-            TParticle p;
-            std::istringstream is(line);
-            constexpr int D = degreesOfFreedom<TParticle>();
-            // Read positions
-            Vec<T, D> q;
-            for (int a = 0; a < D; ++a) {
-                if (!(is >> q[a])) {
-                    std::ostringstream os;
-                    os << "Invalid particle position line " << particles.size() + 1;
-                    throw std::runtime_error(std::move(os).str());
-                }
-            }
-            setGeneralizedPositions(p, q);
-            // Filter out particle outside of LxL box
-            if (q[0] > L || q[0] < 0. || q[1] > L || q[1] < 0.) {
-                continue;
-            }
-            // Read velocities
-            Vec<T, D> qDot;
-            for (int a = 0; a < D; ++a) {
-                if (!(is >> qDot[a])) {
-                    qDot.fill(0);
-                    break;
-                }
-            }
-            setGeneralizedVelocities(p, qDot);
-            if (!is.eof()) {
-                std::ostringstream os;
-                os << "Invalid particle velocity line " << particles.size() + 1 << ": unread characters.";
-                throw std::runtime_error(std::move(os).str());
-            }
-            particles.push_back(p);
-        }
-        particles.shrink_to_fit();
     }
+
+    // Set species for all particles
     for (auto& p : particles) {
         p.species = speciesNum;
     }
