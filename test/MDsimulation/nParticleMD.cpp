@@ -96,7 +96,7 @@ int main(int argc, char* argv[]) {
         ("neighborDist",          po::value<Real>()->default_value(1.2),                      "Distance for counting neighbors")
         ("neighborDistances",     po::value<std::vector<Real>>(),                             "Distances for counting neighbors")
         ("particlesNum,n",        po::value<unsigned int>()->default_value(49),               "number of initial particles")
-        ("saveParticles",         po::value<std::string>(),                                   "file path to save final states")
+        ("saveFile",              po::value<std::string>()->default_value("output/run"),      "file path to save simulation output")
         ("appendLog",             po::bool_switch(),                                          "append time series outputs")
         ("relaxationTime",        po::value<Real>()->default_value(40.),                      "relaxation time for Berendsen thermostat")
         ("collisionFr",           po::value<Real>()->default_value(1.0 / 60.0),               "collision frequency for Andersen thermostat")
@@ -177,14 +177,15 @@ int main(int argc, char* argv[]) {
     }();
 
     //output files
+    std::string outputDir = vm["saveFile"].as<std::string>();  // Passed by --saveFile
     unsigned int runIndex = vm["runIndex"].as<unsigned int>();
 
     std::ostringstream buf;
-    buf << "output_run_" << runIndex << ".bp";
+    buf << outputDir << "/run_" << runIndex << ".bp";  // Append run index
     std::string adiosOutput = buf.str();
 
     adios2::ADIOS adios;
-    adios2::IO io = adios.DeclareIO(adiosOutput);
+    adios2::IO io = adios.DeclareIO("SimulationOutput");
 
     constexpr int D = degreesOfFreedom<ParticleT>();
 
