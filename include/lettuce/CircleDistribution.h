@@ -228,7 +228,7 @@ std::vector<TParticle> initialParticles(const unsigned int& particlesNum, const 
 
         size_t totalSteps = varPositions.Steps();
         size_t lastStep = totalSteps - 1;
-        std::cout << "Reading final step " << lastStep << " of " << totalSteps << std::endl;
+        // std::cout << "Reading step " << lastStep + 1 << " (final step) of " << totalSteps << " steps." << std::endl;
         
         varPositions.SetStepSelection({lastStep, 1});
         varVelocities.SetStepSelection({lastStep, 1});
