@@ -43,20 +43,22 @@ run_md() {
 
     echo "Starting simulation #${runIndex} | Temperature: ${temperature}"
 
-    $MD_EXE --runIndex "$runIndex" \
-        --particlesInit "$particleInit" \
-        --temperature "$temperature" \
-        --time "$timeCooling" --dt "$dt" \
-        --particlesNum "$particleNum" \
+ARGS=--particlesNum "$particleNum" \
         --seed "$seed" \
         --areaL "$areaL" \
         --exclusionRadius "$exclusionRadius" \
         --thermoInterval "$thermoInterval" \
         --writeStateInterval "$writeStateInterval" \
         --writeEnergyInterval "$writeEnergyInterval" \
-        --collisionFr "$collisionFr" \
         --integration "$integration" \
-        --saveFile "$outputDir"
+        --collisionFr "$collisionFr"
+
+    $MD_EXE --runIndex "$runIndex" \
+        --particlesInit "$particleInit" \
+        --temperature "$temperature" \
+        --time "$timeCooling" --dt "$dt" \
+        --saveFile "$outputDir" \
+        $ARGS
 
     if [ $? -ne 0 ]; then
         echo "Error: Simulation #${runIndex} failed."
