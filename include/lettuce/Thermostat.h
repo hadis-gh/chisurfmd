@@ -30,7 +30,7 @@ public:
                 }
 
                 if (generalizedVel.size() > 2) {
-                    generalizedVel[2] = rotationalDist(gen) * std::sqrt(1.0 / MI);
+                    generalizedVel[2] = rotationalDist(gen) * std::sqrt(1.0 / MI);  //test to remove this part and see if it works
                 }
 
                 setGeneralizedVelocities(p, generalizedVel);
