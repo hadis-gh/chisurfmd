@@ -197,7 +197,7 @@ int main(int argc, char* argv[]) {
     adios2::Variable<Real> varNeighborCount = io.DefineVariable<Real>("number of neighbors", {1, neighborDistances.size()}, {0, 0}, {1, neighborDistances.size()});
     adios2::Variable<Real> varComVelocity = io.DefineVariable<Real>("center of mass velocity", {1, D}, {0, 0}, {1, D});
     adios2::Variable<Real> varComAngVelocity = io.DefineVariable<Real>("center of mass angular velocity");
-    adios2::Variable<Real> varRealTemperature = io.DefineVariable<Real>("real temperature");
+    adios2::Variable<Real> varRealTemperature = io.DefineVariable<Real>("real temperature", {1, 3}, {0, 0}, {1, 3});
     adios2::Variable<Real> varRawTemperature = io.DefineVariable<Real>("raw temperature");
 
     io.DefineAttribute<Real>("temperature", temperature);
@@ -279,10 +279,10 @@ int main(int argc, char* argv[]) {
             if (step == thermoStep) {
                 thermostat(particles, allSpecies);
 
-                auto temperature = calInternalTemperature(particles, allSpecies);
+                auto realTemperature = calInternalTemperature(particles, allSpecies);
                 auto rawTemperature = calRawTemperature(particles, allSpecies);
 
-                engine.Put(varRealTemperature, temperature);
+                engine.Put(varRealTemperature, realTemperature.data());
                 engine.Put(varRawTemperature, rawTemperature);
 
                 thermoStep = step + thermoIntervalSteps;

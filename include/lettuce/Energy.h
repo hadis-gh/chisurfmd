@@ -14,32 +14,33 @@
 // }
 
 template<typename TParticle, typename T = typename TParticle::value_type>
-T calInternalTemperature(const std::vector<TParticle>& particles, const std::vector<Species<T>>& allSpecies) {
-    T translationalKE = 0.0;
+std::vector<T> calInternalTemperature(const std::vector<TParticle>& particles, const std::vector<Species<T>>& allSpecies) {
+    T translationalKEx = 0.0;
+    T translationalKEy = 0.0;
     T rotationalKE = 0.0;
-    size_t numParticles = particles.size();
+    const size_t numParticles = particles.size();
     
     for (const auto& p : particles) {
         const T mass = allSpecies[p.species].mass;
-        const T MI = allSpecies[p.species].momentOfInertia;
+        const T MI   = allSpecies[p.species].momentOfInertia;
         auto vel = getGeneralizedVelocities(p);
-
-        for (size_t i = 0; i < 2; ++i) {
-            translationalKE += 0.5 * mass * vel[i] * vel[i];
-        }
-
+        
+        translationalKEx += 0.5 * mass * vel[0] * vel[0];
+        translationalKEy += 0.5 * mass * vel[1] * vel[1];
+        
         if (vel.size() > 2) {
             rotationalKE += 0.5 * MI * vel[2] * vel[2];
         }
     }
-
-    // Each degree of freedom contributes 1/2 kB T to the energy: equipartition theorem
-    T totalDOF = 2 * numParticles;  // 2 translational DOF per particle
-    if (DegreesOfFreedom<TParticle>::degreesOfFreedom() > 2) {
-        totalDOF += numParticles;    // Add 1 rotational DOF per particle if present
-    }
-
-    return 2.0 * (translationalKE + rotationalKE) / (constants::boltzmann * totalDOF);
+    
+    // Each degree of freedom contributes 1/2 kB T to the energy.
+    const T factor = 2.0 / (constants::boltzmann * numParticles);
+    
+    T temperatureX = translationalKEx * factor;
+    T temperatureY = translationalKEy * factor;
+    T temperatureRotational = rotationalKE  * factor;
+    
+    return { temperatureX, temperatureY, temperatureRotational };
 }
 
 template<typename TParticle, typename T = typename TParticle::value_type>
