@@ -40,26 +40,23 @@ run_md() {
     local runIndex="$1"
     local particleInit="$2"
     local temperature="$3"
-    local saveFile="${outputDir}/run_${runIndex}.bp"
 
     echo "Starting simulation #${runIndex} | Temperature: ${temperature}"
 
-    ARGS=--particlesNum "$particleNum" \
+    $MD_EXE --runIndex "$runIndex" \
+        --particlesInit "$particleInit" \
+        --temperature "$temperature" \
+        --time "$timeCooling" --dt "$dt" \
+        --particlesNum "$particleNum" \
         --seed "$seed" \
         --areaL "$areaL" \
         --exclusionRadius "$exclusionRadius" \
         --thermoInterval "$thermoInterval" \
         --writeStateInterval "$writeStateInterval" \
         --writeEnergyInterval "$writeEnergyInterval" \
+        --collisionFr "$collisionFr" \
         --integration "$integration" \
-        --collisionFr "$collisionFr"
-
-    $MD_EXE --runIndex "$runIndex" \
-        --particlesInit "$particleInit" \
-        --temperature "$temperature" \
-        --time "$timeCooling" --dt "$dt" \
-        --saveFile "$outputDir" \
-        $ARGS
+        --saveFile "${outputDir}/run_${runIndex}.bp"
 
     if [ $? -ne 0 ]; then
         echo "Error: Simulation #${runIndex} failed."
