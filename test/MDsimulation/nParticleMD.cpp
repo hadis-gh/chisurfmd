@@ -146,7 +146,7 @@ int main(int argc, char* argv[]) {
     auto potential = Potential::potential(vm);
 
     const Real neighborDist = vm["neighborDist"].as<Real>();
-    const std::vector<Real> neighborDistances {0.8, 1.0, 1.2, 1.5, 1.8, 2.0, 2.5};
+    const std::vector<Real> neighborDistances {1.2, 1.5, 2.0};
     
     const bool enableCapVelocity = vm["enableCapVelocity"].as<bool>();
     const std::vector<Real> maxVelocity = vm["maxVelocity"].as<std::vector<Real>>();
