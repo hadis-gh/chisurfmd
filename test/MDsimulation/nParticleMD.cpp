@@ -79,7 +79,6 @@ int main(int argc, char* argv[]) {
     po::options_description desc("Allowed Options");
     desc.add_options()
         ("help,h", "print help")
-        ("runIndex",              po::value<unsigned int>()->default_value(0),                "index of the current run in the loop")
         ("time,t",                po::value<Real>()->default_value(10.0),                     "max simulation time")
         ("dt",                    po::value<Real>()->default_value(.01),                      "integration step size")
         ("writeStateInterval",    po::value<Real>()->default_value(.05),                      "measurement State interval")
@@ -93,11 +92,10 @@ int main(int argc, char* argv[]) {
         ("seed",                  po::value<unsigned int>(),                                  "random seed")
         ("areaL",                 po::value<Real>()->default_value(20.0),                     "simulation size")
         ("particlesDensity",      po::value<Real>(),                                          "packing density of particles")
-        ("neighborDist",          po::value<Real>()->default_value(1.2),                      "Distance for counting neighbors")
-        ("neighborDistances",     po::value<std::vector<Real>>(),                             "Distances for counting neighbors")
+        ("neighborDistances",     po::value<std::vector<Real>>()->multitoken()->default_value(std::vector<Real>{1.2, 1.5, 2.0}, "1.2 1.5 2.0"),
+                                                                                              "Distances for counting neighbors {x-y, omega}")
         ("particlesNum,n",        po::value<unsigned int>()->default_value(49),               "number of initial particles")
         ("saveFile",              po::value<std::string>()->default_value("output/run.bp"),   "file path to save simulation output")
-        ("appendLog",             po::bool_switch(),                                          "append time series outputs")
         ("relaxationTime",        po::value<Real>()->default_value(40.),                      "relaxation time for Berendsen thermostat")
         ("collisionFr",           po::value<Real>()->default_value(1.0 / 60.0),               "collision frequency for Andersen thermostat")
         ("integration",           po::value<std::string>()->default_value("VelocityVerlet"),  "integration method (velocity verlet/ euler)")
@@ -117,6 +115,7 @@ int main(int argc, char* argv[]) {
 
     //simulation parameters
     const Real mass = vm["mass"].as<Real>();
+    const Real momentI = vm["momentI"].as<Real>();
     const Real radius = vm["exclusionRadius"].as<Real>();
     unsigned int particlesNum = vm["particlesNum"].as<unsigned int>();
         if (vm.count("particlesDensity") > 0) {
@@ -126,10 +125,11 @@ int main(int argc, char* argv[]) {
     Real areaL = vm["areaL"].as<Real>();
     const Real boxPBC = vm["areaL"].as<Real>();
 
-    Species<Real> species1 {mass, vm["momentI"].as<Real>(), radius};
-    Species<Real> species2 {2.0f * mass, vm["momentI"].as<Real>(), 0.5f * radius};
-    std::vector<Species<Real>> allSpecies {species1, species2};
     int speciesInd = 0;
+    Species<Real> species1 {mass, momentI, radius};
+    Species<Real> species2 {2.0f * mass, momentI, 0.5f * radius};
+    std::vector<Species<Real>> allSpecies {species1, species2};
+
     auto particlesInit = vm["particlesInit"].as<std::string>(); 
 
     auto gen = [&]() {
@@ -145,16 +145,6 @@ int main(int argc, char* argv[]) {
     auto force = Potential::force(vm);
     auto potential = Potential::potential(vm);
 
-    const Real neighborDist = vm["neighborDist"].as<Real>();
-    const std::vector<Real> neighborDistances {1.2, 1.5, 2.0};
-    
-    const bool enableCapVelocity = vm["enableCapVelocity"].as<bool>();
-    const std::vector<Real> maxVelocity = vm["maxVelocity"].as<std::vector<Real>>();
-
-    const Real relaxationTime = vm["relaxationTime"].as<Real>();
-    const Real collisionFrequency = vm["collisionFr"].as<Real>();
-    const Real temperature = vm["temperature"].as<Real>();
-
     std::string method = vm["integration"].as<std::string>();
     auto integrationMethod = VelocityVerletStep<ParticleT, Potential::ForceType>;
 
@@ -162,6 +152,15 @@ int main(int argc, char* argv[]) {
     else if (method=="Euler")     {integrationMethod = EulerStep<ParticleT, Potential::ForceType>;} 
     else if (method=="SEuler")    {integrationMethod = EulerSymplecticStep<ParticleT, Potential::ForceType>;} 
     else {std::cout << method << " integration wrong!"; return 1;}
+
+    const std::vector<Real> neighborDistances = vm["neighborDistances"].as<std::vector<Real>>();
+    
+    const bool enableCapVelocity = vm["enableCapVelocity"].as<bool>();
+    const std::vector<Real> maxVelocity = vm["maxVelocity"].as<std::vector<Real>>();
+
+    const Real relaxationTime = vm["relaxationTime"].as<Real>();
+    const Real collisionFrequency = vm["collisionFr"].as<Real>();
+    const Real temperature = vm["temperature"].as<Real>();
 
     auto thermostat = [&]() {
         if constexpr (LETTUCE_THERMOSTAT == ThermostatID::None)
@@ -178,7 +177,6 @@ int main(int argc, char* argv[]) {
 
     //output files
     std::string adiosOutput = vm["saveFile"].as<std::string>();
-    unsigned int runIndex = vm["runIndex"].as<unsigned int>();
 
     adios2::ADIOS adios;
     adios2::IO io = adios.DeclareIO("SimulationOutput");
@@ -194,10 +192,8 @@ int main(int argc, char* argv[]) {
     adios2::Variable<Real> varComVelocity = io.DefineVariable<Real>("center of mass velocity", {1, D}, {0, 0}, {1, D});
     adios2::Variable<Real> varComAngVelocity = io.DefineVariable<Real>("center of mass angular velocity");
     adios2::Variable<Real> varRealTemperature = io.DefineVariable<Real>("real temperature", {1, 3}, {0, 0}, {1, 3});
-    adios2::Variable<Real> varRawTemperature = io.DefineVariable<Real>("raw temperature");
 
     io.DefineAttribute<Real>("temperature", temperature);
-    io.DefineAttribute<unsigned int>("runIndex", runIndex);
 
     adios2::Engine engine = io.Open(adiosOutput, adios2::Mode::Write);
 
@@ -276,10 +272,8 @@ int main(int argc, char* argv[]) {
                 thermostat(particles, allSpecies);
 
                 auto realTemperature = calInternalTemperature(particles, allSpecies);
-                auto rawTemperature = calRawTemperature(particles, allSpecies);
 
                 engine.Put(varRealTemperature, realTemperature.data());
-                engine.Put(varRawTemperature, rawTemperature);
 
                 thermoStep = step + thermoIntervalSteps;
                 if constexpr (LETTUCE_THERMOSTAT == ThermostatID::VelocityScaling) {
