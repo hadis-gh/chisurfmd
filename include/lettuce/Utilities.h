@@ -51,6 +51,11 @@ auto calAveNeighborList(const std::vector<TParticle>& particles, const std::vect
 }
 
 template<typename TParticle, typename T = typename TParticle::value_type>
+auto calOrderParameter(const std::vector<TParticle>& particles, const T& neighborCutoff) {
+    ...
+}
+
+template<typename TParticle, typename T = typename TParticle::value_type>
 Vec<T> calCOMposition(const std::vector<TParticle>& particles, const std::vector<Species<T>>& allSpecies) {
     Vec<T> comPos;
     T totalMass = 0;

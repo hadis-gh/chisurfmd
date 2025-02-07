@@ -154,7 +154,8 @@ int main(int argc, char* argv[]) {
     else {std::cout << method << " integration wrong!"; return 1;}
 
     const std::vector<Real> neighborDistances = vm["neighborDistances"].as<std::vector<Real>>();
-    
+    const Real neighborCutoff = neighborDistances[0];
+
     const bool enableCapVelocity = vm["enableCapVelocity"].as<bool>();
     const std::vector<Real> maxVelocity = vm["maxVelocity"].as<std::vector<Real>>();
 
@@ -192,6 +193,7 @@ int main(int argc, char* argv[]) {
     adios2::Variable<Real> varComVelocity = io.DefineVariable<Real>("center of mass velocity", {1, D}, {0, 0}, {1, D});
     adios2::Variable<Real> varComAngVelocity = io.DefineVariable<Real>("center of mass angular velocity");
     adios2::Variable<Real> varRealTemperature = io.DefineVariable<Real>("real temperature", {1, 3}, {0, 0}, {1, 3});
+    adios2::Variable<Real> varOrderParameter = io.DefineVariable<Real>("positional order", {1, 2}, {0, 0}, {1, 2});
 
     io.DefineAttribute<Real>("temperature", temperature);
 
@@ -255,13 +257,19 @@ int main(int argc, char* argv[]) {
         if (step == writeEnergyStep) {
             auto kineticE = calKineticEnergy(particles, allSpecies);
             auto potentialE = calPotentialEnergy(particles, allSpecies, boxPBC, potential);
+
             auto neighborCount = calAveNeighborList(particles, neighborDistances);
+            auto orderParameter = calOrderParameter(particles, neighborCutoff);
+
             auto COMvelocity = calCOMvelocity(particles, allSpecies);
             auto COMangularVelocity = calAngularMomentum2D(particles, allSpecies, boxPBC);
 
             engine.Put(varKineticEnergy, kineticE.data());
             engine.Put(varPotentialEnergy, potentialE);
+
             engine.Put(varNeighborCount, neighborCount.data());
+            engine.Put(varOrderParameter, orderParameter.data());
+
             engine.Put(varComVelocity, COMvelocity.data());
             engine.Put(varComAngVelocity, COMangularVelocity);
 
