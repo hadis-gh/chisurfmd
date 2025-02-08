@@ -47,8 +47,7 @@ run_md() {
 
     echo "Starting simulation #${runIndex} | Temperature: ${temperature}"
 
-    $MD_EXE --runIndex "$runIndex" \
-        --particlesInit "$particleInit" \
+    $MD_EXE --particlesInit "$particleInit" \
         --temperature "$temperature" \
         --time "$timeCooling" --dt "$dt" \
         --particlesNum "$particleNum" \
