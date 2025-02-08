@@ -51,8 +51,36 @@ auto calAveNeighborList(const std::vector<TParticle>& particles, const std::vect
 }
 
 template<typename TParticle, typename T = typename TParticle::value_type>
-auto calOrderParameter(const std::vector<TParticle>& particles, const T& neighborCutoff) {
-    ...
+T calPositionalOrder (const std::vector<TParticle>& particles, const T& neighborCutoff) {
+    //implement later
+    return neighborCutoff;
+}
+
+template<typename TParticle, typename T = typename TParticle::value_type>
+T calOrientationalOrder(const std::vector<TParticle>& particles) {
+    T orientationalOrder;
+    size_t count = 0;
+
+
+    for (size_t i = 0; i < particles.size(); ++i) {
+        for (size_t j = i + 1; j < particles.size(); ++j) {
+            auto pr1 = getGeneralizedPositions(particles[i]);
+            auto pr2 = getGeneralizedPositions(particles[j]);
+
+            if (pr1.size() > 2) {
+                T deltaPhi = pr1[2] - pr2[2];
+                deltaPhi = std::fmod(deltaPhi + 2*M_PI, 2*M_PI);
+                if (deltaPhi > M_PI) deltaPhi -= 2*M_PI;
+    
+                orientationalOrder += std::cos(2.0 * deltaPhi * M_PI / M_PI);
+                count++;
+            } else {
+                orientationalOrder = 0;
+                count = 1;
+            }
+        }
+    }
+    return orientationalOrder/count;
 }
 
 template<typename TParticle, typename T = typename TParticle::value_type>
