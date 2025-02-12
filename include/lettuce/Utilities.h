@@ -102,7 +102,7 @@ T calOrderParameter(const std::vector<TParticle>& particles, const po::variables
 
             if (pr1.size() > 2) {
                 T deltaPhi = pr1[2] - pr2[2];
-                orderParam += std::fmod(deltaPhi, 2 * M_PI / n);
+                orderParam += std::abs(std::fmod(deltaPhi, 2 * M_PI / n));
                 count++;
             } else {
                 orderParam = 0;
