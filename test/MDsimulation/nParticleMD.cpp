@@ -194,6 +194,7 @@ int main(int argc, char* argv[]) {
     adios2::Variable<Real> varComAngVelocity = io.DefineVariable<Real>("center of mass angular velocity");
     adios2::Variable<Real> varRealTemperature = io.DefineVariable<Real>("real temperature", {1, 3}, {0, 0}, {1, 3});
     adios2::Variable<Real> varOrientationalOrder = io.DefineVariable<Real>("orientational order");
+    adios2::Variable<Real> varOrderParameter = io.DefineVariable<Real>("order parameter");
     adios2::Variable<Real> varPositionalOrder = io.DefineVariable<Real>("positional order");
 
     io.DefineAttribute<Real>("temperature", temperature);
@@ -261,6 +262,7 @@ int main(int argc, char* argv[]) {
 
             auto neighborCount = calAveNeighborList(particles, neighborDistances);
             auto orientationalOrder = calOrientationalOrder(particles);
+            auto orderParameter = calOrderParameter(particles, vm);
             auto positionalOrder = calPositionalOrder(particles, neighborCutoff);
 
             auto COMvelocity = calCOMvelocity(particles, allSpecies);
@@ -271,6 +273,7 @@ int main(int argc, char* argv[]) {
 
             engine.Put(varNeighborCount, neighborCount.data());
             engine.Put(varOrientationalOrder, orientationalOrder);
+            engine.Put(varOrderParameter, orderParameter);
             engine.Put(varPositionalOrder, positionalOrder);
 
             engine.Put(varComVelocity, COMvelocity.data());

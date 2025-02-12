@@ -2,8 +2,12 @@
 
 #include <vector>
 #include <cmath>
+#include <boost/program_options.hpp>
+
 #include "lettuce/Vec.h"
 #include "lettuce/ParticleDot.h"
+
+namespace po = boost::program_options;
 
 template<typename T>
 std::vector<T> linspace(const T& start, const T& end, const int& points) {
@@ -81,6 +85,32 @@ T calOrientationalOrder(const std::vector<TParticle>& particles) {
         }
     }
     return orientationalOrder/count;
+}
+
+
+template<typename TParticle, typename T = typename TParticle::value_type>
+T calOrderParameter(const std::vector<TParticle>& particles, const po::variables_map &vm) {
+    T orderParam;
+    size_t count = 0;
+    auto n = vm["LJPhiOrder"].as<unsigned int>();
+
+
+    for (size_t i = 0; i < particles.size(); ++i) {
+        for (size_t j = i + 1; j < particles.size(); ++j) {
+            auto pr1 = getGeneralizedPositions(particles[i]);
+            auto pr2 = getGeneralizedPositions(particles[j]);
+
+            if (pr1.size() > 2) {
+                T deltaPhi = pr1[2] - pr2[2];
+                orderParam += std::fmod(deltaPhi, 2 * M_PI / n);
+                count++;
+            } else {
+                orderParam = 0;
+                count = 1;
+            }
+        }
+    }
+    return orderParam/(count * (2 * M_PI / n)) ;
 }
 
 template<typename TParticle, typename T = typename TParticle::value_type>
