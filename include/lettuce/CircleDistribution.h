@@ -50,6 +50,23 @@ bool has_overlap(const Circle<T>& newCircle, const std::vector<Circle<T>>& circl
     return false;
 }
 
+template<typename TParticle, typename T = typename TParticle::value_type>
+bool has_overlap(const TParticle &p1, const TParticle &p2, const std::vector<Species<T>>& allSpecies, const int& speciesNum) {
+    T distance2 = (p1.r - p2.r).abs2();
+    const auto radiuses = allSpecies[speciesNum].radius * 2;
+    return distance2 < radiuses * radiuses;
+}
+
+template<typename TParticle, typename T = typename TParticle::value_type>
+bool has_overlap(const TParticle &newParticle, const std::vector<TParticle> particles, const std::vector<Species<T>>& allSpecies, const int& speciesNum) {
+    for (const auto& particle : particles) {
+        if (has_overlap(newParticle, particle)) {
+            return true;
+        }
+    }
+    return false;
+}
+
 template<typename T>
 bool isWithinBounds(const Circle<T>& circle, const T& L) {
     return (circle.c[0] - circle.r >= 0 && circle.c[0] + circle.r <= L &&
@@ -203,7 +220,11 @@ void writeParticle(const std::vector<TParticle>& particles, T radius, const std:
 }
 
 template<typename TParticle, typename T = typename TParticle::value_type>
-std::vector<TParticle> initialParticles(const unsigned int& particlesNum, const std::vector<Species<T>>& allSpecies, int& speciesNum, const T& L, std::mt19937& gen, const std::string& configuration) {
+std::vector<TParticle> initialParticles(const unsigned int& particlesNum, 
+                                        const std::vector<Species<T>>& allSpecies, 
+                                        const int& speciesNum, 
+                                        const T& L, std::mt19937& gen, 
+                                        const std::string& configuration) {
     std::vector<TParticle> particles;
 
     if (configuration == "RANDOM") {
@@ -271,7 +292,11 @@ std::vector<TParticle> initialParticles(const unsigned int& particlesNum, const 
 }
 
 template<typename TParticle, typename T = typename TParticle::value_type>
-std::vector<ParticleOriented<T>> initialParticlesOriented(const unsigned int& particlesNum, const std::vector<Species<T>>& allSpecies, int& speciesNum, const T& L, std::mt19937& gen, const std::string& configuration) {
+std::vector<ParticleOriented<T>> initialParticlesOriented(const unsigned int& particlesNum, 
+                                                          const std::vector<Species<T>>& allSpecies, 
+                                                          const int& speciesNum, 
+                                                          const T& L, std::mt19937& gen, 
+                                                          const std::string& configuration) {
     std::vector<ParticleOriented<T>> particlesOriented;
     std::vector<TParticle> particlesDot = initialParticles<TParticle>(particlesNum, allSpecies, speciesNum, L, gen, configuration);
 
@@ -285,4 +310,30 @@ std::vector<ParticleOriented<T>> initialParticlesOriented(const unsigned int& pa
     }
     
     return particlesOriented;
+}
+
+template<typename TParticle, typename T = typename TParticle::value_type>
+void addedParticle(std::vector<TParticle> particles,  
+                   const std::vector<Species<T>>& allSpecies, 
+                   const int& speciesNum, 
+                   const T& L, 
+                   const std::string& depositeMethod, 
+                   std::mt19937& gen) 
+{
+    int particlesNum = 1;
+    TParticle newParticle;
+
+    do {            
+        if (depositeMethod == "RANDOM") {
+            newParticle = manualRandomParticles<TParticle>(particlesNum, L, allSpecies[speciesNum].radius, gen)[0];
+        } else if (depositeMethod == "RANDOM2") {
+            newParticle = distRandomParticles<TParticle>(particlesNum, L, allSpecies[speciesNum].radius, gen)[0];
+        } else if (depositeMethod == "DLA") {
+            newParticle = distParticleDLA<TParticle>(particlesNum, L, allSpecies[speciesNum].radius, gen)[0];
+        } else {
+            throw std::runtime_error("Unkown deposition method: " + depositeMethod);
+        }
+    } while (!has_overlap(newParticle, particles, allSpecies, speciesNum));
+
+    particles.push_back(newParticle);
 }
