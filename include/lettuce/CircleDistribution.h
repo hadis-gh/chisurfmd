@@ -51,16 +51,16 @@ bool has_overlap(const Circle<T>& newCircle, const std::vector<Circle<T>>& circl
 }
 
 template<typename TParticle, typename T = typename TParticle::value_type>
-bool has_overlap(const TParticle &p1, const TParticle &p2, const std::vector<Species<T>>& allSpecies, const int& speciesNum) {
+bool hasOverlap(const TParticle &p1, const TParticle &p2, const std::vector<Species<T>>& allSpecies, const int& speciesNum) {
     T distance2 = (p1.r - p2.r).abs2();
     const auto radiuses = allSpecies[speciesNum].radius * 2;
     return distance2 < radiuses * radiuses;
 }
 
 template<typename TParticle, typename T = typename TParticle::value_type>
-bool has_overlap(const TParticle &newParticle, const std::vector<TParticle> particles, const std::vector<Species<T>>& allSpecies, const int& speciesNum) {
+bool hasOverlap(const TParticle &newParticle, const std::vector<TParticle> particles, const std::vector<Species<T>>& allSpecies, const int& speciesNum) {
     for (const auto& particle : particles) {
-        if (has_overlap(newParticle, particle)) {
+        if (hasOverlap(newParticle, particle, allSpecies, speciesNum)) {
             return true;
         }
     }
@@ -313,27 +313,30 @@ std::vector<ParticleOriented<T>> initialParticlesOriented(const unsigned int& pa
 }
 
 template<typename TParticle, typename T = typename TParticle::value_type>
-void addedParticle(std::vector<TParticle> particles,  
-                   const std::vector<Species<T>>& allSpecies, 
-                   const int& speciesNum, 
-                   const T& L, 
-                   const std::string& depositeMethod, 
-                   std::mt19937& gen) 
+void addParticle(std::vector<TParticle>& particles,  
+                 const std::vector<Species<T>>& allSpecies, 
+                 const int& speciesNum, 
+                 const T& L, 
+                 const std::string& depositeMethod, 
+                 std::mt19937& gen) 
 {
     int particlesNum = 1;
     TParticle newParticle;
 
     do {            
         if (depositeMethod == "RANDOM") {
-            newParticle = manualRandomParticles<TParticle>(particlesNum, L, allSpecies[speciesNum].radius, gen)[0];
+            auto tempParticles = manualRandomParticles<TParticle>(particlesNum, L, allSpecies[speciesNum].radius, gen);
+            if (!tempParticles.empty()) newParticle = tempParticles[0];
         } else if (depositeMethod == "RANDOM2") {
-            newParticle = distRandomParticles<TParticle>(particlesNum, L, allSpecies[speciesNum].radius, gen)[0];
+            auto tempParticles = distRandomParticles<TParticle>(particlesNum, L, allSpecies[speciesNum].radius, gen);
+            if (!tempParticles.empty()) newParticle = tempParticles[0];
         } else if (depositeMethod == "DLA") {
-            newParticle = distParticleDLA<TParticle>(particlesNum, L, allSpecies[speciesNum].radius, gen)[0];
+            auto tempParticles = distParticleDLA<TParticle>(particlesNum, L, allSpecies[speciesNum].radius, gen);
+            if (!tempParticles.empty()) newParticle = tempParticles[0];
         } else {
-            throw std::runtime_error("Unkown deposition method: " + depositeMethod);
+            throw std::runtime_error("Unknown deposition method: " + depositeMethod);
         }
-    } while (!has_overlap(newParticle, particles, allSpecies, speciesNum));
+    } while (hasOverlap(newParticle, particles, allSpecies, speciesNum));
 
     particles.push_back(newParticle);
 }

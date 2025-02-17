@@ -188,8 +188,8 @@ int main(int argc, char* argv[]) {
     constexpr int D = degreesOfFreedom<ParticleT>();
 
     adios2::Variable<Real> varT = io.DefineVariable<Real>("time");
-    adios2::Variable<Real> varPositions = io.DefineVariable<Real>("positions", {particlesNum, D}, {0, 0}, {particlesNum, D});
-    adios2::Variable<Real> varVelocities = io.DefineVariable<Real>("velocities", {particlesNum, D}, {0, 0}, {particlesNum, D});
+    adios2::Variable<Real> varPositions = io.DefineVariable<Real>("positions", {}, {}, {0, D});
+    adios2::Variable<Real> varVelocities = io.DefineVariable<Real>("velocities", {}, {}, {0, D});
     adios2::Variable<Real> varKineticEnergy = io.DefineVariable<Real>("kinetic energy", {1, 3}, {0, 0}, {1, 3});
     adios2::Variable<Real> varPotentialEnergy = io.DefineVariable<Real>("potential energy");
     adios2::Variable<Real> varNeighborCount = io.DefineVariable<Real>("number of neighbors", {1, neighborDistances.size()}, {0, 0}, {1, neighborDistances.size()});
@@ -244,15 +244,20 @@ int main(int argc, char* argv[]) {
         engine.Put(varT, currentTime);
 
         if (step == depositeStep) {
-            addParticle(particles, depositeMethod);
+            addParticle(particles, allSpecies, speciesInd, areaL, depositeMethod, gen);
+            depositeStep = step + depositeIntervalSteps;
         }
-
+    
         if (enableCapVelocity) {
             capVelocity(particles, maxVelocity);
         }
+        
         if (step == writeStateStep) {
+            positionsVec.resize(particles.size() * D);
+            velocitiesVec.resize(particles.size() * D);
             positionsVec.clear();
             velocitiesVec.clear();
+
             for (auto &p : particles) {
                 auto pos = getGeneralizedPositions(p);
                 auto vel = getGeneralizedVelocities(p);
@@ -306,7 +311,7 @@ int main(int argc, char* argv[]) {
             }
         }
         engine.EndStep();
-    }
+    }    
     engine.Close();
     
     clock_t endTime = clock();
