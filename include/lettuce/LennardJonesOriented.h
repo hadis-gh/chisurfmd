@@ -31,9 +31,9 @@ public:
         
         const T radialForce 
             = -4.0 * m_epsilon * (-12.0 * (m_sigma12 / r12) / effective_r + 6.0 * (m_sigma6 / r6) / effective_r) 
-            - dA_dr * std::cos(m_phiOrder * deltaPhi);
+            - dA_dr * std::cos(m_phiOrder * deltaPhi + M_PI);
 
-        const T angularForce = m_phiOrder * A * std::sin(m_phiOrder * deltaPhi);
+        const T angularForce = m_phiOrder * A * std::sin(m_phiOrder * deltaPhi + M_PI);
                 
         return {{radialForce, angularForce}};
     }
@@ -66,7 +66,7 @@ public:
         const T A = m_angularScale / r12;
 
         return 4.0 * m_epsilon * (m_sigma12 / r12 - m_sigma6 / r6) 
-               + A * std::cos(m_phiOrder * deltaPhi);
+               + A * std::cos(m_phiOrder * deltaPhi + M_PI);
     }
 
 private:
