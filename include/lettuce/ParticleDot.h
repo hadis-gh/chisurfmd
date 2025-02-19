@@ -47,6 +47,30 @@ struct CreateRandomParticle<ParticleDot<T>>
 };
 
 template<typename Particle, typename SFINAE=void>
+struct CreateTwoParticle;
+
+template<typename Particle, typename T>
+auto createTwoParticle(std::mt19937& gen, const T& areaL) {
+    return CreateTwoParticle<Particle>::createTwoParticle(gen, areaL);
+}
+
+template<typename T>
+struct CreateTwoParticle<ParticleDot<T>> {
+    static std::vector<ParticleDot<T>> createTwoParticle(std::mt19937& gen, const T& areaL) { // pass potential as a parameter with equilibr distance
+        ParticleDot<T> p1, p2;
+        
+        T eqDis = 1.123;
+        p1.r[0] = areaL / 2;
+        p1.r[1] = areaL / 2;
+        
+        p2.r[0] = areaL / 2 + eqDis;
+        p2.r[1] = areaL / 2 + eqDis;
+        
+        return std::vector<ParticleDot<T>>{p1, p2};
+    }
+};
+
+template<typename Particle, typename SFINAE=void>
 struct DegreesOfFreedom;
 
 template<typename Particle>

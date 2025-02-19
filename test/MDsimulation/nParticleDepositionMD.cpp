@@ -86,8 +86,8 @@ int main(int argc, char* argv[]) {
         ("writeEnergyInterval",   po::value<Real>()->default_value(.5),                       "measurement Energy interval")
         ("thermoInterval",        po::value<Real>()->default_value(.1),                       "interval after which to apply thermostat")
         ("temperature,T",         po::value<Real>()->default_value(.4),                       "temperature")
-        ("particlesInit",         po::value<std::string>()->default_value("RANDOM"),          "particle initialization")
-        ("depositeMethod",        po::value<std::string>()->default_value("RANDOM"),          "method for particle deposition")
+        ("particlesInit",         po::value<std::string>()->default_value("TWO"),             "particle initialization") ///manually - 
+        ("depositeMethod",        po::value<std::string>()->default_value("DLA"),             "method for particle deposition") //should be just DLA
         ("mass",                  po::value<Real>()->default_value(1.0),                      "mass of particles")       
         ("momentI",               po::value<Real>()->default_value(1.0),                      "moment of inersia")
         ("exclusionRadius",       po::value<Real>()->default_value(.8),                       "exclusion radius")
@@ -96,7 +96,8 @@ int main(int argc, char* argv[]) {
         ("particlesDensity",      po::value<Real>(),                                          "packing density of particles")
         ("neighborDistances",     po::value<std::vector<Real>>()->multitoken()->default_value(std::vector<Real>{1.2, 1.5, 2.0}, "1.2 1.5 2.0"),
                                                                                               "Distances for counting neighbors {x-y, omega}")
-        ("particlesNum,n",        po::value<unsigned int>()->default_value(49),               "number of initial particles")
+        ("particlesNum,n",        po::value<unsigned int>()->default_value(2),                "number of initial particles")
+        ("particlesNumMax",       po::value<unsigned int>()->default_value(49),               "number of final particles")
         ("saveFile",              po::value<std::string>()->default_value("output/run.bp"),   "file path to save simulation output")
         ("relaxationTime",        po::value<Real>()->default_value(40.),                      "relaxation time for Berendsen thermostat")
         ("collisionFr",           po::value<Real>()->default_value(1.0 / 60.0),               "collision frequency for Andersen thermostat")
@@ -120,6 +121,7 @@ int main(int argc, char* argv[]) {
     const Real momentI = vm["momentI"].as<Real>();
     const Real radius = vm["exclusionRadius"].as<Real>();
     unsigned int particlesNum = vm["particlesNum"].as<unsigned int>();
+    unsigned int particlesNumMax = vm["particlesNumMax"].as<unsigned int>();
         if (vm.count("particlesDensity") > 0) {
         const Real density = vm["particlesDensity"].as<Real>();
         const Real areaL = sqrt(particlesNum * M_PI * radius * radius / (density));
@@ -164,6 +166,9 @@ int main(int argc, char* argv[]) {
 
     const Real relaxationTime = vm["relaxationTime"].as<Real>();
     const Real collisionFrequency = vm["collisionFr"].as<Real>();
+
+    const Real collisionFrDeposit = vm["collisionFr"].as<Real>();
+    
     const Real temperature = vm["temperature"].as<Real>();
 
     auto thermostat = [&]() {
@@ -188,8 +193,7 @@ int main(int argc, char* argv[]) {
     constexpr int D = degreesOfFreedom<ParticleT>();
 
     adios2::Variable<Real> varT = io.DefineVariable<Real>("time");
-    adios2::Variable<Real> varPositions = io.DefineVariable<Real>("positions", {}, {}, {0, D});
-    adios2::Variable<Real> varVelocities = io.DefineVariable<Real>("velocities", {}, {}, {0, D});
+    //redefince position and velocity at every deposition
     adios2::Variable<Real> varKineticEnergy = io.DefineVariable<Real>("kinetic energy", {1, 3}, {0, 0}, {1, 3});
     adios2::Variable<Real> varPotentialEnergy = io.DefineVariable<Real>("potential energy");
     adios2::Variable<Real> varNeighborCount = io.DefineVariable<Real>("number of neighbors", {1, neighborDistances.size()}, {0, 0}, {1, neighborDistances.size()});
@@ -231,87 +235,94 @@ int main(int argc, char* argv[]) {
 
     clock_t startTime = clock();
 
-    //main loop
-    while (step < nsteps) {
-        engine.BeginStep();
-
-        const auto nextEventStep = std::min({depositeStep, writeStateStep, writeEnergyStep, thermoStep, nsteps});
-        Real currentTime = step * dt;
-        integrate(particles, allSpecies, dt, (nextEventStep - step) * dt, boxPBC, force, integrationMethod);
-
-        step = nextEventStep;
-
-        engine.Put(varT, currentTime);
-
-        if (step == depositeStep) {
-            addParticle(particles, allSpecies, speciesInd, areaL, depositeMethod, gen);
-            depositeStep = step + depositeIntervalSteps;
-        }
-    
-        if (enableCapVelocity) {
-            capVelocity(particles, maxVelocity);
-        }
+    //aggregation loop
+    for (int a=0;  particles.size()<particlesNumMax; ++a) {
+        adios2::Variable<Real> varPositions = io.DefineVariable<Real>("positions", {particles.size(), D}, {0, 0}, {particles.size(), D});
+        adios2::Variable<Real> varVelocities = io.DefineVariable<Real>("velocities", {particles.size(), D}, {0, 0}, {particles.size(), D});
         
-        if (step == writeStateStep) {
-            positionsVec.resize(particles.size() * D);
-            velocitiesVec.resize(particles.size() * D);
-            positionsVec.clear();
-            velocitiesVec.clear();
+        addParticle(particles, allSpecies, species1, areaL, depositeMethod, gen);
+        resetVelocitiesRandom(particles, allSpecies); //using target temperature is better
 
-            for (auto &p : particles) {
-                auto pos = getGeneralizedPositions(p);
-                auto vel = getGeneralizedVelocities(p);
-                for (int i = 0; i < D; ++i) {
-                    positionsVec.push_back(pos[i]);
-                    velocitiesVec.push_back(vel[i]);
+        //md loop
+        while (step < nsteps) {
+            engine.BeginStep();
+    
+            const auto nextEventStep = std::min({writeStateStep, writeEnergyStep, thermoStep, nsteps});
+            Real currentTime = step * dt;
+            integrate(particles, allSpecies, dt, (nextEventStep - step) * dt, boxPBC, force, integrationMethod);
+    
+            step = nextEventStep;
+    
+            engine.Put(varT, currentTime);
+        
+            if (enableCapVelocity) {
+                capVelocity(particles, maxVelocity);
+            }
+            
+            if (step == writeStateStep) {
+                positionsVec.resize(particles.size() * D);
+                velocitiesVec.resize(particles.size() * D);
+                positionsVec.clear();
+                velocitiesVec.clear();
+    
+                for (auto &p : particles) {
+                    auto pos = getGeneralizedPositions(p);
+                    auto vel = getGeneralizedVelocities(p);
+                    for (int i = 0; i < D; ++i) {
+                        positionsVec.push_back(pos[i]);
+                        velocitiesVec.push_back(vel[i]);
+                    }
+                }
+    
+                engine.Put(varPositions, positionsVec.data());
+                engine.Put(varVelocities, velocitiesVec.data());
+                writeStateStep = step + writeStateIntervalSteps;
+            }
+            if (step == writeEnergyStep) {
+                auto kineticE = calKineticEnergy(particles, allSpecies);
+                auto potentialE = calPotentialEnergy(particles, allSpecies, boxPBC, potential);
+    
+                auto neighborCount = calAveNeighborList(particles, neighborDistances);
+                auto orientationalOrder = calOrientationalOrder(particles);
+                auto orderParameter = calOrderParameter(particles, vm);
+                auto positionalOrder = calPositionalOrder(particles, neighborCutoff);
+    
+                auto COMvelocity = calCOMvelocity(particles, allSpecies);
+                auto COMangularVelocity = calAngularMomentum2D(particles, allSpecies, boxPBC);
+    
+                engine.Put(varKineticEnergy, kineticE.data());
+                engine.Put(varPotentialEnergy, potentialE);
+    
+                engine.Put(varNeighborCount, neighborCount.data());
+                engine.Put(varOrientationalOrder, orientationalOrder);
+                engine.Put(varOrderParameter, orderParameter);
+                engine.Put(varPositionalOrder, positionalOrder);
+    
+                engine.Put(varComVelocity, COMvelocity.data());
+                engine.Put(varComAngVelocity, COMangularVelocity);
+    
+                writeEnergyStep = step + writeEnergyIntervalSteps;
+            }
+            if constexpr (LETTUCE_THERMOSTAT != ThermostatID::None) {
+                if (step == thermoStep) {
+                    thermostat(particles, allSpecies);
+    
+                    auto realTemperature = calInternalTemperature(particles, allSpecies);
+    
+                    engine.Put(varRealTemperature, realTemperature.data());
+    
+                    thermoStep = step + thermoIntervalSteps;
+                    if constexpr (LETTUCE_THERMOSTAT == ThermostatID::VelocityScaling) {
+                        removeCOMVelocity(particles, allSpecies);
+                    }
                 }
             }
+            ///another option (another variable which is flag to choose write at the end of while or not) that is written all time. when we want to ignore that it is 0, otherwise 1
+            engine.EndStep();
+        }    
+        // 
+    }
 
-            engine.Put(varPositions, positionsVec.data());
-            engine.Put(varVelocities, velocitiesVec.data());
-            writeStateStep = step + writeStateIntervalSteps;
-        }
-        if (step == writeEnergyStep) {
-            auto kineticE = calKineticEnergy(particles, allSpecies);
-            auto potentialE = calPotentialEnergy(particles, allSpecies, boxPBC, potential);
-
-            auto neighborCount = calAveNeighborList(particles, neighborDistances);
-            auto orientationalOrder = calOrientationalOrder(particles);
-            auto orderParameter = calOrderParameter(particles, vm);
-            auto positionalOrder = calPositionalOrder(particles, neighborCutoff);
-
-            auto COMvelocity = calCOMvelocity(particles, allSpecies);
-            auto COMangularVelocity = calAngularMomentum2D(particles, allSpecies, boxPBC);
-
-            engine.Put(varKineticEnergy, kineticE.data());
-            engine.Put(varPotentialEnergy, potentialE);
-
-            engine.Put(varNeighborCount, neighborCount.data());
-            engine.Put(varOrientationalOrder, orientationalOrder);
-            engine.Put(varOrderParameter, orderParameter);
-            engine.Put(varPositionalOrder, positionalOrder);
-
-            engine.Put(varComVelocity, COMvelocity.data());
-            engine.Put(varComAngVelocity, COMangularVelocity);
-
-            writeEnergyStep = step + writeEnergyIntervalSteps;
-        }
-        if constexpr (LETTUCE_THERMOSTAT != ThermostatID::None) {
-            if (step == thermoStep) {
-                thermostat(particles, allSpecies);
-
-                auto realTemperature = calInternalTemperature(particles, allSpecies);
-
-                engine.Put(varRealTemperature, realTemperature.data());
-
-                thermoStep = step + thermoIntervalSteps;
-                if constexpr (LETTUCE_THERMOSTAT == ThermostatID::VelocityScaling) {
-                    removeCOMVelocity(particles, allSpecies);
-                }
-            }
-        }
-        engine.EndStep();
-    }    
     engine.Close();
     
     clock_t endTime = clock();

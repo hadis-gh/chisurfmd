@@ -233,7 +233,9 @@ std::vector<TParticle> initialParticles(const unsigned int& particlesNum,
         particles = distRandomParticles<TParticle>(particlesNum, L, allSpecies[speciesNum].radius, gen);
     } else if (configuration == "DLA") {
         particles = distParticleDLA<TParticle>(particlesNum, L, allSpecies[speciesNum].radius, gen);
-    } 
+    } else if (configuration == "TWO") {
+        particles = createTwoParticle<TParticle, T>(gen, L);
+    }
     else if (configuration.ends_with(".bp")) {
 
         adios2::ADIOS adios;
@@ -313,7 +315,8 @@ std::vector<ParticleOriented<T>> initialParticlesOriented(const unsigned int& pa
 }
 
 template<typename TParticle, typename T = typename TParticle::value_type>
-void addParticle(std::vector<TParticle>& particles,  
+void 
+addParticle(std::vector<TParticle>& particles,  
                  const std::vector<Species<T>>& allSpecies, 
                  const int& speciesNum, 
                  const T& L, 

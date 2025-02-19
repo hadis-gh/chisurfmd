@@ -34,6 +34,26 @@ struct CreateRandomParticle<ParticleOriented<T>>
 };
 
 template<typename T>
+struct CreateTwoParticle<ParticleOriented<T>> {
+    static std::vector<ParticleOriented<T>> createTwoParticle(std::mt19937& gen, const T& areaL) {
+        auto baseParticles = CreateTwoParticle<ParticleDot<T>>::createTwoParticle(gen, areaL);
+        
+        std::vector<ParticleOriented<T>> orientedParticles;
+        for (auto& baseParticle : baseParticles) {
+            ParticleOriented<T> p;
+            p.r[0] = baseParticle.r[0];
+            p.r[1] = baseParticle.r[1];
+
+            std::uniform_real_distribution<T> randomPos(0, 1);
+            p.phi = randomPos(gen) * 2 * M_PI - M_PI;       ///equilibrium phi
+
+            orientedParticles.push_back(p);
+        }
+        return orientedParticles;
+    }
+};
+
+template<typename T>
 struct DegreesOfFreedom<ParticleOriented<T>>
 {
     static constexpr int degreesOfFreedom()

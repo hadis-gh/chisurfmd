@@ -99,3 +99,26 @@ void rescaleVelocities(std::vector<TParticle>& particles, const std::vector<Spec
         setGeneralizedVelocities(p, generalizedVel);
     }
 }
+
+template<typename TParticle, typename T = typename TParticle::value_type>
+void resetVelocitiesRandom(std::vector<TParticle>& particles, const std::vector<Species<T>>& allSpecies, std::mt19937 gen) {
+    auto temperature = calInternalTemperature(particles, allSpecies);
+    
+    std::normal_distribution<T> translationalDist(0.0, std::sqrt(constants::boltzmann * temperature[0]));
+    std::normal_distribution<T> rotationalDist(0.0, std::sqrt(constants::boltzmann * temperature[2]));
+
+    for (auto& p : particles) {
+        auto generalizedVel = getGeneralizedVelocities(p);
+        const T mass = allSpecies[p.species].mass;
+        const T MI = allSpecies[p.species].momentOfInertia;
+
+        for (size_t i = 0; i < generalizedVel.size(); ++i) {
+            if (i < 2) {
+                generalizedVel[i] = translationalDist(gen) * std::sqrt(1.0 / mass);
+            } else {
+                generalizedVel[2] = rotationalDist(gen) * std::sqrt(1.0 / MI);
+            }
+        }
+        setGeneralizedVelocities(p, generalizedVel);
+    }
+}
