@@ -233,16 +233,30 @@ int main(int argc, char* argv[]) {
     std::vector<Real> positionsVec(particlesNum * D);
     std::vector<Real> velocitiesVec(particlesNum * D);
 
+    adios2::Variable<Real> varPositions = io.DefineVariable<Real>("positions", {adios2::UnknownDim, D}, {0, 0}, {adios2::UnknownDim, D});
+    adios2::Variable<Real> varVelocities = io.DefineVariable<Real>("velocities", {adios2::UnknownDim, D}, {0, 0}, {adios2::UnknownDim, D});
+    
+    int failedAttempts = 0;
+    const int maxFailedAttempts = 100; 
+    
     clock_t startTime = clock();
 
     //aggregation loop
-    for (int a=0;  particles.size()<particlesNumMax; ++a) {
-        adios2::Variable<Real> varPositions = io.DefineVariable<Real>("positions", {particles.size(), D}, {0, 0}, {particles.size(), D});
-        adios2::Variable<Real> varVelocities = io.DefineVariable<Real>("velocities", {particles.size(), D}, {0, 0}, {particles.size(), D});
-        
-        addParticle(particles, allSpecies, species1, areaL, depositeMethod, gen);
-        resetVelocitiesRandom(particles, allSpecies); //using target temperature is better
+    for (int a=0;  particles.size()<particlesNumMax && failedAttempts < maxFailedAttempts; ++a) {
+        step = 0;  // Reset step count for each new particle
 
+        // adios2::Variable<Real> varPositions = io.DefineVariable<Real>("positions", {particles.size(), D}, {0, 0}, {particles.size(), D});
+        // adios2::Variable<Real> varVelocities = io.DefineVariable<Real>("velocities", {particles.size(), D}, {0, 0}, {particles.size(), D});
+        size_t previousSize = particles.size();
+
+        addParticle(particles, allSpecies, speciesInd, areaL, depositeMethod, gen);
+        resetVelocitiesRandom(particles, allSpecies, gen); //using target temperature is better
+
+        if (particles.size() == previousSize) { 
+            ++failedAttempts;
+        } else {
+            failedAttempts = 0;
+        }
         //md loop
         while (step < nsteps) {
             engine.BeginStep();

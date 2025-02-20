@@ -38,29 +38,6 @@ std::pair<Circle<T>, T> findStopPoint (const Circle<T> &startCircle, Vec<T> &dir
 }
 
 template<typename T>
-Circle<T> findStopPointAll (const Circle<T> &startCircle, Vec<T> &direction, const std::vector<Circle<T>> &circles){
-    std::vector<std::pair<Circle<T>, T>> pairs;
-    for (const auto &c: circles){
-        pairs.push_back(findStopPoint(startCircle, direction, c));
-    }
-
-    auto it = std::min_element(pairs.begin(), pairs.end(),
-        [](const std::pair<Circle<T>, T>& a, const std::pair<Circle<T>, T>& b) {
-            if (!std::isnan(a.second) && !std::isnan(b.second)) {
-                return a.second < b.second;
-            }
-            else if (std::isnan(a.second)) {
-                return false;
-            }
-            else {
-                return true;
-            }
-        });
-
-    return it->first;
-}
-
-template<typename T>
 std::pair<Circle<T>, T> findClosestCircle (const Vec<T> &startPoint, const Vec<T> &direction, const std::vector<Circle<T>> &circles){
     std::vector<size_t> circlesIndex;
     std::vector<T> circlesDistance;

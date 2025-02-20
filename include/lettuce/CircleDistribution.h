@@ -14,77 +14,7 @@
 #include "lettuce/ParticleOriented.h"
 #include "lettuce/CirclesIntersectionFuncs.h"
 
-template<typename T>
-Circle<T> startCircleRandom(const T& radius, const T& areaRadius, std::mt19937 &gen) {   
-    Circle<T> newCircle;
-    newCircle.r = radius;
-
-    std::uniform_real_distribution<> randomAngle(0, 2 * M_PI);
-    T angle = randomAngle(gen);
-
-    newCircle.c[0] = areaRadius * cos(angle);
-    newCircle.c[1] = areaRadius * sin(angle);
-
-    return newCircle;
-}
-
-template<typename T>
-Vec<T> shootToCenter(const Circle<T> &startCircle, const T &areaWidth) {
-    return (-startCircle.c + areaWidth / static_cast<T>(2));
-}
-
-template <typename T>
-bool has_overlap(const Circle<T> &c1, const Circle<T> &c2) {
-    T distance2 = (c1.c - c2.c).abs2();
-    const auto radiuses = c1.r + c2.r;
-    return distance2 < radiuses * radiuses;
-}
-
-template<typename T>
-bool has_overlap(const Circle<T>& newCircle, const std::vector<Circle<T>>& circles) {
-    for (const auto& circle : circles) {
-        if (has_overlap(newCircle, circle)) {
-            return true;
-        }
-    }
-    return false;
-}
-
-template<typename TParticle, typename T = typename TParticle::value_type>
-bool hasOverlap(const TParticle &p1, const TParticle &p2, const std::vector<Species<T>>& allSpecies, const int& speciesNum) {
-    T distance2 = (p1.r - p2.r).abs2();
-    const auto radiuses = allSpecies[speciesNum].radius * 2;
-    return distance2 < radiuses * radiuses;
-}
-
-template<typename TParticle, typename T = typename TParticle::value_type>
-bool hasOverlap(const TParticle &newParticle, const std::vector<TParticle> particles, const std::vector<Species<T>>& allSpecies, const int& speciesNum) {
-    for (const auto& particle : particles) {
-        if (hasOverlap(newParticle, particle, allSpecies, speciesNum)) {
-            return true;
-        }
-    }
-    return false;
-}
-
-template<typename T>
-bool isWithinBounds(const Circle<T>& circle, const T& L) {
-    return (circle.c[0] - circle.r >= 0 && circle.c[0] + circle.r <= L &&
-            circle.c[1] - circle.r >= 0 && circle.c[1] + circle.r <= L);
-}
-
-template<typename T>
-Circle<T> placeRandomCircle(const std::vector<Circle<T>>& circles, std::uniform_real_distribution<> dis, const T& radius, std::mt19937& gen) {
-    Circle<T> newCircle;
-    newCircle.c[0] = dis(gen);
-    newCircle.c[1] = dis(gen);
-    newCircle.r = radius;
-
-    if (has_overlap(newCircle, circles)) {
-        newCircle.c[0] = NAN;  // Indicate overlap
-    }
-    return newCircle;
-}
+// ================================== old Random Particle ==================================
 
 template<typename T>
 std::vector<Circle<T>> distRandomCircles(const int& circlesNum, const T& L, const T& radius, std::mt19937& gen) {
@@ -110,10 +40,37 @@ std::vector<TParticle> distRandomParticles(const int& particlesNum, const T& L, 
     return randomParticles;
 }
 
-template<typename T>
-T packingDensity(const int& number, const T& radius, const T& L) {
-    return (number * M_PI * radius * radius) / (L * L);
+template <typename T>
+bool has_overlap(const Circle<T> &c1, const Circle<T> &c2) {
+    T distance2 = (c1.c - c2.c).abs2();
+    const auto radiuses = c1.r + c2.r;
+    return distance2 < radiuses * radiuses;
 }
+
+template<typename T>
+bool has_overlap(const Circle<T>& newCircle, const std::vector<Circle<T>>& circles) {
+    for (const auto& circle : circles) {
+        if (has_overlap(newCircle, circle)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+template<typename T>
+Circle<T> placeRandomCircle(const std::vector<Circle<T>>& circles, std::uniform_real_distribution<> dis, const T& radius, std::mt19937& gen) {
+    Circle<T> newCircle;
+    newCircle.c[0] = dis(gen);
+    newCircle.c[1] = dis(gen);
+    newCircle.r = radius;
+
+    if (has_overlap(newCircle, circles)) {
+        newCircle.c[0] = NAN;  // Indicate overlap
+    }
+    return newCircle;
+}
+
+// ================================== Manual Random Particle ==================================
 
 template<typename TParticle, typename T = typename TParticle::value_type>
 std::vector<TParticle> manualRandomParticles(const int& particlesNum, T L, const T& radius, std::mt19937& gen) {
@@ -164,6 +121,56 @@ std::vector<TParticle> manualRandomParticles(const int& particlesNum, T L, const
     return particles;
 }
 
+// ================================== DLA shoot Particle ==================================
+
+template<typename T>
+Circle<T> startCircleRandom(const T& radius, const T& areaRadius, std::mt19937 &gen) {   
+    Circle<T> newCircle;
+    newCircle.r = radius;
+
+    std::uniform_real_distribution<> randomAngle(0, 2 * M_PI);
+    T angle = randomAngle(gen);
+
+    newCircle.c[0] = areaRadius * cos(angle);
+    newCircle.c[1] = areaRadius * sin(angle);
+
+    return newCircle;
+}
+
+template<typename T>
+Vec<T> shootToCenter(const Circle<T> &startCircle, const T &areaWidth) {
+    return (-startCircle.c + areaWidth / static_cast<T>(2));
+}
+
+template<typename T>
+Circle<T> findStopPointAll (const Circle<T> &startCircle, Vec<T> &direction, const std::vector<Circle<T>> &circles){
+    std::vector<std::pair<Circle<T>, T>> pairs;
+    for (const auto &c: circles){
+        pairs.push_back(findStopPoint(startCircle, direction, c));
+    }
+
+    auto it = std::min_element(pairs.begin(), pairs.end(),
+        [](const std::pair<Circle<T>, T>& a, const std::pair<Circle<T>, T>& b) {
+            if (!std::isnan(a.second) && !std::isnan(b.second)) {
+                return a.second < b.second;
+            }
+            else if (std::isnan(a.second)) {
+                return false;
+            }
+            else {
+                return true;
+            }
+        });
+
+    return it->first;
+}
+
+template<typename T>
+bool isWithinBounds(const Circle<T>& circle, const T& L) {
+    return (circle.c[0] - circle.r >= 0 && circle.c[0] + circle.r <= L &&
+            circle.c[1] - circle.r >= 0 && circle.c[1] + circle.r <= L);
+}
+
 template<typename T>
 std::vector<Circle<T>> distCirclesDLA(const int& shootNum, const T& L, const T& radius, std::mt19937& gen) {
     const double packingDensity = 0.70;
@@ -203,21 +210,7 @@ std::vector<TParticle> distParticleDLA(const int& shootNum, const T& L, const T&
     return finalParticles;
 }
 
-template<typename T>
-void writeCircles(T begin, T end, const std::string& fname) {
-    std::ofstream output_file(fname);
-    for (auto c = begin; c != end; ++c) {
-        output_file << c->c << ", " << c->r << "\n";
-    }
-}
-
-template<typename TParticle, typename T = typename TParticle::value_type>
-void writeParticle(const std::vector<TParticle>& particles, T radius, const std::string& fname) {
-    std::ofstream output_file(fname);
-    for (const auto& p : particles) {
-        output_file << p.r[0] << ", " << p.r[1] << ", " << radius << "\n";
-    }
-}
+// ================================== Initial all Particles ==================================
 
 template<typename TParticle, typename T = typename TParticle::value_type>
 std::vector<TParticle> initialParticles(const unsigned int& particlesNum, 
@@ -314,9 +307,10 @@ std::vector<ParticleOriented<T>> initialParticlesOriented(const unsigned int& pa
     return particlesOriented;
 }
 
+// ================================== Deposite Particles ==================================
+
 template<typename TParticle, typename T = typename TParticle::value_type>
-void 
-addParticle(std::vector<TParticle>& particles,  
+void addParticle(std::vector<TParticle>& particles,  
                  const std::vector<Species<T>>& allSpecies, 
                  const int& speciesNum, 
                  const T& L, 
@@ -342,4 +336,44 @@ addParticle(std::vector<TParticle>& particles,
     } while (hasOverlap(newParticle, particles, allSpecies, speciesNum));
 
     particles.push_back(newParticle);
+}
+
+template<typename TParticle, typename T = typename TParticle::value_type>
+bool hasOverlap(const TParticle &p1, const TParticle &p2, const std::vector<Species<T>>& allSpecies, const int& speciesNum) {
+    T distance2 = (p1.r - p2.r).abs2();
+    const auto radiuses = allSpecies[speciesNum].radius * 2;
+    return distance2 < radiuses * radiuses;
+}
+
+template<typename TParticle, typename T = typename TParticle::value_type>
+bool hasOverlap(const TParticle &newParticle, const std::vector<TParticle> particles, const std::vector<Species<T>>& allSpecies, const int& speciesNum) {
+    for (const auto& particle : particles) {
+        if (hasOverlap(newParticle, particle, allSpecies, speciesNum)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+// ================================== Useless ones (clean later) ==================================
+
+template<typename T>
+T packingDensity(const int& number, const T& radius, const T& L) {
+    return (number * M_PI * radius * radius) / (L * L);
+}
+
+template<typename T>
+void writeCircles(T begin, T end, const std::string& fname) {
+    std::ofstream output_file(fname);
+    for (auto c = begin; c != end; ++c) {
+        output_file << c->c << ", " << c->r << "\n";
+    }
+}
+
+template<typename TParticle, typename T = typename TParticle::value_type>
+void writeParticle(const std::vector<TParticle>& particles, T radius, const std::string& fname) {
+    std::ofstream output_file(fname);
+    for (const auto& p : particles) {
+        output_file << p.r[0] << ", " << p.r[1] << ", " << radius << "\n";
+    }
 }
