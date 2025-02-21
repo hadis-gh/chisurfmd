@@ -92,7 +92,7 @@ int main(int argc, char* argv[]) {
         ("momentI",               po::value<Real>()->default_value(1.0),                      "moment of inersia")
         ("exclusionRadius",       po::value<Real>()->default_value(.8),                       "exclusion radius")
         ("seed",                  po::value<unsigned int>(),                                  "random seed")
-        ("areaL",                 po::value<Real>()->default_value(20.0),                     "simulation size")
+        ("areaL",                 po::value<Real>()->default_value(50.0),                     "simulation size")
         ("particlesDensity",      po::value<Real>(),                                          "packing density of particles")
         ("neighborDistances",     po::value<std::vector<Real>>()->multitoken()->default_value(std::vector<Real>{1.2, 1.5, 2.0}, "1.2 1.5 2.0"),
                                                                                               "Distances for counting neighbors {x-y, omega}")
@@ -233,30 +233,37 @@ int main(int argc, char* argv[]) {
     std::vector<Real> positionsVec(particlesNum * D);
     std::vector<Real> velocitiesVec(particlesNum * D);
 
-    adios2::Variable<Real> varPositions = io.DefineVariable<Real>("positions", {adios2::UnknownDim, D}, {0, 0}, {adios2::UnknownDim, D});
-    adios2::Variable<Real> varVelocities = io.DefineVariable<Real>("velocities", {adios2::UnknownDim, D}, {0, 0}, {adios2::UnknownDim, D});
-    
-    int failedAttempts = 0;
-    const int maxFailedAttempts = 100; 
-    
+    adios2::Variable<Real> varPositions = io.DefineVariable<Real>("positions", {particlesNumMax, D}, {0, 0}, {particlesNumMax, D});
+    adios2::Variable<Real> varVelocities = io.DefineVariable<Real>("velocities", {particlesNumMax, D}, {0, 0}, {particlesNumMax, D});
+        
     clock_t startTime = clock();
+    std::cout << "\nParticles.size() before start main loop = " << particles.size() << "\n" << std::endl;
 
-    //aggregation loop
-    for (int a=0;  particles.size()<particlesNumMax && failedAttempts < maxFailedAttempts; ++a) {
-        step = 0;  // Reset step count for each new particle
+    Real newPhi = 0;
 
-        // adios2::Variable<Real> varPositions = io.DefineVariable<Real>("positions", {particles.size(), D}, {0, 0}, {particles.size(), D});
-        // adios2::Variable<Real> varVelocities = io.DefineVariable<Real>("velocities", {particles.size(), D}, {0, 0}, {particles.size(), D});
-        size_t previousSize = particles.size();
+    for (int a=0;  particles.size()<particlesNumMax; ++a) {
+        step = 0;
 
-        addParticle(particles, allSpecies, speciesInd, areaL, depositeMethod, gen);
-        resetVelocitiesRandom(particles, allSpecies, gen); //using target temperature is better
-
-        if (particles.size() == previousSize) { 
-            ++failedAttempts;
-        } else {
-            failedAttempts = 0;
+        auto newPos = depositeDLAinfo(particles, allSpecies, speciesInd, areaL, gen);
+    
+        ParticleT newParticle(speciesInd, newPos);
+    
+        if constexpr (std::is_same_v<ParticleT, ParticleOriented<Real>>) {
+            std::uniform_real_distribution<Real> phiDist(0.0, 2.0 * M_PI);
+            newParticle.phi = phiDist(gen);
         }
+    
+        particles.push_back(newParticle);
+    
+        std::cout << "New particle added:" << particles.size() << std::endl;
+        std::cout << "Position: (" << newParticle.r[0] << ", " << newParticle.r[1] << ")" << std::endl;
+        std::cout << "Species: " << newParticle.species << std::endl;
+        std::cout << "Phi: " << newParticle.phi << std::endl;
+        std::cout << "Omega: " << newParticle.omega << std::endl;
+                
+        resetVelocitiesRandom(particles, allSpecies, temperature, gen);
+        std::cout << "Particles velocity after reset = " << particles.back().v << " " << particles.back().omega << std::endl;
+
         //md loop
         while (step < nsteps) {
             engine.BeginStep();
@@ -264,7 +271,8 @@ int main(int argc, char* argv[]) {
             const auto nextEventStep = std::min({writeStateStep, writeEnergyStep, thermoStep, nsteps});
             Real currentTime = step * dt;
             integrate(particles, allSpecies, dt, (nextEventStep - step) * dt, boxPBC, force, integrationMethod);
-    
+            std::cout << "Particles velocity after Integration = " << particles.back().v << " " << particles.back().omega <<"\n"<< std::endl;
+
             step = nextEventStep;
     
             engine.Put(varT, currentTime);
