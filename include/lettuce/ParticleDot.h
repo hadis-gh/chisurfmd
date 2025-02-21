@@ -23,6 +23,15 @@ struct ParticleDot
 
     Vec<value_type> r, v;
     unsigned int species;
+
+    ParticleDot() : species(0), r({0, 0}), v({0, 0}) {}
+
+    ParticleDot(unsigned int speciesIndex) : species(speciesIndex), r({0, 0}), v({0, 0}) {}
+
+    ParticleDot(unsigned int speciesIndex, Vec<value_type> position) : species(speciesIndex), r(position), v({0, 0}) {}
+
+    ParticleDot(unsigned int speciesIndex, Vec<value_type> position, Vec<value_type> velocity)
+        : species(speciesIndex), r(position), v(velocity) {}
 };
 
 template<typename Particle, typename SFINAE=void>

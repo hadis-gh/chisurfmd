@@ -9,8 +9,17 @@ template<typename T>
 struct ParticleOriented : public ParticleDot<T>
 {
     using typename ParticleDot<T>::value_type;
+    using ParticleDot<T>::ParticleDot;
 
-    value_type phi, omega;
+    value_type phi, omega=0;
+
+    ParticleOriented() : ParticleDot<T>(), phi(0), omega(0) {}
+
+    ParticleOriented(value_type phi, value_type omega)
+        : ParticleDot<T>(), phi(phi), omega(omega) {}
+
+    ParticleOriented(unsigned int speciesIndex, value_type phi, value_type omega)
+        : ParticleDot<T>(speciesIndex), phi(phi), omega(omega) {}
 };
 
 template<typename T>
