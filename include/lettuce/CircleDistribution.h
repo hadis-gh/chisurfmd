@@ -14,6 +14,32 @@
 #include "lettuce/ParticleOriented.h"
 #include "lettuce/CirclesIntersectionFuncs.h"
 
+// ================================== Circle-Particle conversion ==================================
+template<typename TParticle, typename T = typename TParticle::value_type>
+std::vector<TParticle> circleToParticle(const std::vector<Circle<T>> &circles) {
+    std::vector<TParticle> particles;
+    
+    for (auto &c: circles){
+        TParticle p;
+        p.r = c.c;
+        particles.push_back(p);
+    }
+    return particles;
+}
+
+template<typename TParticle, typename T = typename TParticle::value_type>
+std::vector<Circle<T>> particleToCircle(const std::vector<TParticle> &particles, const std::vector<Species<T>>& allSpecies, const int& speciesNum) {
+    std::vector<Circle<T>> circles;
+    Circle<T> c;
+
+    for (auto &p: particles){
+        c.c = p.r;
+        c.r = allSpecies[speciesNum].radius;
+        circles.push_back(c);
+    }
+    return circles;
+}
+
 // ================================== old Random Particle ==================================
 
 template<typename T>
@@ -147,6 +173,10 @@ Circle<T> findStopPointAll (const Circle<T> &startCircle, Vec<T> &direction, con
     std::vector<std::pair<Circle<T>, T>> pairs;
     for (const auto &c: circles){
         pairs.push_back(findStopPoint(startCircle, direction, c));
+    }
+
+    if (pairs.empty()) {
+        return startCircle;
     }
 
     auto it = std::min_element(pairs.begin(), pairs.end(),
@@ -307,7 +337,7 @@ std::vector<ParticleOriented<T>> initialParticlesOriented(const unsigned int& pa
     return particlesOriented;
 }
 
-// ================================== Deposite Particles ==================================
+// ================================== Deposite Particles RANDOM ==================================
 
 template<typename TParticle, typename T = typename TParticle::value_type>
 void addParticle(std::vector<TParticle>& particles,  
@@ -353,6 +383,39 @@ bool hasOverlap(const TParticle &newParticle, const std::vector<TParticle> parti
         }
     }
     return false;
+}
+
+// ================================== Deposite Particles DLA ==================================
+
+template<typename TParticle, typename T = typename TParticle::value_type>
+auto depositeDLAinfo(const std::vector<TParticle>& particles,  
+                         const std::vector<Species<T>>& allSpecies, 
+                         const int& speciesNum, 
+                         const T& L,
+                         std::mt19937& gen) 
+{
+    std::vector<Circle<T>> circles = particleToCircle<TParticle, T>(particles, allSpecies, speciesNum);
+
+    T radius = allSpecies[speciesNum].radius;
+    Circle<T> endPoint;
+
+    int attempt = 0;
+    // int maxAttempt = 100000;
+
+    while (!isWithinBounds(endPoint, L)) {
+        Circle<T> newCircle = startCircleRandom(radius, L * 10, gen);
+        Vec<T> direction = shootToCenter(newCircle, L);
+    
+        endPoint = findStopPointAll(newCircle, direction, circles);
+        std::cout << "=================================number of attempt to DLA successful shoot:" << attempt << std::endl;
+        attempt ++;
+    }
+
+    if (std::isnan(endPoint.c[0])){
+        std::cout << "could not add new particle" << std::endl;
+    }
+
+    return endPoint.c;
 }
 
 // ================================== Useless ones (clean later) ==================================
