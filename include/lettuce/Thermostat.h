@@ -100,18 +100,19 @@ void rescaleVelocities(std::vector<TParticle>& particles, const std::vector<Spec
     }
 }
 
+// ================================== Reset Velocities after DLA deposition ==================================
+
 template<typename TParticle, typename T = typename TParticle::value_type>
-void resetVelocitiesRandom(std::vector<TParticle>& particles, const std::vector<Species<T>>& allSpecies, std::mt19937 gen) {
-    auto temperature = calInternalTemperature(particles, allSpecies);
+void resetVelocitiesRandom(std::vector<TParticle>& particles, const std::vector<Species<T>>& allSpecies, T desiredTemperature, std::mt19937 gen) {
     
-    std::normal_distribution<T> translationalDist(0.0, std::sqrt(constants::boltzmann * temperature[0]));
-    std::normal_distribution<T> rotationalDist(0.0, std::sqrt(constants::boltzmann * temperature[2]));
+    std::normal_distribution<T> translationalDist(0.0, std::sqrt(constants::boltzmann * desiredTemperature));
+    std::normal_distribution<T> rotationalDist(0.0, std::sqrt(constants::boltzmann * desiredTemperature));
 
     for (auto& p : particles) {
         auto generalizedVel = getGeneralizedVelocities(p);
         const T mass = allSpecies[p.species].mass;
         const T MI = allSpecies[p.species].momentOfInertia;
-
+        
         for (size_t i = 0; i < generalizedVel.size(); ++i) {
             if (i < 2) {
                 generalizedVel[i] = translationalDist(gen) * std::sqrt(1.0 / mass);
