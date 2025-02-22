@@ -400,19 +400,19 @@ auto depositeDLAinfo(const std::vector<TParticle>& particles,
     Circle<T> endPoint;
 
     int attempt = 0;
-    // int maxAttempt = 100000;
-
-    while (!isWithinBounds(endPoint, L)) {
+    int maxAttempt = 10000000;
+    
+    // std::cout << ">>>  shooting new particle:" << attempt << std::endl;
+    while (!isWithinBounds(endPoint, L) && attempt<maxAttempt) {
         Circle<T> newCircle = startCircleRandom(radius, L * 10, gen);
         Vec<T> direction = shootToCenter(newCircle, L);
-    
         endPoint = findStopPointAll(newCircle, direction, circles);
-        std::cout << "=================================number of attempt to DLA successful shoot:" << attempt << std::endl;
         attempt ++;
     }
+    // std::cout << ">>>  number of attempt to DLA successful shoot:" << attempt << std::endl;
 
     if (std::isnan(endPoint.c[0])){
-        std::cout << "could not add new particle" << std::endl;
+        std::cout << "could not add new particle!!" << std::endl;
     }
 
     return endPoint.c;

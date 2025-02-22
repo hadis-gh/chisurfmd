@@ -79,15 +79,13 @@ int main(int argc, char* argv[]) {
     po::options_description desc("Allowed Options");
     desc.add_options()
         ("help,h", "print help")
-        ("time,t",                po::value<Real>()->default_value(10.0),                     "max simulation time")
-        ("dt",                    po::value<Real>()->default_value(.01),                      "integration step size")
-        ("dtDeposite",            po::value<Real>()->default_value(2.0),                      "deposition rate")
-        ("writeStateInterval",    po::value<Real>()->default_value(.05),                      "measurement State interval")
-        ("writeEnergyInterval",   po::value<Real>()->default_value(.5),                       "measurement Energy interval")
-        ("thermoInterval",        po::value<Real>()->default_value(.1),                       "interval after which to apply thermostat")
+        ("time,t",                po::value<Real>()->default_value(50.0),                     "max simulation time")
+        ("dt",                    po::value<Real>()->default_value(.0001),                    "integration step size")
+        ("writeStateInterval",    po::value<Real>()->default_value(.01),                      "measurement State interval")
+        ("writeEnergyInterval",   po::value<Real>()->default_value(.1),                       "measurement Energy interval")
+        ("thermoInterval",        po::value<Real>()->default_value(.05),                      "interval after which to apply thermostat")
         ("temperature,T",         po::value<Real>()->default_value(.4),                       "temperature")
-        ("particlesInit",         po::value<std::string>()->default_value("TWO"),             "particle initialization") ///manually - 
-        ("depositeMethod",        po::value<std::string>()->default_value("DLA"),             "method for particle deposition") //should be just DLA
+        ("particlesInit",         po::value<std::string>()->default_value("TWO"),             "particle initialization")
         ("mass",                  po::value<Real>()->default_value(1.0),                      "mass of particles")       
         ("momentI",               po::value<Real>()->default_value(1.0),                      "moment of inersia")
         ("exclusionRadius",       po::value<Real>()->default_value(.8),                       "exclusion radius")
@@ -98,7 +96,7 @@ int main(int argc, char* argv[]) {
                                                                                               "Distances for counting neighbors {x-y, omega}")
         ("particlesNum,n",        po::value<unsigned int>()->default_value(2),                "number of initial particles")
         ("particlesNumMax",       po::value<unsigned int>()->default_value(49),               "number of final particles")
-        ("saveFile",              po::value<std::string>()->default_value("output/run.bp"),   "file path to save simulation output")
+        ("saveFile",              po::value<std::string>()->default_value("outputs/run_0.bp"),"file path to save simulation output")
         ("relaxationTime",        po::value<Real>()->default_value(40.),                      "relaxation time for Berendsen thermostat")
         ("collisionFr",           po::value<Real>()->default_value(1.0 / 60.0),               "collision frequency for Andersen thermostat")
         ("integration",           po::value<std::string>()->default_value("VelocityVerlet"),  "integration method (velocity verlet/ euler)")
@@ -116,7 +114,8 @@ int main(int argc, char* argv[]) {
     if (vm.count("help") > 0) {std::cout << desc << std::endl; return 0;}
     printOptions(vm);
 
-    //simulation parameters
+// ================================== simulation parameters ==================================
+
     const Real mass = vm["mass"].as<Real>();
     const Real momentI = vm["momentI"].as<Real>();
     const Real radius = vm["exclusionRadius"].as<Real>();
@@ -135,7 +134,6 @@ int main(int argc, char* argv[]) {
     std::vector<Species<Real>> allSpecies {species1, species2};
 
     auto particlesInit = vm["particlesInit"].as<std::string>(); 
-    auto depositeMethod = vm["depositeMethod"].as<std::string>(); 
 
     auto gen = [&]() {
         if (vm.count("seed") > 0) {
@@ -184,7 +182,8 @@ int main(int argc, char* argv[]) {
             return AndersenThermostat<ParticleT>(vm["thermoInterval"].as<Real>(), collisionFrequency, temperature, gen);
     }();
 
-    //output files
+// ================================== output files ==================================
+
     std::string adiosOutput = vm["saveFile"].as<std::string>();
 
     adios2::ADIOS adios;
@@ -193,7 +192,8 @@ int main(int argc, char* argv[]) {
     constexpr int D = degreesOfFreedom<ParticleT>();
 
     adios2::Variable<Real> varT = io.DefineVariable<Real>("time");
-    //redefince position and velocity at every deposition
+    adios2::Variable<Real> varPositions = io.DefineVariable<Real>("positions", {particlesNumMax, D}, {0, 0}, {particlesNumMax, D});
+    adios2::Variable<Real> varVelocities = io.DefineVariable<Real>("velocities", {particlesNumMax, D}, {0, 0}, {particlesNumMax, D});
     adios2::Variable<Real> varKineticEnergy = io.DefineVariable<Real>("kinetic energy", {1, 3}, {0, 0}, {1, 3});
     adios2::Variable<Real> varPotentialEnergy = io.DefineVariable<Real>("potential energy");
     adios2::Variable<Real> varNeighborCount = io.DefineVariable<Real>("number of neighbors", {1, neighborDistances.size()}, {0, 0}, {1, neighborDistances.size()});
@@ -203,16 +203,18 @@ int main(int argc, char* argv[]) {
     adios2::Variable<Real> varOrientationalOrder = io.DefineVariable<Real>("orientational order");
     adios2::Variable<Real> varOrderParameter = io.DefineVariable<Real>("order parameter");
     adios2::Variable<Real> varPositionalOrder = io.DefineVariable<Real>("positional order");
+    
+    std::vector<Real> positionsVec(particlesNum * D);
+    std::vector<Real> velocitiesVec(particlesNum * D);
 
     io.DefineAttribute<Real>("temperature", temperature);
-
+    
     adios2::Engine engine = io.Open(adiosOutput, adios2::Mode::Write);
 
-    //time intervals
+// ================================== time intervals ==================================
+
     const Real dt = vm["dt"].as<Real>();
     const Real Time = vm["time"].as<Real>();
-
-    const size_t depositeIntervalSteps = std::ceil(vm["dtDeposite"].as<Real>() / dt);
 
     const size_t writeStateIntervalSteps = std::ceil(vm["writeStateInterval"].as<Real>() / dt);
     const size_t writeEnergyIntervalSteps = std::ceil(vm["writeEnergyInterval"].as<Real>() / dt);
@@ -221,7 +223,6 @@ int main(int argc, char* argv[]) {
     const size_t nsteps = std::ceil(Time / dt);
 
     size_t step = 0;
-    size_t depositeStep = depositeIntervalSteps;
     size_t writeStateStep = writeStateIntervalSteps;
     size_t writeEnergyStep = writeEnergyIntervalSteps;
     size_t thermoStep = thermoIntervalSteps;
@@ -229,50 +230,47 @@ int main(int argc, char* argv[]) {
     if constexpr (LETTUCE_THERMOSTAT == ThermostatID::None) {
         thermoStep = 2 * nsteps;
     }
-
-    std::vector<Real> positionsVec(particlesNum * D);
-    std::vector<Real> velocitiesVec(particlesNum * D);
-
-    adios2::Variable<Real> varPositions = io.DefineVariable<Real>("positions", {particlesNumMax, D}, {0, 0}, {particlesNumMax, D});
-    adios2::Variable<Real> varVelocities = io.DefineVariable<Real>("velocities", {particlesNumMax, D}, {0, 0}, {particlesNumMax, D});
         
     clock_t startTime = clock();
-    std::cout << "\nParticles.size() before start main loop = " << particles.size() << "\n" << std::endl;
 
-    Real newPhi = 0;
+// ================================== Deposition Loop ==================================
 
     for (int a=0;  particles.size()<particlesNumMax; ++a) {
-        step = 0;
-
         auto newPos = depositeDLAinfo(particles, allSpecies, speciesInd, areaL, gen);
-    
+        std::cout << "favorite position out of DLA shooting: " << newPos << std::endl;
+
         ParticleT newParticle(speciesInd, newPos);
-    
         if constexpr (std::is_same_v<ParticleT, ParticleOriented<Real>>) {
             std::uniform_real_distribution<Real> phiDist(0.0, 2.0 * M_PI);
-            newParticle.phi = phiDist(gen);
+            // newParticle.phi = phiDist(gen);
+            newParticle.phi = 0.0;
         }
     
         particles.push_back(newParticle);
-    
-        std::cout << "New particle added:" << particles.size() << std::endl;
-        std::cout << "Position: (" << newParticle.r[0] << ", " << newParticle.r[1] << ")" << std::endl;
-        std::cout << "Species: " << newParticle.species << std::endl;
-        std::cout << "Phi: " << newParticle.phi << std::endl;
-        std::cout << "Omega: " << newParticle.omega << std::endl;
-                
+        std::cout << "\n___________________________________ " << std::endl;
+        std::cout << "New particle added! System size: " << particles.size() << std::endl;
+        std::cout << "Position- (x, y): " << newParticle.r << ", (phi): " << newParticle.phi << std::endl;
+        std::cout << "Velocity- (Vx, Vy): " << newParticle.v << ", (omega): " << newParticle.omega << std::endl;
+        
         resetVelocitiesRandom(particles, allSpecies, temperature, gen);
-        std::cout << "Particles velocity after reset = " << particles.back().v << " " << particles.back().omega << std::endl;
+        // std::cout << "Velocity after reset- (Vx, Vy): " << particles.back().v << ", (omega): " << particles.back().omega << std::endl;
 
-        //md loop
+        step = 0;
+        writeStateStep = writeStateIntervalSteps;
+        writeEnergyStep = writeEnergyIntervalSteps;
+        thermoStep = thermoIntervalSteps;
+
+// ================================== Integration Loop ==================================
+        
         while (step < nsteps) {
             engine.BeginStep();
     
             const auto nextEventStep = std::min({writeStateStep, writeEnergyStep, thermoStep, nsteps});
             Real currentTime = step * dt;
+            // std::cout << ">>>> Before Integration: " << particles.back().r << ", " << particles.back().phi << " | v: " << particles.back().v << ", " << particles.back().omega << std::endl;
             integrate(particles, allSpecies, dt, (nextEventStep - step) * dt, boxPBC, force, integrationMethod);
-            std::cout << "Particles velocity after Integration = " << particles.back().v << " " << particles.back().omega <<"\n"<< std::endl;
-
+            // std::cout << "<<<<< After Integration: " << particles.back().r << ", " << particles.back().phi << " | v: " << particles.back().v << ", " << particles.back().omega << std::endl;
+            
             step = nextEventStep;
     
             engine.Put(varT, currentTime);
@@ -339,10 +337,8 @@ int main(int argc, char* argv[]) {
                     }
                 }
             }
-            ///another option (another variable which is flag to choose write at the end of while or not) that is written all time. when we want to ignore that it is 0, otherwise 1
             engine.EndStep();
         }    
-        // 
     }
 
     engine.Close();
