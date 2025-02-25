@@ -62,7 +62,7 @@ struct LennardJones<ParticleOriented<T>>
         LennardJones<ParticleDot<T>>::initProgramOptions(desc); // Reuse base options
         desc.add_options()
             ("LJPhiOrder",      po::value<unsigned int>()   ->default_value(4),     "rotational order for orientation-dependent interactions")
-            ("LJangularScale",  po::value<T>()              ->default_value(5.0),   "scaling factor for the orientation-dependent interaction")
+            ("LJangularScale",  po::value<T>()              ->default_value(1.0),   "scaling factor for the orientation-dependent interaction")
         ;
     }
 

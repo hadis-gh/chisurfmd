@@ -234,7 +234,7 @@ int main(int argc, char* argv[]) {
     clock_t startTime = clock();
 
 // ================================== Deposition Loop ==================================
-    std::cout << "==================================initial particles:==============================" << std::endl;
+    std::cout << "==================initial particles================" << std::endl;
     for (auto &p: particles) {
         // std::cout << " - particle pos: "<< p.r << ", "<< p.phi;
         // std::cout << " - particle vel: "<< p.v << ", "<< p.omega << std::endl;
@@ -246,13 +246,14 @@ int main(int argc, char* argv[]) {
         auto newPos = depositeDLAinfo(particles, allSpecies, speciesInd, areaL, gen);
         
         ParticleT newParticle(speciesInd, newPos);
-        // if constexpr (std::is_same_v<ParticleT, ParticleOriented<Real>>) {
-        // auto pos = getGeneralizedPositions(newParticle);
-        // if (pos.size() > 1) {
-        //     std::uniform_real_distribution<Real> phiDist(0.0, 2.0 * M_PI);
-        //     // newParticle.phi = phiDist(gen);
-        //     newParticle.phi = 0.0;
-        // }
+
+        constexpr bool hasOrientation = (degreesOfFreedom<ParticleT>() > 2);
+
+        if constexpr (hasOrientation) {
+            std::uniform_real_distribution<Real> phiDist(0.0, 2.0 * M_PI);
+            newParticle.phi = phiDist(gen);
+            // newParticle.phi = 0.0;
+        }
         
         particles.push_back(newParticle);
         std::cout << "\n___________________________________ " << std::endl;
