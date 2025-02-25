@@ -79,12 +79,12 @@ int main(int argc, char* argv[]) {
     po::options_description desc("Allowed Options");
     desc.add_options()
         ("help,h", "print help")
-        ("time,t",                po::value<Real>()->default_value(50.0),                     "max simulation time")
-        ("dt",                    po::value<Real>()->default_value(.0001),                    "integration step size")
+        ("time,t",                po::value<Real>()->default_value(30.0),                     "max simulation time")
+        ("dt",                    po::value<Real>()->default_value(.00005),                    "integration step size")
         ("writeStateInterval",    po::value<Real>()->default_value(.01),                      "measurement State interval")
         ("writeEnergyInterval",   po::value<Real>()->default_value(.1),                       "measurement Energy interval")
         ("thermoInterval",        po::value<Real>()->default_value(.05),                      "interval after which to apply thermostat")
-        ("temperature,T",         po::value<Real>()->default_value(.4),                       "temperature")
+        ("temperature,T",         po::value<Real>()->default_value(.3),                       "temperature")
         ("particlesInit",         po::value<std::string>()->default_value("TWO"),             "particle initialization")
         ("mass",                  po::value<Real>()->default_value(1.0),                      "mass of particles")       
         ("momentI",               po::value<Real>()->default_value(1.0),                      "moment of inersia")
@@ -204,8 +204,8 @@ int main(int argc, char* argv[]) {
     adios2::Variable<Real> varOrderParameter = io.DefineVariable<Real>("order parameter");
     adios2::Variable<Real> varPositionalOrder = io.DefineVariable<Real>("positional order");
     
-    std::vector<Real> positionsVec(particlesNum * D);
-    std::vector<Real> velocitiesVec(particlesNum * D);
+    std::vector<Real> positionsVec(particlesNumMax * D, 0);
+    std::vector<Real> velocitiesVec(particlesNumMax * D, 0);
 
     io.DefineAttribute<Real>("temperature", temperature);
     
@@ -234,23 +234,34 @@ int main(int argc, char* argv[]) {
     clock_t startTime = clock();
 
 // ================================== Deposition Loop ==================================
-
+    std::cout << "==================================initial particles:==============================" << std::endl;
+    for (auto &p: particles) {
+        // std::cout << " - particle pos: "<< p.r << ", "<< p.phi;
+        // std::cout << " - particle vel: "<< p.v << ", "<< p.omega << std::endl;
+        std::cout << " - particle pos: "<< p.r << std::endl;
+        std::cout << " - particle vel: "<< p.v << std::endl;
+    }
+    
     for (int a=0;  particles.size()<particlesNumMax; ++a) {
         auto newPos = depositeDLAinfo(particles, allSpecies, speciesInd, areaL, gen);
-        std::cout << "favorite position out of DLA shooting: " << newPos << std::endl;
-
+        
         ParticleT newParticle(speciesInd, newPos);
-        if constexpr (std::is_same_v<ParticleT, ParticleOriented<Real>>) {
-            std::uniform_real_distribution<Real> phiDist(0.0, 2.0 * M_PI);
-            // newParticle.phi = phiDist(gen);
-            newParticle.phi = 0.0;
-        }
-    
+        // if constexpr (std::is_same_v<ParticleT, ParticleOriented<Real>>) {
+        // auto pos = getGeneralizedPositions(newParticle);
+        // if (pos.size() > 1) {
+        //     std::uniform_real_distribution<Real> phiDist(0.0, 2.0 * M_PI);
+        //     // newParticle.phi = phiDist(gen);
+        //     newParticle.phi = 0.0;
+        // }
+        
         particles.push_back(newParticle);
         std::cout << "\n___________________________________ " << std::endl;
+        std::cout << "favorite position out of DLA shooting: " << newPos << std::endl;
         std::cout << "New particle added! System size: " << particles.size() << std::endl;
-        std::cout << "Position- (x, y): " << newParticle.r << ", (phi): " << newParticle.phi << std::endl;
-        std::cout << "Velocity- (Vx, Vy): " << newParticle.v << ", (omega): " << newParticle.omega << std::endl;
+        // std::cout << "Position- (x, y): " << newParticle.r << ", (phi): " << newParticle.phi << std::endl;
+        // std::cout << "Velocity- (Vx, Vy): " << newParticle.v << ", (omega): " << newParticle.omega << std::endl;
+        std::cout << "Position- (x, y): " << newParticle.r << std::endl;
+        std::cout << "Velocity- (Vx, Vy): " << newParticle.v << std::endl;
         
         resetVelocitiesRandom(particles, allSpecies, temperature, gen);
         // std::cout << "Velocity after reset- (Vx, Vy): " << particles.back().v << ", (omega): " << particles.back().omega << std::endl;

@@ -90,27 +90,33 @@ T calOrientationalOrder(const std::vector<TParticle>& particles) {
 
 template<typename TParticle, typename T = typename TParticle::value_type>
 T calOrderParameter(const std::vector<TParticle>& particles, const po::variables_map &vm) {
-    T orderParam;
+    T orderParam = 0;
     size_t count = 0;
-    auto n = vm["LJPhiOrder"].as<unsigned int>();
 
+    constexpr bool hasOrientation = (degreesOfFreedom<TParticle>() > 2);
 
-    for (size_t i = 0; i < particles.size(); ++i) {
-        for (size_t j = i + 1; j < particles.size(); ++j) {
-            auto pr1 = getGeneralizedPositions(particles[i]);
-            auto pr2 = getGeneralizedPositions(particles[j]);
+    if constexpr (hasOrientation) {
+        auto n = vm["LJPhiOrder"].as<unsigned int>();
 
-            if (pr1.size() > 2) {
+        for (size_t i = 0; i < particles.size(); ++i) {
+            for (size_t j = i + 1; j < particles.size(); ++j) {
+                auto pr1 = getGeneralizedPositions(particles[i]);
+                auto pr2 = getGeneralizedPositions(particles[j]);
+
                 T deltaPhi = pr1[2] - pr2[2];
                 orderParam += std::abs(std::fmod(deltaPhi, 2 * M_PI / n));
                 count++;
-            } else {
-                orderParam = 0;
-                count = 1;
             }
         }
+
+        if (count > 0) {
+            return orderParam / (count * (2 * M_PI / n));
+        }
+    } else {
+        return 0;
     }
-    return orderParam/(count * (2 * M_PI / n)) ;
+
+    return 0;
 }
 
 template<typename TParticle, typename T = typename TParticle::value_type>
