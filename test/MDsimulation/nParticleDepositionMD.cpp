@@ -204,8 +204,8 @@ int main(int argc, char* argv[]) {
     adios2::Variable<Real> varOrderParameter = io.DefineVariable<Real>("order parameter");
     adios2::Variable<Real> varPositionalOrder = io.DefineVariable<Real>("positional order");
     
-    std::vector<Real> positionsVec(particlesNumMax * D, 0);
-    std::vector<Real> velocitiesVec(particlesNumMax * D, 0);
+    std::vector<Real> positionsVec(particlesNumMax * D, NAN);
+    std::vector<Real> velocitiesVec(particlesNumMax * D, NAN);
 
     io.DefineAttribute<Real>("temperature", temperature);
     
@@ -258,14 +258,9 @@ int main(int argc, char* argv[]) {
         particles.push_back(newParticle);
         std::cout << "\n___________________________________ " << std::endl;
         std::cout << "favorite position out of DLA shooting: " << newPos << std::endl;
-        std::cout << "New particle added! System size: " << particles.size() << std::endl;
-        // std::cout << "Position- (x, y): " << newParticle.r << ", (phi): " << newParticle.phi << std::endl;
-        // std::cout << "Velocity- (Vx, Vy): " << newParticle.v << ", (omega): " << newParticle.omega << std::endl;
-        std::cout << "Position- (x, y): " << newParticle.r << std::endl;
-        std::cout << "Velocity- (Vx, Vy): " << newParticle.v << std::endl;
+        std::cout << "New particle added!       System size: " << particles.size() << std::endl;
         
         resetVelocitiesRandom(particles, allSpecies, temperature, gen);
-        // std::cout << "Velocity after reset- (Vx, Vy): " << particles.back().v << ", (omega): " << particles.back().omega << std::endl;
 
         step = 0;
         writeStateStep = writeStateIntervalSteps;
@@ -279,9 +274,7 @@ int main(int argc, char* argv[]) {
     
             const auto nextEventStep = std::min({writeStateStep, writeEnergyStep, thermoStep, nsteps});
             Real currentTime = step * dt;
-            // std::cout << ">>>> Before Integration: " << particles.back().r << ", " << particles.back().phi << " | v: " << particles.back().v << ", " << particles.back().omega << std::endl;
             integrate(particles, allSpecies, dt, (nextEventStep - step) * dt, boxPBC, force, integrationMethod);
-            // std::cout << "<<<<< After Integration: " << particles.back().r << ", " << particles.back().phi << " | v: " << particles.back().v << ", " << particles.back().omega << std::endl;
             
             step = nextEventStep;
     
@@ -292,17 +285,19 @@ int main(int argc, char* argv[]) {
             }
             
             if (step == writeStateStep) {
-                positionsVec.resize(particles.size() * D);
-                velocitiesVec.resize(particles.size() * D);
-                positionsVec.clear();
-                velocitiesVec.clear();
+                positionsVec.resize(particlesNumMax * D, NAN);
+                velocitiesVec.resize(particlesNumMax * D, NAN);
+                // positionsVec.resize(particles.size() * D);
+                // velocitiesVec.resize(particles.size() * D);
+                // positionsVec.clear();
+                // velocitiesVec.clear();
     
-                for (auto &p : particles) {
-                    auto pos = getGeneralizedPositions(p);
-                    auto vel = getGeneralizedVelocities(p);
-                    for (int i = 0; i < D; ++i) {
-                        positionsVec.push_back(pos[i]);
-                        velocitiesVec.push_back(vel[i]);
+                for (size_t i = 0; i < particles.size(); ++i) {
+                    auto pos = getGeneralizedPositions(particles[i]);
+                    auto vel = getGeneralizedVelocities(particles[i]);
+                    for (int j = 0; j < D; ++j) {
+                        positionsVec[i * D + j] = pos[j];
+                        velocitiesVec[i * D + j] = vel[j];
                     }
                 }
     
