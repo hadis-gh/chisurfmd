@@ -35,22 +35,35 @@ T calAverageNeighbors(const std::vector<TParticle>& particles, const T& distance
 }
 
 template<typename TParticle, typename T = typename TParticle::value_type>
-auto calAveNeighborList(const std::vector<TParticle>& particles, const std::vector<T>& distances) {
+auto calAveNeighborList(const std::vector<TParticle>& particles, const std::vector<T>& distances, T boxSize) {
     T totalNeighbors = 0;
     std::vector<T> neighborsList;
-    for (auto &d : distances) {
-        T totalNeighbors = 0;
+
+    for (auto d : distances) {
+        totalNeighbors = 0;
+
         for (const auto& p1 : particles) {
             int eachParticleNeighbors = 0;
+
             for (const auto& p2 : particles) {
-                if (p1.r != p2.r && (p1.r - p2.r).abs() <= d) {
-                    ++eachParticleNeighbors;
+                if (p1.r != p2.r) {
+                    // Apply periodic boundary conditions using minimum image convention
+                    auto delta = p1.r - p2.r;
+                    delta[0] -= boxSize * round(delta[0] / boxSize);
+                    delta[1] -= boxSize * round(delta[1] / boxSize);
+
+                    if (delta.abs() <= d) {
+                        ++eachParticleNeighbors;
+                    }
                 }
             }
+
             totalNeighbors += eachParticleNeighbors;
         }
+        
         neighborsList.push_back(totalNeighbors / particles.size());
     }
+
     return neighborsList;
 }
 

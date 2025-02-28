@@ -260,7 +260,7 @@ int main(int argc, char* argv[]) {
             auto kineticE = calKineticEnergy(particles, allSpecies);
             auto potentialE = calPotentialEnergy(particles, allSpecies, boxPBC, potential);
 
-            auto neighborCount = calAveNeighborList(particles, neighborDistances);
+            auto neighborCount = calAveNeighborList(particles, neighborDistances, areaL);
             auto orientationalOrder = calOrientationalOrder(particles);
             auto orderParameter = calOrderParameter(particles, vm);
             auto positionalOrder = calPositionalOrder(particles, neighborCutoff);
