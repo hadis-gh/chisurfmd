@@ -24,6 +24,7 @@ collisionFr=${collisionFr:-0.016}
 
 integration=${integration:-"VelocityVerlet"}
 
+alpha=${alpha:-"alpha"}
 LJPhiOrder=${LJPhiOrder:-"LJPhiOrder"}
 momentI=${momentI:-"momentI"}
 LJangularScale=${LJangularScale:-"LJangularScale"}
@@ -59,6 +60,7 @@ run_md() {
         --writeEnergyInterval "$writeEnergyInterval" \
         --collisionFr "$collisionFr" \
         --integration "$integration" \
+        --LJalpha "$alpha" \
         --LJPhiOrder "$LJPhiOrder" \
         --momentI "$momentI" \
         --LJangularScale "$LJangularScale" \

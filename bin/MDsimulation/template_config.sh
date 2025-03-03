@@ -1,32 +1,32 @@
+simulationType="oriented"
+
 particleNum=49
 areaL=20
 particlesDensity=70.0
 particlesInit="RANDOM"
 seed=15
 
-timeCooling=100
-timeHeating=100
-
+timeCooling=120
+timeHeating=120
 timeSim=1000
-
-dt=0.001
-
-writeStateInterval=0.05
-writeEnergyInterval=0.5
-thermoInterval=0.1
+dt=0.0008
+writeStateInterval=0.01
+writeEnergyInterval=0.1
+thermoInterval=0.05
 
 cutoff=10.0
 exclusionRadius=0.8
 relaxationTime=40.0
 
 lowTemperature=0.02
-highTemperature=1.00
+highTemperature=0.6
 stepTemperature=0.02
-
-targetT=0.7
+collisionFr=0.0166
 
 integration="VelocityVerlet"
+targetT=1
 
+alpha=0
 LJPhiOrder=2
 momentI=1
-LJangularScale=5
+LJangularScale=1
