@@ -84,7 +84,7 @@ int main(int argc, char* argv[]) {
         ("writeStateInterval",    po::value<Real>()->default_value(.05),                      "measurement State interval")
         ("writeEnergyInterval",   po::value<Real>()->default_value(.5),                       "measurement Energy interval")
         ("thermoInterval",        po::value<Real>()->default_value(.1),                       "interval after which to apply thermostat")
-        ("temperature,T",         po::value<Real>()->default_value(.4),                       "temperature")
+        ("temperature,T",         po::value<Real>()->default_value(.3),                       "temperature")
         ("particlesInit",         po::value<std::string>()->default_value("RANDOM"),          "particle initialization")
         ("mass",                  po::value<Real>()->default_value(1.0),                      "mass of particles")       
         ("momentI",               po::value<Real>()->default_value(1.0),                      "moment of inersia")
@@ -141,6 +141,7 @@ int main(int argc, char* argv[]) {
         }
     }();
     auto particles = initialParticles<ParticleT>(particlesNum, allSpecies, speciesInd, areaL, gen, particlesInit);
+    particlesNum = particles.size();
 
     auto force = Potential::force(vm);
     auto potential = Potential::potential(vm);
@@ -302,7 +303,10 @@ int main(int argc, char* argv[]) {
     clock_t endTime = clock();
 
     Real timeTaken = Real(endTime - startTime) / CLOCKS_PER_SEC;
-    std::cout << "\nTime taken: " << timeTaken << " seconds\n";
 
+    int timeMin = static_cast<int>(timeTaken) / 60;
+    double timeSec = std::fmod(timeTaken, 60);
+
+    std::cout << "\nTime taken: " << timeMin << "m " << std::fixed << std::setprecision(2) << timeSec << "s\n";
     return 0;
 }

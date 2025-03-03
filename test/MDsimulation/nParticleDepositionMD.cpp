@@ -313,7 +313,7 @@ int main(int argc, char* argv[]) {
                 auto kineticE = calKineticEnergy(particles, allSpecies);
                 auto potentialE = calPotentialEnergy(particles, allSpecies, boxPBC, potential);
     
-                auto neighborCount = calAveNeighborList(particles, neighborDistances);
+                auto neighborCount = calAveNeighborList(particles, neighborDistances, areaL);
                 auto orientationalOrder = calOrientationalOrder(particles);
                 auto orderParameter = calOrderParameter(particles, vm);
                 auto positionalOrder = calPositionalOrder(particles, neighborCutoff);
@@ -357,7 +357,11 @@ int main(int argc, char* argv[]) {
     clock_t endTime = clock();
 
     Real timeTaken = Real(endTime - startTime) / CLOCKS_PER_SEC;
-    std::cout << "\nTime taken: " << timeTaken << " seconds\n";
+
+    int timeMin = static_cast<int>(timeTaken) / 60;
+    double timeSec = std::fmod(timeTaken, 60);
+
+    std::cout << "\nTime taken: " << timeMin << "m " << std::fixed << std::setprecision(2) << timeSec << "s\n";
 
     return 0;
 }
