@@ -23,7 +23,6 @@ echo "Logging to: $logFile"
 
 args=(
     --seed "$seed"
-    --areaL "$areaL"
     --exclusionRadius "$exclusionRadius"
     --thermoInterval "$thermoInterval"
     --writeStateInterval "$writeStateInterval"
@@ -48,10 +47,11 @@ run_md() {
     local temperature=$1
 
     printf "\nPart 1: Thermal Equilibration starting from FROZEN state: \n"
-    printf "\nTemperature: %s\n\n" "$temperature"
+    printf "\nTemperature: %s\n" "$temperature"
+    echo "------------------------------------------------------------"
 
     "$MD_EXE" "${args[@]}" \
-        --particlesInit "../initCluster/run_0.bp" \
+        --particlesInit "initCluster/run_0.bp" \
         --temperature "$temperature" \
         --areaL 20 \
         --time "$relaxationTime" --dt "$dt" \
@@ -69,7 +69,9 @@ run_deposition() {
     local depositionTime=$2
 
     printf "\nPart 2: Particle Deposition starting from RELAXED state: \n"
-    printf "\nTemperature: %s\n\n" "$temperature"
+    printf "\nTemperature: %s\n" "$temperature"
+    printf "Deposition Time Interval: %s\n" "$depositionTime"
+    echo "------------------------------------------------------------"
 
     "$DEPOSIT_MD_EXE" "${args[@]}" \
         --particlesInit "${outputDir}/equilibrated_${temperature}.bp" \

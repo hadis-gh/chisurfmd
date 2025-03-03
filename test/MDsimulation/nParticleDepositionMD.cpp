@@ -235,15 +235,8 @@ int main(int argc, char* argv[]) {
 
 // ================================== Deposition Loop ==================================
     auto prevSize = particles.size();
-    std::cout << " |||| system initial size: " << particles.size() << "|||" << std::endl;
+    std::cout << "\n _______ system initial size: " << particles.size() << " _______ \n" << std::endl;
 
-    std::cout << "==================initial particles================" << std::endl;
-    for (auto &p: particles) {
-        // std::cout << " - particle pos: "<< p.r << ", "<< p.phi;
-        // std::cout << " - particle vel: "<< p.v << ", "<< p.omega << std::endl;
-        std::cout << " - particle pos: "<< p.r << std::endl;
-        std::cout << " - particle vel: "<< p.v << std::endl;
-    }
     moveParticlesToCenter(particles, allSpecies, areaL);
 
     for (int a=prevSize;  particles.size()<particlesNumMax; ++a) {
@@ -260,10 +253,8 @@ int main(int argc, char* argv[]) {
         }
         
         particles.push_back(newParticle);
-        std::cout << "\n___________________________________ " << std::endl;
-        std::cout << "favorite position out of DLA shooting: " << newPos << std::endl;
-        std::cout << "New particle added!       System size: " << particles.size() << std::endl;
-        
+        std::cout << "\rNew particle added! System size: " << particles.size() << std::flush;
+
         resetVelocitiesRandom(particles, allSpecies, temperature, gen);
 
         step = 0;
@@ -291,10 +282,6 @@ int main(int argc, char* argv[]) {
             if (step == writeStateStep) {
                 positionsVec.resize(particlesNumMax * D, NAN);
                 velocitiesVec.resize(particlesNumMax * D, NAN);
-                // positionsVec.resize(particles.size() * D);
-                // velocitiesVec.resize(particles.size() * D);
-                // positionsVec.clear();
-                // velocitiesVec.clear();
     
                 for (size_t i = 0; i < particles.size(); ++i) {
                     auto pos = getGeneralizedPositions(particles[i]);
@@ -360,7 +347,8 @@ int main(int argc, char* argv[]) {
 
     int timeMin = static_cast<int>(timeTaken) / 60;
     double timeSec = std::fmod(timeTaken, 60);
-
+    
+    std::cout << "\nDone!" << std::endl;
     std::cout << "\nTime taken: " << timeMin << "m " << std::fixed << std::setprecision(2) << timeSec << "s\n";
 
     return 0;

@@ -409,7 +409,7 @@ auto depositeDLAinfo(const std::vector<TParticle>& particles,
         endPoint = findStopPointAll(newCircle, direction, circles);
         attempt ++;
     }
-    std::cout << ">>>  number of attempt to DLA successful shoot:" << attempt << std::endl;
+    // std::cout << ">> attempt numbers for successful DLA: " << attempt << std::endl;
 
     if (std::isnan(endPoint.c[0])){
         std::cout << "could not add new particle!!" << std::endl;
