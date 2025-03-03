@@ -234,6 +234,9 @@ int main(int argc, char* argv[]) {
     clock_t startTime = clock();
 
 // ================================== Deposition Loop ==================================
+    auto prevSize = particles.size();
+    std::cout << " |||| system initial size: " << particles.size() << "|||" << std::endl;
+
     std::cout << "==================initial particles================" << std::endl;
     for (auto &p: particles) {
         // std::cout << " - particle pos: "<< p.r << ", "<< p.phi;
@@ -241,8 +244,9 @@ int main(int argc, char* argv[]) {
         std::cout << " - particle pos: "<< p.r << std::endl;
         std::cout << " - particle vel: "<< p.v << std::endl;
     }
-    
-    for (int a=0;  particles.size()<particlesNumMax; ++a) {
+    moveParticlesToCenter(particles, allSpecies, areaL);
+
+    for (int a=prevSize;  particles.size()<particlesNumMax; ++a) {
         auto newPos = depositeDLAinfo(particles, allSpecies, speciesInd, areaL, gen);
         
         ParticleT newParticle(speciesInd, newPos);

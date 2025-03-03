@@ -440,3 +440,14 @@ void writeParticle(const std::vector<TParticle>& particles, T radius, const std:
         output_file << p.r[0] << ", " << p.r[1] << ", " << radius << "\n";
     }
 }
+
+// ================================== Move particles to center of box ==================================
+
+template<typename TParticle, typename T = typename TParticle::value_type>
+void moveParticlesToCenter(std::vector<TParticle>& particles, const std::vector<Species<T>>& allSpecies, const T& L)
+{
+    Vec<T> comPos = calCOMpositionPBC(particles, allSpecies, L);
+    for (auto &p: particles){
+        p.r += -comPos + L/2;
+    }     
+}
