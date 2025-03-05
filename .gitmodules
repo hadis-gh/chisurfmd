@@ -1,0 +1,3 @@
+[submodule "thirdParty/lettuce"]
+	path = thirdParty/lettuce
+	url = git@codebase.helmholtz.cloud:kelling/lettuce.git

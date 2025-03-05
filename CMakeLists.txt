@@ -33,6 +33,9 @@ include_directories(
 	${Boost_INCLUDE_DIRS}
 	#${Adios2_DIR}/include
 )
+
+add_subdirectory(thirdParty/lettuce)
+
 #add_subdirectory(include)
 #add_subdirectory(src)
 add_subdirectory(test)
