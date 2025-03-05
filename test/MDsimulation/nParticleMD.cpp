@@ -82,7 +82,7 @@ int main(int argc, char* argv[]) {
         ("time,t",                po::value<Real>()->default_value(10.0),                     "max simulation time")
         ("dt",                    po::value<Real>()->default_value(.01),                      "integration step size")
         ("writeStateInterval",    po::value<Real>()->default_value(.05),                      "measurement State interval")
-        ("writeEnergyInterval",   po::value<Real>()->default_value(.5),                       "measurement Energy interval")
+        ("writeEnergyInterval",   po::value<Real>()->default_value(.005),                       "measurement Energy interval")
         ("thermoInterval",        po::value<Real>()->default_value(.1),                       "interval after which to apply thermostat")
         ("temperature,T",         po::value<Real>()->default_value(.3),                       "temperature")
         ("particlesInit",         po::value<std::string>()->default_value("RANDOM"),          "particle initialization")

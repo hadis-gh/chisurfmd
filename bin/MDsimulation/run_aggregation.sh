@@ -18,7 +18,7 @@ outputDir=${outputDir:-"./outputs"}
 mkdir -p "$outputDir"
 
 logFile="log.txt"
-exec > >(tee "$logFile") 2>&1
+exec > >(tee -a "$logFile") 2>&1
 echo "Logging to: $logFile"
 
 args=(
@@ -89,8 +89,8 @@ run_deposition() {
 }
 
 # Main Loop
-temp_ranges=(0.2 0.1 0.5 0.25 0.1 0.05 0.03 0.02 0.01)
-deposit_rates=(1 4 10 20 50)
+temp_ranges=(0.5 0.25 0.3 0.4 0.35)
+deposit_rates=(1 4 8)
 
 for T in "${temp_ranges[@]}"; do
     for rate in "${deposit_rates[@]}"; do
