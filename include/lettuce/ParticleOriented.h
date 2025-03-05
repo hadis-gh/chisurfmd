@@ -184,8 +184,7 @@ void implementPBC(ParticleOriented<T>& p, const T& boxPBC) {
     implementPBC(static_cast<ParticleDot<T>&>(p), boxPBC);
 
     T phi = p.phi;
-    phi = std::fmod(phi + 2 * M_PI, 2 * M_PI); 
-    if (phi > M_PI) phi -= 2 * M_PI;
+    phi = std::fmod(phi + M_PI, 2 * M_PI); 
     if (phi < 0) phi += 2 * M_PI;
     p.phi = phi - M_PI;
 }

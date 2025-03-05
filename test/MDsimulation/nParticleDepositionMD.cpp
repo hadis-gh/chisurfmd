@@ -237,6 +237,7 @@ int main(int argc, char* argv[]) {
     auto prevSize = particles.size();
     std::cout << "\n _______ system initial size: " << particles.size() << " _______ \n" << std::endl;
 
+    
     moveParticlesToCenter(particles, allSpecies, areaL);
 
     for (int a=prevSize;  particles.size()<particlesNumMax; ++a) {
