@@ -45,6 +45,7 @@ echo "=================================================="
 
 run_md() {
     local temperature=$1
+    local equilibrationTime=$2
 
     printf "\nPart 1: Thermal Equilibration starting from FROZEN state: \n"
     printf "\nTemperature: %s\n" "$temperature"
@@ -54,7 +55,7 @@ run_md() {
         --particlesInit "initCluster/run_0.bp" \
         --temperature "$temperature" \
         --areaL 20 \
-        --time "$relaxationTime" --dt "$dt" \
+        --time "$equilibrationTime" --dt "$dt" \
         --saveFile "${outputDir}/equilibrated_${temperature}.bp" || {
         printf "Error: Thermal Equilibration simulation failed.\n"
         exit 1
@@ -91,10 +92,11 @@ run_deposition() {
 # Main Loop
 temp_ranges=(0.5 0.25 0.3 0.4 0.35)
 deposit_rates=(1 4 8)
+equilibrationTime=10000
 
 for T in "${temp_ranges[@]}"; do
     for rate in "${deposit_rates[@]}"; do
-        run_md "$T"
+        run_md "$T" "$equilibrationTime"
         run_deposition "$T" "$rate"
     done
 done
