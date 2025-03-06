@@ -34,7 +34,7 @@ include_directories(
 	#${Adios2_DIR}/include
 )
 
-add_subdirectory(thirdParty/lettuce)
+# add_subdirectory(thirdParty/lettuce)
 
 #add_subdirectory(include)
 #add_subdirectory(src)
