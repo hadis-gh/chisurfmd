@@ -19,6 +19,8 @@ std::vector<T> linspace(const T& start, const T& end, const int& points) {
     return result;
 }
 
+// ================================== order calculation (neighbors + orientation) ==================================
+
 template<typename TParticle, typename T = typename TParticle::value_type>
 T calAverageNeighbors(const std::vector<TParticle>& particles, const T& distance) {
     T totalNeighbors = 0;
@@ -100,6 +102,7 @@ T calOrientationalOrder(const std::vector<TParticle>& particles) {
     return orientationalOrder/count;
 }
 
+// ================================== Useless ones (clean later) ==================================
 
 template<typename TParticle, typename T = typename TParticle::value_type>
 T calOrderParameter(const std::vector<TParticle>& particles, const po::variables_map &vm) {
@@ -131,6 +134,8 @@ T calOrderParameter(const std::vector<TParticle>& particles, const po::variables
 
     return 0;
 }
+
+// ================================== Center of Mass ==================================
 
 template<typename TParticle, typename T = typename TParticle::value_type>
 Vec<T> calCOMposition(const std::vector<TParticle>& particles, const std::vector<Species<T>>& allSpecies) {
@@ -172,6 +177,8 @@ Vec<T> calCOMpositionPBC(const std::vector<TParticle>& particles,
     
     return comPos;
 }
+
+// ================================== COM angular velocity ==================================
 
 template<typename TParticle, typename T = typename TParticle::value_type>
 T calAngularMomentum2D(const std::vector<TParticle>& particles, const std::vector<Species<T>>& allSpecies, const T& boxPBC) {
@@ -228,6 +235,8 @@ void removeCOMvelocityRotation2D_wholeCenter(std::vector<TParticle>& particles,
     }
 }
 
+// ================================== COM linear velocity ==================================
+
 template<typename TParticle, typename T = typename TParticle::value_type>
 Vec<T> calCOMVelocity(const std::vector<TParticle>& particles, const std::vector<Species<T>>& allSpecies) {
     Vec<T> totalMomentum = {{0.0, 0.0}};
@@ -257,10 +266,23 @@ std::vector<T> calCOMvelocity(const std::vector<TParticle>& particles, const std
     return totalMomentumVec;
 }
 
+// ================================== remove COM angular velocity ==================================
+
 template<typename TParticle, typename T = typename TParticle::value_type>
 void removeCOMVelocity(std::vector<TParticle>& particles, const std::vector<Species<T>>& allSpecies) {
     Vec<T> comVel = calCOMVelocity(particles, allSpecies);
     for (auto& p : particles) {
         p.v -= comVel;
     }
+}
+
+// ================================== Move particles to center of box ==================================
+
+template<typename TParticle, typename T = typename TParticle::value_type>
+void moveParticlesToCenter(std::vector<TParticle>& particles, const std::vector<Species<T>>& allSpecies, const T& L)
+{
+    Vec<T> comPos = calCOMpositionPBC(particles, allSpecies, L);
+    for (auto &p: particles){
+        p.r += -comPos + L/2;
+    }     
 }
