@@ -118,7 +118,7 @@ T calPotentialEnergy(const std::vector<TParticle>& particles, const std::vector<
         }
         ePot.push_back(pot);
     }
-    return std::accumulate(ePot.begin(), ePot.end(), 0.0);
+    return std::accumulate(ePot.begin(), ePot.end(), 0.0)/(2*particles.size());
 }
 
 template<typename TParticle, typename T = typename TParticle::value_type>
