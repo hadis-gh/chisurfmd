@@ -155,29 +155,21 @@ Vec<T> calCOMpositionPBC(const std::vector<TParticle>& particles,
                          const T& boxSize) {
     Vec<T> comPos;
     T totalMass = 0;
-    Vec<T> prevPos = particles[0].r;
     
     for (const auto& p : particles) {
         const T mass = allSpecies[p.species].mass;
-        Vec<T> adjustedPos = p.r;
-        for (size_t i = 0; i < 2; ++i) {
-            while (adjustedPos[i] - prevPos[i] > boxSize/2) adjustedPos[i] -= boxSize;
-            while (adjustedPos[i] - prevPos[i] < -boxSize/2) adjustedPos[i] += boxSize;
-        }
-        comPos += adjustedPos * mass;
+        comPos += p.r * mass;
         totalMass += mass;
-        prevPos = adjustedPos;
     }
     comPos /= totalMass;
-    
+
     for (size_t i = 0; i < 2; ++i) {
         comPos[i] = std::fmod(comPos[i], boxSize);
         if (comPos[i] < 0) comPos[i] += boxSize;
     }
-    
+
     return comPos;
 }
-
 // ================================== COM angular velocity ==================================
 
 template<typename TParticle, typename T = typename TParticle::value_type>
@@ -282,7 +274,13 @@ template<typename TParticle, typename T = typename TParticle::value_type>
 void moveParticlesToCenter(std::vector<TParticle>& particles, const std::vector<Species<T>>& allSpecies, const T& L)
 {
     Vec<T> comPos = calCOMpositionPBC(particles, allSpecies, L);
+    Vec<T> shift = -comPos + L/2;
+    
     for (auto &p: particles){
-        p.r += -comPos + L/2;
+        p.r += shift;
+        for (size_t i = 0; i < 2; ++i) {
+            p.r[i] = std::fmod(p.r[i], L);
+            if (p.r[i] < 0) p.r[i] += L;
+        }
     }     
 }
