@@ -143,7 +143,6 @@ int main(int argc, char* argv[]) {
             return std::mt19937(rd());
         }
     }();
-    auto particles = initialParticles<ParticleT>(particlesNum, allSpecies, speciesInd, areaL, gen, particlesInit);
 
     auto force = Potential::force(vm);
     auto potential = Potential::potential(vm);
@@ -234,10 +233,12 @@ int main(int argc, char* argv[]) {
     clock_t startTime = clock();
 
 // ================================== Deposition Loop ==================================
+    
+    auto particles = initialParticles<ParticleT>(particlesNum, allSpecies, speciesInd, areaL, gen, particlesInit);
+    
     auto prevSize = particles.size();
     std::cout << "\n _______ system initial size: " << particles.size() << " _______ \n" << std::endl;
 
-    
     moveParticlesToCenter(particles, allSpecies, areaL);
 
     for (int a=prevSize;  particles.size()<particlesNumMax; ++a) {
@@ -341,7 +342,9 @@ int main(int argc, char* argv[]) {
     }
 
     engine.Close();
-    
+
+    // ================================== run time output ==================================
+
     clock_t endTime = clock();
 
     Real timeTaken = Real(endTime - startTime) / CLOCKS_PER_SEC;
