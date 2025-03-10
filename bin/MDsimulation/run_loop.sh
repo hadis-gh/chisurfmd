@@ -24,7 +24,6 @@ logFile="log.txt"
 exec > >(tee "$logFile") 2>&1
 echo "Logging to: $logFile"
 
-
 simulationType=${simulationType:-"oriented"}
 
 run_simulation() {
@@ -73,15 +72,20 @@ run_temperature_loop() {
     local numRuns="$3"
     local startIndex="$4"
 
-    for ((i = 1; i <= numRuns; i++)); do
-        local runIndex=$((startIndex + i))
+    for ((i = 0; i < numRuns; i++)); do
+        local runIndex=$((startIndex + i + 1))
         local temperature=$(echo "$startTemp + $i * $stepTemp" | bc)
         local prevOutput="${outputDir}/run_$((runIndex - 1)).bp"
+
+        # Check if the previous output file exists
+        if [ ! -f "$prevOutput" ]; then
+            printf "Error: Previous output file '%s' not found. Aborting.\n" "$prevOutput"
+            exit 1
+        fi
 
         run_simulation "$runIndex" "$prevOutput" "$temperature"
     done
 }
-
 
 echo "======================================================="
 echo "    Temperature Loop Molecular Dynamics Simulation     "
@@ -90,7 +94,10 @@ echo "======================================================="
 initialRunIndex=0
 run_simulation "$initialRunIndex" "RANDOM" "$highTemperature"
 
-run_temperature_loop "$highTemperature" "$stepTemperature" "$numCoolingRuns" 0
+# Cooling process: temperature decreases from highTemperature to lowTemperature
+run_temperature_loop "$highTemperature" "$((-stepTemperature))" "$numCoolingRuns" 0
+
+# Heating process: temperature increases from lowTemperature to highTemperature
 run_temperature_loop "$lowTemperature" "$stepTemperature" "$numHeatingRuns" "$numCoolingRuns"
 
 # Record time
