@@ -22,7 +22,7 @@ struct LennardJones<ParticleDot<T>>
         desc.add_options()
             ("LJepsilon", po::value<T>()->default_value(1.),     "epsilon in Lennard-Jones force and potential")
             ("LJsigma",   po::value<T>()->default_value(1.),     "sigma in Lennard-Jones force and potential")
-            ("LJcutoff",  po::value<T>()->default_value(10.),   "cutoff distance for Lennard-Jones interactions")
+            ("LJcutoff",  po::value<T>()->default_value(10.),    "cutoff distance for Lennard-Jones interactions")
         ;
     }
 
