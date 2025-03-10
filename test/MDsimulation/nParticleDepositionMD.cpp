@@ -207,6 +207,13 @@ int main(int argc, char* argv[]) {
     std::vector<Real> velocitiesVec(particlesNumMax * D, NAN);
 
     io.DefineAttribute<Real>("temperature", temperature);
+    io.DefineAttribute<Real>("radius", radius);
+    io.DefineAttribute<Real>("mass", mass);
+    io.DefineAttribute<Real>("momentI", momentI);
+    io.DefineAttribute<Real>("areaL", areaL);
+    io.DefineAttribute<Real>("particlesNum", particlesNum);
+    io.DefineAttribute<Real>("particlesNumMax", particlesNumMax);
+    io.DefineAttribute<Real>("neighborCutoff", neighborCutoff);
     
     adios2::Engine engine = io.Open(adiosOutput, adios2::Mode::Write);
 
@@ -239,10 +246,10 @@ int main(int argc, char* argv[]) {
     auto prevSize = particles.size();
     std::cout << "\n _______ system initial size: " << particles.size() << " _______ \n" << std::endl;
 
-    moveParticlesToCenter(particles, allSpecies, areaL);
+    // moveParticlesToCenter(particles, allSpecies, areaL);
 
     for (int a=prevSize;  particles.size()<particlesNumMax; ++a) {
-        auto newPos = depositeDLAinfo(particles, allSpecies, speciesInd, areaL, gen);
+        auto newPos = depositeDLAinfo3(particles, allSpecies, speciesInd, areaL, gen);
         
         ParticleT newParticle(speciesInd, newPos);
 

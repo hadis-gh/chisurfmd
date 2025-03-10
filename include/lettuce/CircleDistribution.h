@@ -6,6 +6,8 @@
 #include <random>
 #include <sstream>
 #include <stdexcept>
+#include <unordered_set>
+#include <queue>
 #include <adios2.h>
 
 #include "Vec.h"
@@ -402,17 +404,118 @@ auto depositeDLAinfo(const std::vector<TParticle>& particles,
     int attempt = 0;
     int maxAttempt = 10000000;
     
-    // std::cout << ">>>  shooting new particle:" << attempt << std::endl;
     while (!isWithinBounds(endPoint, L) && attempt<maxAttempt) {
         Circle<T> newCircle = startCircleRandom(radius, L * 10, gen);
         Vec<T> direction = shootToCenter(newCircle, L);
         endPoint = findStopPointAll(newCircle, direction, circles);
         attempt ++;
     }
-    // std::cout << ">> attempt numbers for successful DLA: " << attempt << std::endl;
 
     if (std::isnan(endPoint.c[0])){
         std::cout << "could not add new particle!!" << std::endl;
+    }
+
+    return endPoint.c;
+}
+// ================================== filter cluster DLA shooting ==================================
+
+template<typename TParticle, typename T = typename TParticle::value_type>
+std::vector<bool> identifyMainCluster(const std::vector<TParticle>& particles,
+                                      const std::vector<Species<T>>& allSpecies,
+                                      const int& speciesNum)
+{
+    size_t n = particles.size();
+    std::vector<bool> inCluster(n, false);
+    std::vector<bool> visited(n, false);
+    T contactThreshold = 2.1 * allSpecies[speciesNum].radius;
+
+    // Find the largest cluster using BFS
+    size_t largestClusterSize = 0;
+    size_t largestClusterStart = 0;
+
+    for (size_t i = 0; i < n; ++i) {
+        if (!visited[i]) {
+            std::queue<size_t> queue;
+            queue.push(i);
+            visited[i] = true;
+            size_t currentClusterSize = 0;
+
+            while (!queue.empty()) {
+                size_t current = queue.front();
+                queue.pop();
+                currentClusterSize++;
+
+                // Check neighbors
+                for (size_t j = 0; j < n; ++j) {
+                    if (!visited[j] && (particles[current].r - particles[j].r).abs() < contactThreshold) {
+                        queue.push(j);
+                        visited[j] = true;
+                    }
+                }
+            }
+
+            // Update largest cluster
+            if (currentClusterSize > largestClusterSize) {
+                largestClusterSize = currentClusterSize;
+                largestClusterStart = i;
+            }
+        }
+    }
+
+    // Mark particles in the largest cluster
+    if (largestClusterSize > 0) {
+        std::queue<size_t> queue;
+        queue.push(largestClusterStart);
+        inCluster[largestClusterStart] = true;
+
+        while (!queue.empty()) {
+            size_t current = queue.front();
+            queue.pop();
+
+            for (size_t j = 0; j < n; ++j) {
+                if (!inCluster[j] && (particles[current].r - particles[j].r).abs() < contactThreshold) {
+                    inCluster[j] = true;
+                    queue.push(j);
+                }
+            }
+        }
+    }
+
+    return inCluster;
+}
+
+template<typename TParticle, typename T = typename TParticle::value_type>
+auto depositeDLAinfo3(const std::vector<TParticle>& particles,  
+                     const std::vector<Species<T>>& allSpecies, 
+                     const int& speciesNum, 
+                     const T& L,
+                     std::mt19937& gen) 
+{
+    std::vector<bool> inMainCluster = identifyMainCluster(particles, allSpecies, speciesNum);
+
+    std::vector<Circle<T>> circles = particleToCircle<TParticle, T>(particles, allSpecies, speciesNum);
+
+    std::vector<Circle<T>> mainClusterCircles;
+    for (size_t i = 0; i < circles.size(); ++i) {
+        if (inMainCluster[i]) {
+            mainClusterCircles.push_back(circles[i]);
+        }
+    }
+
+    T radius = allSpecies[speciesNum].radius;
+    Circle<T> endPoint;
+    int attempt = 0;
+    int maxAttempt = 10000000;
+
+    while (!isWithinBounds(endPoint, L) && attempt < maxAttempt) {
+        Circle<T> newCircle = startCircleRandom(radius, L * 10, gen);
+        Vec<T> direction = shootToCenter(newCircle, L);
+        endPoint = findStopPointAll(newCircle, direction, mainClusterCircles);
+        attempt++;
+    }
+
+    if (std::isnan(endPoint.c[0])) {
+        std::cout << "Could not add new particle!!" << std::endl;
     }
 
     return endPoint.c;
