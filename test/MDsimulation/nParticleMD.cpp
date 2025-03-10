@@ -21,6 +21,7 @@
 #include "lettuce/Thermostat.h"
 #include "lettuce/LennardJones.h"
 #include "lettuce/LennardJonesOriented.h"
+#include "lettuce/DFTBpotential.h"
 #include "lettuce/CircleDistribution.h"
 #include "lettuce/LennarJonesParticles.h"
 
@@ -113,7 +114,8 @@ int main(int argc, char* argv[]) {
     if (vm.count("help") > 0) {std::cout << desc << std::endl; return 0;}
     printOptions(vm);
 
-    //simulation parameters
+// ================================== simulation parameters ==================================
+    
     const Real mass = vm["mass"].as<Real>();
     const Real momentI = vm["momentI"].as<Real>();
     const Real radius = vm["exclusionRadius"].as<Real>();
@@ -177,7 +179,8 @@ int main(int argc, char* argv[]) {
             return AndersenThermostat<ParticleT>(vm["thermoInterval"].as<Real>(), collisionFrequency, temperature, gen);
     }();
 
-    //output files
+// ================================== output files ==================================
+
     std::string adiosOutput = vm["saveFile"].as<std::string>();
 
     adios2::ADIOS adios;
@@ -198,10 +201,17 @@ int main(int argc, char* argv[]) {
     adios2::Variable<Real> varPositionalOrder = io.DefineVariable<Real>("positional order");
 
     io.DefineAttribute<Real>("temperature", temperature);
-
+    io.DefineAttribute<Real>("radius", radius);
+    io.DefineAttribute<Real>("mass", mass);
+    io.DefineAttribute<Real>("momentI", momentI);
+    io.DefineAttribute<Real>("areaL", areaL);
+    io.DefineAttribute<Real>("particlesNum", particlesNum);
+    io.DefineAttribute<Real>("neighborCutoff", neighborCutoff);
+    
     adios2::Engine engine = io.Open(adiosOutput, adios2::Mode::Write);
 
-    //time intervals
+// ================================== time intervals ==================================
+
     const Real dt = vm["dt"].as<Real>();
     const Real Time = vm["time"].as<Real>();
 
@@ -225,7 +235,8 @@ int main(int argc, char* argv[]) {
 
     clock_t startTime = clock();
 
-    //main loop
+// ================================== Integration Loop ==================================
+
     while (step < nsteps) {
         engine.BeginStep();
 
@@ -299,6 +310,8 @@ int main(int argc, char* argv[]) {
     }
     engine.Close();
     
+// ================================== run time output ==================================
+
     clock_t endTime = clock();
 
     Real timeTaken = Real(endTime - startTime) / CLOCKS_PER_SEC;
