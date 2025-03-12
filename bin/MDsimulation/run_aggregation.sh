@@ -11,8 +11,8 @@ if [ ! -f "$config" ]; then
 fi
 source "$config"
 
-MD_EXE=${MD_EXE:-"../test/testNParticleMD"}
-DEPOSIT_MD_EXE=${DEPOSIT_MD_EXE:-"../test/testNParticleDepositionMD"}
+MD_EXE=${MD_EXE:-"../build/test/testNParticleMD"}
+DEPOSIT_MD_EXE=${DEPOSIT_MD_EXE:-"../build/test/testNParticleDepositionMD"}
 
 outputDir=${outputDir:-"./outputs"}
 mkdir -p "$outputDir"
@@ -54,7 +54,7 @@ run_md() {
     "$MD_EXE" "${args[@]}" \
         --particlesInit "initCluster/run_0.bp" \
         --temperature "$temperature" \
-        --areaL 20 \
+        --areaL 50 \
         --time "$equilibrationTime" --dt "$dt" \
         --saveFile "${outputDir}/equilibrated_${temperature}.bp" || {
         printf "Error: Thermal Equilibration simulation failed.\n"
@@ -90,9 +90,9 @@ run_deposition() {
 }
 
 # Main Loop
-temp_ranges=(0.5 0.25 0.3 0.4 0.35)
+temp_ranges=(0.25 0.3 0.35 0.4 0.5)
 deposit_rates=(1 4 8)
-equilibrationTime=10000
+equilibrationTime=1000
 
 for T in "${temp_ranges[@]}"; do
     for rate in "${deposit_rates[@]}"; do

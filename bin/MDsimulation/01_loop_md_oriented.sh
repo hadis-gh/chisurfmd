@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+start_time=$(date +%s)
+
 if [ -f config.sh ]; then
     source config.sh
 fi
@@ -40,6 +42,10 @@ totalRuns=$((numCoolingRuns + numHeatingRuns))
 MD_EXE=${MD_EXE:-../test/testNParticleMD}
 outputDir=${outputDir:-"./outputs"}
 mkdir -p "$outputDir"
+
+logFile="log.txt"
+exec > >(tee "$logFile") 2>&1
+echo "Logging to: $logFile"
 
 run_md() {
     local runIndex="$1"
@@ -96,3 +102,14 @@ for ((i = 1; i <= numHeatingRuns; i++)); do
 done
 
 echo "All simulations completed. Total runs: ${totalRuns}"
+
+
+# Record time
+end_time=$(date +%s)
+elapsed_time=$((end_time - start_time))
+
+hours=$((elapsed_time / 3600))
+minutes=$(((elapsed_time % 3600) / 60))
+seconds=$((elapsed_time % 60))
+
+printf "Total execution time: %02d:%02d:%02d (hh:mm:ss)\n" "$hours" "$minutes" "$seconds"
