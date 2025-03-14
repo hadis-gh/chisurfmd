@@ -427,7 +427,7 @@ std::vector<bool> identifyMainCluster(const std::vector<TParticle>& particles,
     size_t n = particles.size();
     std::vector<bool> inCluster(n, false);
     std::vector<bool> visited(n, false);
-    T contactThreshold = 2.1 * allSpecies[speciesNum].radius;
+    T contactThreshold = 4 * allSpecies[speciesNum].radius;
 
     // Find the largest cluster using BFS
     size_t largestClusterSize = 0;

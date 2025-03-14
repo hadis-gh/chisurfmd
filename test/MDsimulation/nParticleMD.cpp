@@ -21,7 +21,7 @@
 #include "lettuce/Thermostat.h"
 #include "lettuce/LennardJones.h"
 #include "lettuce/LennardJonesOriented.h"
-#include "lettuce/TabularPotential.h"
+// #include "lettuce/TabularPotential.h"
 #include "lettuce/CircleDistribution.h"
 #include "lettuce/LennarJonesParticles.h"
 
@@ -38,7 +38,7 @@ enum class ThermostatID {
 #endif
 
 #ifndef LETTUCE_POTENTIAL
-#define LETTUCE_POTENTIAL PotentialFactory<ParticleT>
+#define LETTUCE_POTENTIAL LennardJones<ParticleT>
 #endif
 
 #define STRINGIFY(x) #x
