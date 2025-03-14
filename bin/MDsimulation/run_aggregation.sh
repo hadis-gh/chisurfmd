@@ -66,21 +66,28 @@ run_md() {
 }
 
 run_deposition() {
-    local temperature=$1
-    local depositionTime=$2
+    local temperature=$2
+    local depositionTime=$1
 
     printf "\nPart 2: Particle Deposition starting from RELAXED state: \n"
     printf "\nTemperature: %s\n" "$temperature"
     printf "Deposition Time Interval: %s\n" "$depositionTime"
     echo "------------------------------------------------------------"
 
-    "$DEPOSIT_MD_EXE" "${args[@]}" \
+    OUTFILE="${outputDir}/aggregated_${temperature}_${depositionTime}.bp"
+    if [ -d "$OUTFILE" ]; then
+        #printf "Output file already exists: %s\n" "$OUTFILE"
+        return
+    fi
+
+    "$DEPOSIT_MD_EXE" \
+    "${args[@]}" \
         --particlesInit "${outputDir}/equilibrated_${temperature}.bp" \
         --particlesNumMax 100 \
         --areaL 50 \
         --temperature "$temperature" \
         --time "$depositionTime" --dt "$dt" \
-        --saveFile "${outputDir}/aggregated_${temperature}_${depositionTime}.bp" || {
+        --saveFile "$OUTFILE" || {
         printf "Error: Particle Deposition simulation failed.\n"
         exit 1
     }
@@ -90,16 +97,23 @@ run_deposition() {
 }
 
 # Main Loop
-temp_ranges=(0.25 0.3 0.35 0.4 0.5)
-deposit_rates=(1 4 8)
+temp_ranges=(0.35 0.25 0.15 0.05)
+deposit_rates=(0.1 0.5 1 2 4 8 16)
 equilibrationTime=1000
 
+export -f run_deposition
+export args DEPOSIT_MD_EXE outputDir dt depositionTime temperature
+
+parallel -j 16 run_deposition ::: "${deposit_rates[@]}" ::: "${temp_ranges[@]}"
+
+if false; then
 for T in "${temp_ranges[@]}"; do
     for rate in "${deposit_rates[@]}"; do
-        run_md "$T" "$equilibrationTime"
+        # run_md "$T" "$equilibrationTime"
         run_deposition "$T" "$rate"
     done
 done
+fi
 
 # Record time
 end_time=$(date +%s)

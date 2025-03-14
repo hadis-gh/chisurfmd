@@ -6,5 +6,7 @@ build
 buildParticleDot
 buildParticleOriented
 *.mp4
+*.pdf
+*.png
 recourses
 jbMDdocs
