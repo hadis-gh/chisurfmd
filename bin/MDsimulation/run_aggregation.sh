@@ -51,12 +51,18 @@ run_md() {
     printf "\nTemperature: %s\n" "$temperature"
     echo "------------------------------------------------------------"
 
+    OUTFILE="${outputDir}/equilibrated_${temperature}.bp"
+    if [ -d "$OUTFILE" ]; then
+        #printf "Output file already exists: %s\n" "$OUTFILE"
+        return
+    fi
+
     "$MD_EXE" "${args[@]}" \
         --particlesInit "initCluster/run_0.bp" \
         --temperature "$temperature" \
         --areaL 50 \
         --time "$equilibrationTime" --dt "$dt" \
-        --saveFile "${outputDir}/equilibrated_${temperature}.bp" || {
+        --saveFile "$OUTFILE" || {
         printf "Error: Thermal Equilibration simulation failed.\n"
         exit 1
     }
@@ -97,23 +103,31 @@ run_deposition() {
 }
 
 # Main Loop
-temp_ranges=(0.35 0.25 0.15 0.05)
-deposit_rates=(0.1 0.5 1 2 4 8 16)
+# temp_ranges=(0.35 0.25 0.15 0.05)
+# deposit_rates=(0.1 0.5 1 2 4 8 16)
+temp_ranges=(0.5 0.35 0.25)
+deposit_rates=(0.5 16 0.5)
+
 equilibrationTime=1000
 
-export -f run_deposition
-export args DEPOSIT_MD_EXE outputDir dt depositionTime temperature
+# export -f run_deposition
+# export args DEPOSIT_MD_EXE outputDir dt depositionTime temperature
 
-parallel -j 16 run_deposition ::: "${deposit_rates[@]}" ::: "${temp_ranges[@]}"
+export -f run_md
+export args MD_EXE outputDir dt temperature equilibrationTime
 
-if false; then
+# parallel -j 16 run_deposition ::: "${deposit_rates[@]}" ::: "${temp_ranges[@]}"
+parallel -j 16 run_md ::: "${temp_ranges[@]}" ::: "${equilibrationTime}"
+
+
+# if false; then
 for T in "${temp_ranges[@]}"; do
-    for rate in "${deposit_rates[@]}"; do
-        # run_md "$T" "$equilibrationTime"
-        run_deposition "$T" "$rate"
-    done
+    # for rate in "${deposit_rates[@]}"; do
+        run_md "$T" "$equilibrationTime"
+        # run_deposition "$T" "$rate"
+    # done
 done
-fi
+# fi
 
 # Record time
 end_time=$(date +%s)
