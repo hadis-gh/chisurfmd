@@ -1,11 +1,17 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import data_extraction
 
 #  in the notebook you can try:
 # %load_ext autoreload
 # %autoreload 2
 
-def plot_temperature(m_temperatures, temperature_label=False):
+#------------------------------   SINGLE MD   ------------------------------
+
+############## plot system properties, Energy, Temperature, Neighbors, Order, COM vel ##############
+
+def plot_temperature(m_temperatures, 
+                     temperature_label=False):
     temperature_data = m_temperatures['data']
     temp_labels = m_temperatures['temperature label']
     fig, ax = plt.subplots(figsize=(7, 4))
@@ -37,7 +43,8 @@ def plot_temperature(m_temperatures, temperature_label=False):
     plt.tight_layout()
     plt.show()
 
-def plot_neighbors(neighbors_array, m_temperatures, temperature_show=False, temperature_label=False):
+def plot_neighbors(neighbors_array, m_temperatures, 
+                   temperature_show=False, temperature_label=False):
     neighbors_data = neighbors_array['data']
     temp_labels = neighbors_array['temperature label']
     fig, ax = plt.subplots(figsize=(7, 4))
@@ -71,7 +78,8 @@ def plot_neighbors(neighbors_array, m_temperatures, temperature_show=False, temp
     if temperature_show:
         plot_temperature(m_temperatures)
 
-def plot_energies(kinetic_energy, potential_energy, m_temperatures, show_potential=True, temperature_show=False, temperature_label=False):
+def plot_energies(kinetic_energy, potential_energy, m_temperatures, 
+                  show_potential=True, temperature_show=False, temperature_label=False):
     kinetic_energy_data = kinetic_energy['data']
     temp_labels = kinetic_energy['temperature label']
     potential_energy_data = potential_energy['data']
@@ -111,7 +119,8 @@ def plot_energies(kinetic_energy, potential_energy, m_temperatures, show_potenti
     if temperature_show:
         plot_temperature(m_temperatures)
 
-def plot_com_velocity(com_velocity, m_temperatures, temperature_show=False, temperature_label=False):
+def plot_com_velocity(com_velocity, m_temperatures, 
+                      temperature_show=False, temperature_label=False):
     com_vel_data = com_velocity['data']
     temp_labels = com_velocity['temperature label']
     fig, ax = plt.subplots(figsize=(7, 4))
@@ -145,7 +154,8 @@ def plot_com_velocity(com_velocity, m_temperatures, temperature_show=False, temp
     if temperature_show:
         plot_temperature(m_temperatures)
 
-def plot_com_ang_velocity(com_ang_velocity, m_temperatures, temperature_show=False, temperature_label=False):
+def plot_com_ang_velocity(com_ang_velocity, m_temperatures, 
+                          temperature_show=False, temperature_label=False):
     data = com_ang_velocity['data']
     temp_labels = com_ang_velocity['temperature label']
 
@@ -174,7 +184,8 @@ def plot_com_ang_velocity(com_ang_velocity, m_temperatures, temperature_show=Fal
     if temperature_show:
         plot_temperature(m_temperatures)
         
-def plot_order_parameter(order, m_temperatures, type, temperature_show=False, temperature_label=False):
+def plot_order_parameter(order, m_temperatures, 
+                         temperature_show=False, temperature_label=False):
     order_data = order['data']
     temp_labels = order['temperature label']
     fig, ax = plt.subplots(figsize=(6, 3.8))  
@@ -193,7 +204,7 @@ def plot_order_parameter(order, m_temperatures, type, temperature_show=False, te
         ax.set_xlabel("Steps")
 
     ax.set_ylabel("Order Parameter")
-    ax.set_title(f"{type} Order Parameter")
+    ax.set_title(f"Orientational Order Parameter")
         
     plt.tight_layout()
     plt.show()
@@ -203,19 +214,22 @@ def plot_order_parameter(order, m_temperatures, type, temperature_show=False, te
 
 ############## snapshot of system over steps/ single file --one MD simulation or one aggregation ##############
 
-def plot_snapshot_configuration(positions, shot=-1, radius=0.4, color_phi=False, diameter=20, x_limit=(0, 50),y_limit=(0, 50), save_fig=False):
+def plot_configuration(positions, step_target=-1, radius=0.4, color_phi=False, diameter=20, 
+                       x_limit=(0, 50),y_limit=(0, 50), aggregation=False, 
+                       save_fig=False, save_name='output.pdf', 
+                       set_title=None):
 
     x0, x1 = x_limit
     y0, y1 = y_limit
         
     positions_data = positions['data']
-    availble_shot = positions_data.shape[0]
-    print('available steps: ', availble_shot, '\tchoosed step: ', shot)
+    availble_steps = positions_data.shape[0]
+    print('available steps: ', availble_steps, '\tchoosed step: ', step_target)
 
-    x = positions_data[shot, :, 0]
-    y = positions_data[shot, :, 1]
+    x = positions_data[step_target, :, 0]
+    y = positions_data[step_target, :, 1]
     if positions_data.shape[2] == 3:
-        phi = positions_data[shot, :, 2]
+        phi = positions_data[step_target, :, 2]
 
     T = positions["temperature label"][0][0]
     
@@ -233,28 +247,49 @@ def plot_snapshot_configuration(positions, shot=-1, radius=0.4, color_phi=False,
             cbar = fig.colorbar(scatter, ax=ax, label='Phi (radians)', orientation='vertical', shrink=0.8, pad=0.02)
             cbar.set_alpha(1)
         else:
-            
-            scatter = ax.scatter(
-                x, y, 
-                s=diameter,
-                edgecolors='black',
-                facecolors='none',
-                alpha=0.8
-            )
-            x_end = x + radius * np.cos(phi)
-            y_end = y + radius * np.sin(phi)
-            
+            if aggregation:
+                colors = np.arange(len(x))
+                colors[:20] = 0
+                
+                scatter = ax.scatter(
+                    x, y, 
+                    s=diameter,
+                    edgecolors='black',
+                    facecolors='none',
+                    alpha=0.8,
+                    cmap='plasma',
+                    c=colors
+                )
+                x_end = x + radius * np.cos(phi)
+                y_end = y + radius * np.sin(phi)
+                cbar = fig.colorbar(scatter, ax=ax, label='deposited particles order', orientation='vertical', shrink=0.8, pad=0.02)
+                
+            else:
+                scatter = ax.scatter(
+                    x, y, 
+                    s=diameter,
+                    edgecolors='black',
+                    facecolors='none',
+                    alpha=0.8
+                )
+                x_end = x + radius * np.cos(phi)
+                y_end = y + radius * np.sin(phi)
+                
             for i in range(positions_data.shape[1]):
                 ax.plot([x[i], x_end[i]], [y[i], y_end[i]], color='black', linewidth=0.8, alpha=0.8)
 
     ax.set_xlabel('X Position')
     ax.set_ylabel('Y Position')
-    if shot == -1:
-        ax.set_title(f"Particle's configuration - Last step")
-    elif shot == 0:
-        ax.set_title(f"Particle's configuration - First step")
+    
+    if set_title:
+        ax.set_title(set_title)
     else:
-        ax.set_title(f"Particle's configuration - {shot/availble_shot * 100:.0f}%")
+        if step_target == -1:
+            ax.set_title(f"Particle's configuration - Last step")
+        elif step_target == 0:
+            ax.set_title(f"Particle's configuration - First step")
+        else:
+            ax.set_title(f"Particle's configuration - {step_target/availble_steps * 100:.0f}%")
 
     ax.set_xlim(x0, x1)
     ax.set_ylim(y0, y1)
@@ -265,7 +300,7 @@ def plot_snapshot_configuration(positions, shot=-1, radius=0.4, color_phi=False,
 
     plt.tight_layout()
     if save_fig:
-        plt.savefig(f'config_{shot}.pdf')
+        plt.savefig(save_name)
     plt.show()
     
 ############## animation of system configuration evolution over time steps for single simple file ##############
@@ -336,11 +371,134 @@ def animate_position_simple(positions, output_name, line_length=0.4, area=50, co
 
         out.write(frame)
 
-        if step % (100 * frame_skip) == 0:
-            print(f"Processing frame {step}/{num_steps}")
+        if step % (50 * frame_skip) == 0:
+            print(f"Processing frame{step}/{num_steps}      ", end='\r')
 
     out.release()
+    print("Processing complete.            ", end='\r')
     print("Video saved as", output_name)
 
 ############## Depiction and alalysis of phi and delta phi of particles ##############
 
+def plot_trajectory_steps(positions, step_target, step_window=10000, area=50):
+    positions_data = positions['data']
+    print('available steps: ', positions_data.shape[0])
+    
+    step_max = step_target + step_window
+
+    fig, ax = plt.subplots(1, 2, figsize=(8, 4), dpi=150)
+
+    num_particles = positions_data.shape[1]
+
+    for i in range(num_particles):
+        ax[0].scatter(
+            positions_data[step_target:step_max, i, 0], 
+            positions_data[step_target:step_max, i, 1], 
+            c=np.linspace(0, 1, step_max - step_target),
+            cmap="plasma",
+            s=0.02, alpha=0.6
+        )
+
+    ax[0].set_title(f"Trajectories, for step: {step_target} to {step_max}")
+    ax[0].set_xlabel("X Position")
+    ax[0].set_ylabel("Y Position")
+
+    # Plot initial vs final positions
+    ax[1].scatter(
+        positions_data[step_target, :, 0], positions_data[step_target, :, 1], 
+        marker='o', s=10, color='#00aabb', label='Initial Position', alpha=0.8
+    )
+    ax[1].scatter(
+        positions_data[step_max - 1, :, 0], positions_data[step_max - 1, :, 1], 
+        marker='x', s=10, color='#ff7777', label='Final Position', alpha=0.8
+    )
+    print("available steps: ", positions_data.shape[0])
+    ax[1].set_title("Initial vs. Final Positions")
+    ax[1].set_xlabel("X Position")
+    ax[1].set_ylabel("Y Position")
+    ax[1].legend()
+
+    for ax_i in ax:
+        ax_i.set_xlim(0,area)
+        ax_i.set_ylim(0,area)
+        ax_i.set_aspect('equal')
+        ax_i.grid(linestyle='--', alpha=0.5)
+
+    plt.tight_layout()
+    plt.show()
+
+def plot_hist_phi_steps(positions, step_target, step_window=1000, bins_num=100):
+    positions_data = positions['data']
+    
+    step_max = step_target + step_window
+    print(f"available steps: {positions_data.shape[0]}, chosen step: {step_target} - {step_max}")
+    
+    fig, ax = plt.subplots(subplot_kw={'projection': 'polar'},figsize=(6, 4))
+
+    ax.hist(positions_data[step_target:step_max,:,2].flatten(), bins=bins_num, color='#954965', alpha=0.7)
+    ax.set_title(f'Histogram of particles $\phi$')
+    ax.set_xlabel('Orientation Angle $\phi$')
+    # ax.set_ylabel('Frequency')
+    ax.set_axisbelow(True)
+    ax.grid(color='gray', linestyle='dashed', alpha=0.5)
+    
+    plt.tight_layout()
+    plt.show()
+
+def plot_deltaphi_hist_steps(positions, step_target, min_dis=20, step_window=1000, bins_num= 100):
+    
+    step_max = step_target + step_window
+    print(f"available steps: {positions['data'].shape[0]}, chosen step: {step_target} - {step_max}")
+    
+    total_delta_phi=[]
+    
+    for a in range(step_window):
+        data = positions['data'][step_target+a]
+        for i in range(data.shape[0]):
+            for j in range(i+1, data.shape[0]):
+                r = np.sqrt((data[i, 0] - data[j, 0])**2 + (data[i, 1] - data[j, 1])**2)
+                if r < min_dis:
+                    delta_phi = data[i, 2] - data[j, 2]
+                    delta_phi = (delta_phi + np.pi) % (2 * np.pi) - np.pi
+                    total_delta_phi.append(delta_phi)
+
+    fig, ax = plt.subplots(subplot_kw={'projection': 'polar'},figsize=(6, 4))
+    
+    bins = np.linspace(-np.pi, np.pi, bins_num + 1)
+    hist, bin_edges = np.histogram(total_delta_phi, bins=bins)
+
+    ax.bar(bin_edges[:-1], hist, width=np.diff(bin_edges), color='#55b3d1', align='edge', alpha=0.7)
+
+    ax.set_title(f'Histogram of $\Delta \phi$')
+    ax.set_xlabel('Orientation Angle $\phi$')
+    
+    ax.set_axisbelow(True)
+    ax.grid(color='gray', linestyle='dashed', alpha=0.5)
+    
+    ax.set_theta_zero_location("E")
+
+    plt.show()
+
+#------------------------------   AGGREGATION   ------------------------------
+
+############## snapshot of system over steps/ aggregation with specific Temperature & Deposition ##############
+
+def plot_configuration_aggregation(output_dir, temperature, deposition_rate, step_target=-1, 
+                                   radius=0.4, diameter=20, x_limit=(0, 50), y_limit=(0, 50), 
+                                   aggregation=True, save_fig=False):
+    
+    target_file = data_extraction.file_selection(output_dir, temperature, deposition_rate)
+    positions = data_extraction.read_variable_file(target_file, 'positions')
+    
+    plot_configuration(positions=positions, step_target=step_target, radius=radius, color_phi=False, diameter=diameter, 
+                        x_limit=x_limit, y_limit=y_limit, aggregation=aggregation, 
+                        save_fig=save_fig, save_name=f"config_T{temperature}_t{deposition_rate}.pdf",
+                        set_title=f'Temperature={temperature}, Deposition Interval={deposition_rate}')
+
+def animate_position_aggregation(output_dir, temperature, deposition_rate, line_length=0.4, area=50, color_p=False, frame_skip=1, frame_size=800, fps=20):
+    target_file = data_extraction.file_selection(output_dir, temperature, deposition_rate)
+    positions = data_extraction.read_variable_file(target_file, 'positions')
+    
+    animate_position_simple(positions=positions, output_name=f"animation_T{temperature}_t{deposition_rate}.mp4",
+                            line_length=line_length, area=area, color_p=color_p, frame_skip=frame_skip, frame_size=frame_size, fps=fps)
+    

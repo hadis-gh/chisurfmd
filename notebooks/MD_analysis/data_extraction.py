@@ -1,9 +1,10 @@
 import os
+import re
 import numpy as np
 from adios2 import Stream
 from adios2 import FileReader
 
-
+#------------------------------   SINGLE MD   ------------------------------
 
 ################# print information of output file and directory #################
 
@@ -91,7 +92,7 @@ def read_variable_directory(output_dir, variable_name):
             else:
                 raise ValueError(f"Variable {variable_name} not found in {file_path}")
     
-    print(f'read {variable_name} successfully!')        
+    print(f'read {variable_name} successfully!', end='\r')        
     return {'data':np.array(variable_data), 'temperature label':np.array(temperatures)}
 
 def read_variable_file(file_name, variable_name):
@@ -118,7 +119,7 @@ def read_variable_file(file_name, variable_name):
         else:
             raise ValueError(f"Variable {variable_name} not found in {file_name}")
     
-    print(f'read {variable_name} successfully!')        
+    print(f'read {variable_name} successfully!', end='\r')        
     return {'data':np.array(variable_data), 'temperature label':np.array(temperatures)}
 
 def read_variable(name, variable_name):
@@ -137,7 +138,7 @@ def read_attributes_file(file_name, attribute_name):
         else:
             raise ValueError(f"Variable {attribute_name} not found in {file_name}")
     
-    print(f'{attribute_name} is {attribute_data}!')        
+    # print(f'{attribute_name} is {attribute_data}!')        
     return attribute_data
 
 def read_attributes_directory(output_dir, attribute_name, index=0):
@@ -152,3 +153,36 @@ def read_attributes(name, attribute_name):
     elif os.path.isdir(name):
         return read_attributes_directory(name, attribute_name)
     
+#------------------------------   AGGREGATION   ------------------------------
+
+################# MD aggregation directory,find file #################
+
+def file_selection(output_dir, temperature, deposition_interval):
+    return os.path.join(output_dir, f'aggregated_{temperature}_{deposition_interval}.bp')
+
+def extract_ranges(output_dir):
+    """Extracts temperature and deposition intervals values from filenames in the given directory."""
+    
+    pattern = re.compile(r"aggregated_(\d+\.\d+)_(\d+\.\d+)\.bp")
+    temperatures = []
+    deposition_rates = []
+    
+    for file in os.listdir(output_dir):
+        match = pattern.match(file)
+        if match:
+            temperatures.append(float(match.group(1)))
+            deposition_rates.append(float(match.group(2)))
+    
+    if not temperatures or not deposition_rates:
+        print("No matching files found.")
+        return {'temperatures': [], 'deposition_rates': []}
+
+    temperatures = sorted(set(temperatures))
+    deposition_rates = sorted(set(deposition_rates))
+
+    print(f'Temperature range: \t{temperatures[0]} .. {temperatures[-1]}')
+    print(f'Deposition Rate range: \t{deposition_rates[0]} .. {deposition_rates[-1]}')
+
+    return {'temperatures': temperatures, 'deposition_rates': deposition_rates}
+
+
