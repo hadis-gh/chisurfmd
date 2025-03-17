@@ -8,5 +8,6 @@ buildParticleOriented
 *.mp4
 *.pdf
 *.png
+*.pyc
 recourses
 jbMDdocs
