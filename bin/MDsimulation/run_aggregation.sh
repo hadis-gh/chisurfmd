@@ -105,29 +105,29 @@ run_deposition() {
 # Main Loop
 # temp_ranges=(0.35 0.25 0.15 0.05)
 # deposit_rates=(0.1 0.5 1 2 4 8 16)
-temp_ranges=(0.5 0.35 0.25)
-deposit_rates=(0.5 16 0.5)
+temp_ranges=($(seq 0.05 0.01 0.35))
+deposit_rates=($(seq 0.5 0.5 16))
 
 equilibrationTime=1000
 
-# export -f run_deposition
-# export args DEPOSIT_MD_EXE outputDir dt depositionTime temperature
+export -f run_deposition
+export args DEPOSIT_MD_EXE outputDir dt depositionTime temperature
 
-export -f run_md
-export args MD_EXE outputDir dt temperature equilibrationTime
+# export -f run_md
+# export args MD_EXE outputDir dt temperature equilibrationTime
 
-# parallel -j 16 run_deposition ::: "${deposit_rates[@]}" ::: "${temp_ranges[@]}"
-parallel -j 16 run_md ::: "${temp_ranges[@]}" ::: "${equilibrationTime}"
+parallel -j 16 run_deposition ::: "${deposit_rates[@]}" ::: "${temp_ranges[@]}"
+# parallel -j 16 run_md ::: "${temp_ranges[@]}" ::: "${equilibrationTime}"
 
 
-# if false; then
-for T in "${temp_ranges[@]}"; do
-    # for rate in "${deposit_rates[@]}"; do
-        run_md "$T" "$equilibrationTime"
-        # run_deposition "$T" "$rate"
-    # done
-done
-# fi
+if false; then
+# for T in "${temp_ranges[@]}"; do
+    for rate in "${deposit_rates[@]}"; do
+        # run_md "$T" "$equilibrationTime"
+        run_deposition "$T" "$rate"
+    done
+# done
+fi
 
 # Record time
 end_time=$(date +%s)
