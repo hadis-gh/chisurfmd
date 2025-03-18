@@ -187,4 +187,46 @@ def extract_ranges(output_dir):
 
     return {'temperatures': temperatures, 'deposition_rates': deposition_rates}
 
+def extract_order_parameter_matrix(output_dir, temperatures, deposition_rates):
+    
+    temperature_numbers = len(temperatures)
+    deposition_rates_numbers = len(deposition_rates)
+    order_matrix = np.zeros((temperature_numbers, deposition_rates_numbers))
+
+    for i, temperature in enumerate(temperatures):
+        for j, deposition_rate in enumerate(deposition_rates):
+            formatted_temp = f"{temperature:.2f}"
+            formatted_dep_rate = f"{deposition_rate:.1f}"
+
+            file_path = os.path.join(output_dir, f'aggregated_{formatted_temp}_{formatted_dep_rate}.bp')
+
+            order_value = read_variable(file_path, 'orientational order')['data']
+
+            order_matrix[i, j] = order_value[-1]
+
+            print(f"File {i+1}/{temperature_numbers}, {j+1}/{deposition_rates_numbers} stored!                 ", end='\r')
+
+    return order_matrix
+
+def extract_neighbors_number_matrix(output_dir, temperatures, deposition_rates):
+    
+    temperature_numbers = len(temperatures)
+    deposition_rates_numbers = len(deposition_rates)
+    neighbors_matrix = np.zeros((temperature_numbers, deposition_rates_numbers))
+
+    for i, temperature in enumerate(temperatures):
+        for j, deposition_rate in enumerate(deposition_rates):
+            formatted_temp = f"{temperature:.2f}"
+            formatted_dep_rate = f"{deposition_rate:.1f}"
+
+            file_path = os.path.join(output_dir, f'aggregated_{formatted_temp}_{formatted_dep_rate}.bp')
+
+            neighbors = read_variable(file_path, 'number of neighbors')['data']
+
+            neighbors_matrix[i, j] = neighbors[-1, :,-1]
+
+            print(f"File {i+1}/{temperature_numbers}, {j+1}/{deposition_rates_numbers} stored!                 ", end='\r')
+
+    return neighbors_matrix
+
 

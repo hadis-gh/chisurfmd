@@ -501,4 +501,18 @@ def animate_position_aggregation(output_dir, temperature, deposition_rate, line_
     
     animate_position_simple(positions=positions, output_name=f"animation_T{temperature}_t{deposition_rate}.mp4",
                             line_length=line_length, area=area, color_p=color_p, frame_skip=frame_skip, frame_size=frame_size, fps=fps)
+
+############## Plot Heatmaps of parameters for output directory of aggregation with various T and dt ##############
+
+def plot_parameter_heatmap(parameter_matrix, parameter_name, temperatures, deposition_rates, cmap='RdYlBu'):
+    fig, ax = plt.subplots(figsize=(8, 6))
     
+    c = ax.contourf(deposition_rates, temperatures, parameter_matrix, levels=100, cmap=cmap)
+
+    fig.colorbar(c, ax=ax, label=parameter_name)
+    ax.set_title(f'{parameter_name} Heatmap')
+    ax.set_xlabel('Deposition Rate')
+    ax.set_ylabel('Temperature')
+
+    plt.show()
+
