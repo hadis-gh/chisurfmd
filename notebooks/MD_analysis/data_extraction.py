@@ -59,7 +59,7 @@ def print_output_info(name):
 
 ################# read variables from output file and directory #################
 
-def read_variable_directory(output_dir, variable_name):
+def read_variable_directory(output_dir, variable_name, print_message=True):
     pattern = re.compile("run_([0-9]+).bp")
     run_numbers = [int(pattern.match(x)[1]) for x in os.listdir(output_dir) if pattern.match(x)]
     
@@ -91,11 +91,11 @@ def read_variable_directory(output_dir, variable_name):
                 
             else:
                 raise ValueError(f"Variable {variable_name} not found in {file_path}")
-    
-    print(f'read {variable_name} successfully!', end='\r')        
+    if print_message:
+        print(f'read {variable_name} successfully!', end='\r')        
     return {'data':np.array(variable_data), 'temperature label':np.array(temperatures)}
 
-def read_variable_file(file_name, variable_name):
+def read_variable_file(file_name, variable_name, print_message=True):
     variable_data = []
     temperatures = []
     
@@ -118,15 +118,15 @@ def read_variable_file(file_name, variable_name):
             
         else:
             raise ValueError(f"Variable {variable_name} not found in {file_name}")
-    
-    print(f'read {variable_name} successfully!', end='\r')        
+    if print_message:
+        print(f'read {variable_name} successfully!', end='\r')        
     return {'data':np.array(variable_data), 'temperature label':np.array(temperatures)}
 
-def read_variable(name, variable_name):
+def read_variable(name, variable_name, print_message=True):
     if name.endswith(".bp"):
-        return read_variable_file(name, variable_name)
+        return read_variable_file(name, variable_name, print_message)
     elif os.path.isdir(name):
-        return read_variable_directory(name, variable_name)
+        return read_variable_directory(name, variable_name, print_message)
 
 ################# read attributes from output file and directory #################
 
@@ -158,7 +158,9 @@ def read_attributes(name, attribute_name):
 ################# MD aggregation directory,find file #################
 
 def file_selection(output_dir, temperature, deposition_interval):
-    return os.path.join(output_dir, f'aggregated_{temperature}_{deposition_interval}.bp')
+    formatted_temp = f"{temperature:.2f}"
+    formatted_dep_rate = f"{deposition_interval:.1f}"
+    return os.path.join(output_dir, f'aggregated_{formatted_temp}_{formatted_dep_rate}.bp')
 
 def extract_ranges(output_dir):
     """Extracts temperature and deposition intervals values from filenames in the given directory."""
