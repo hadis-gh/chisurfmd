@@ -511,7 +511,7 @@ def plot_parameter_heatmap(parameter_matrix, parameter_name, temperatures, depos
 
     fig.colorbar(c, ax=ax, label=parameter_name)
     ax.set_title(f'{parameter_name} Heatmap')
-    ax.set_xlabel('Deposition Rate')
+    ax.set_xlabel('Deposition Intervals')
     ax.set_ylabel('Temperature')
 
     plt.show()

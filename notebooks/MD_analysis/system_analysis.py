@@ -2,6 +2,7 @@ import numpy as np
 import os
 import re
 import data_extraction
+from scipy.spatial import ConvexHull
 
 #------------------------------   AGGREGATION   ------------------------------
 
@@ -33,7 +34,8 @@ def calculate_perimeter_area(positions_data):
     perimeter_area = []
 
     for step in range(positions_xy.shape[0]):
-        PA = 1
+        hull = ConvexHull(positions_xy[step])
+        PA = hull.p
         perimeter_area.append(PA)
 
     return np.array(perimeter_area)
