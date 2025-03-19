@@ -3,6 +3,10 @@ import os
 import re
 import data_extraction
 
+#------------------------------   AGGREGATION   ------------------------------
+
+################# Calculate Parameters for Cluster Analysis in Aggregation #################
+
 def calculate_gyration_radius(positions_data):
     positions_xy = positions_data[:, :, :2]  # Ignore phi
     COM = np.mean(positions_xy, axis=1)
@@ -14,27 +18,50 @@ def calculate_gyration_radius(positions_data):
         
     return np.array(Rg)
 
-def compute_radius_matrix(output_dir, temperatures, deposition_rates):
+def calculate_fractal_dimension(positions_data):
+    positions_xy = positions_data[:, :, :2]
+    fractal_dimensions = []
+
+    for step in range(positions_xy.shape[0]):
+        Df = 1
+        fractal_dimensions.append(Df)
+
+    return np.array(fractal_dimensions)
+
+def calculate_perimeter_area(positions_data):
+    positions_xy = positions_data[:, :, :2]
+    perimeter_area = []
+
+    for step in range(positions_xy.shape[0]):
+        PA = 1
+        perimeter_area.append(PA)
+
+    return np.array(perimeter_area)
+
+def compute_parameter_matrix(output_dir, temperatures, deposition_rates, parameter_name):
     temperature_numbers = len(temperatures)
     deposition_rates_numbers = len(deposition_rates)
     
-    radius_matrix = np.zeros((temperature_numbers, deposition_rates_numbers))
+    parameter_matrix = np.zeros((temperature_numbers, deposition_rates_numbers))
 
     for i, temperature in enumerate(temperatures):
         for j, deposition_rate in enumerate(deposition_rates):
-            
-            formatted_temp = f"{temperature:.2f}"
-            formatted_dep_rate = f"{deposition_rate:.1f}"
                         
-            file_path = os.path.join(output_dir, f'aggregated_{formatted_temp}_{formatted_dep_rate}.bp')
+            file_path = data_extraction.file_selection(output_dir, temperature, deposition_rate)
             
             positions_data = data_extraction.read_variable(file_path, 'positions', print_message=False)['data']
-            radius_data = calculate_gyration_radius(positions_data)
-            # radius_value = np.mean(radius_data)
-            radius_value = radius_data[-1]
+            
+            if parameter_name == 'gyration radius':
+                parameter_data = calculate_gyration_radius(positions_data)
+            elif parameter_name == 'fractal dimention':
+                parameter_data = calculate_fractal_dimension(positions_data)
+            elif parameter_name == 'perimeter/area':
+                parameter_data = calculate_perimeter_area(positions_data)
+            parameter_value = parameter_data[-1]
 
-            radius_matrix[i, j] = radius_value
+            parameter_matrix[i, j] = parameter_value
+            
             print(f"File {i+1}/{temperature_numbers}, {j+1}/{deposition_rates_numbers} stored!                 ", end='\r')
 
-    return radius_matrix
+    return parameter_matrix
 
