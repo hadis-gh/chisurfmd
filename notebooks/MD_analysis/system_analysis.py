@@ -29,14 +29,18 @@ def calculate_fractal_dimension(positions_data):
 
     return np.array(fractal_dimensions)
 
-def calculate_perimeter_area(positions_data):
+def calculate_convexHull_area(positions_data):
     positions_xy = positions_data[:, :, :2]
     perimeter_area = []
 
     for step in range(positions_xy.shape[0]):
-        hull = ConvexHull(positions_xy[step])
-        PA = hull.p
-        perimeter_area.append(PA)
+        valid_particles = ~np.isnan(positions_xy[step]).any(axis=1)  # Ignore NaN values
+        valid_positions = positions_xy[step][valid_particles]
+
+        hull = ConvexHull(valid_positions)
+
+        PA_ratio = hull.area 
+        perimeter_area.append(PA_ratio)
 
     return np.array(perimeter_area)
 
@@ -57,8 +61,8 @@ def compute_parameter_matrix(output_dir, temperatures, deposition_rates, paramet
                 parameter_data = calculate_gyration_radius(positions_data)
             elif parameter_name == 'fractal dimention':
                 parameter_data = calculate_fractal_dimension(positions_data)
-            elif parameter_name == 'perimeter/area':
-                parameter_data = calculate_perimeter_area(positions_data)
+            elif parameter_name == 'convexHull':
+                parameter_data = calculate_convexHull_area(positions_data)
             parameter_value = parameter_data[-1]
 
             parameter_matrix[i, j] = parameter_value
