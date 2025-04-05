@@ -137,7 +137,7 @@ Vec<T, 3> calForceTwo(const ParticleOriented<T>& p1, const ParticleOriented<T>& 
     T r = dr.abs();
     if (r == 0) return {{0, 0}};
     
-    Vec<T, 2> f = force(p1, p2);
+    Vec<T, 2> f = force(p1, p2, r);
     Vec<T, 3> force_vec;
 
     force_vec[0] = f[0] * dr[0] / r;
