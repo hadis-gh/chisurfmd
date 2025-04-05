@@ -22,9 +22,11 @@ struct ParticleDot
     using value_type = T;
 
     Vec<value_type> r, v;
+    int h,d;
+    
     unsigned int species;
 
-    ParticleDot() : species(0), r({0, 0}), v({0, 0}) {}
+    ParticleDot() : species(0), r({0, 0}), v({0, 0}), h(1), d(1) {}
 
     ParticleDot(unsigned int speciesIndex) : species(speciesIndex), r({0, 0}), v({0, 0}) {}
 
@@ -183,7 +185,7 @@ Vec<T> calForceTwo(const ParticleDot<T> &p1, const ParticleDot<T> &p2, const T& 
     T r = dr.abs();
     if (r == 0) return {{0, 0}};
     
-    T f = force(r);
+    T f = force(p1, p2);
     return f * dr / r;
 }
 

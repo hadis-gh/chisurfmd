@@ -25,12 +25,12 @@ void writePlotData(const T &startR, const T &endR, const int &numSpace){
     std::vector<double> ljForceValue(numSpace);
     std::vector<double> ljPotentialValue(numSpace);
 
-    LennardJonesForce<double> LJForce(epsilon, sigma, cutoff);
-    LennardJonesPotential<double> LJPotential(epsilon, sigma, cutoff);
+    LennardJonesForce<ParticleDot<double>> LJForce(epsilon, sigma, cutoff);
+    LennardJonesPotential<ParticleDot<double>> LJPotential(epsilon, sigma, cutoff);
 
     for (int i = 0; i < distances.size(); ++i){
-        ljForceValue[i] = LJForce(distances[i]);
-        ljPotentialValue[i] = LJPotential(distances[i]);
+        ljForceValue[i] = LJForce(distances[i], 0);
+        ljPotentialValue[i] = LJPotential(distances[i], 0);
     }
 
     std::ofstream ljForceFile ("plotLJforce.txt");

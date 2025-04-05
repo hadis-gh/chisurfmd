@@ -28,7 +28,7 @@ struct LennardJones<ParticleDot<T>>
 
     static auto force(const po::variables_map &vm) {
         try {
-            return LennardJonesForce<T>(
+            return LennardJonesForce<ParticleDot<T>>(
                 vm["LJepsilon"].as<T>(), 
                 vm["LJsigma"].as<T>(), 
                 vm["LJcutoff"].as<T>()
@@ -41,7 +41,7 @@ struct LennardJones<ParticleDot<T>>
 
     static auto potential(const po::variables_map &vm) {
         try {
-            return LennardJonesPotential<T>(
+            return LennardJonesPotential<ParticleDot<T>>(
                 vm["LJepsilon"].as<T>(), 
                 vm["LJsigma"].as<T>(), 
                 vm["LJcutoff"].as<T>()
@@ -52,7 +52,7 @@ struct LennardJones<ParticleDot<T>>
         }
     }
 
-    using ForceType = LennardJonesForce<T>;
+    using ForceType = LennardJonesForce<ParticleDot<T>>;
 };
 
 template<typename T>
@@ -69,7 +69,7 @@ struct LennardJones<ParticleOriented<T>>
 
     static auto force(const po::variables_map &vm) {
         try {
-            return LennardJonesOrientedForce<T>(
+            return LennardJonesOrientedForce<ParticleOriented<T>>(
                 vm["LJepsilon"].as<T>(), 
                 vm["LJsigma"].as<T>(), 
                 vm["LJcutoff"].as<T>(), 
@@ -88,7 +88,7 @@ struct LennardJones<ParticleOriented<T>>
 
     static auto potential(const po::variables_map &vm) {
         try {
-            return LennardJonesOrientedPotential<T>(
+            return LennardJonesOrientedPotential<ParticleOriented<T>>(
                 vm["LJepsilon"].as<T>(), 
                 vm["LJsigma"].as<T>(), 
                 vm["LJcutoff"].as<T>(), 
@@ -102,5 +102,5 @@ struct LennardJones<ParticleOriented<T>>
         }
     }
 
-    using ForceType = LennardJonesOrientedForce<T>;
+    using ForceType = LennardJonesOrientedForce<ParticleOriented<T>>;
 };

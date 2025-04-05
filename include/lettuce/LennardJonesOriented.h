@@ -4,8 +4,9 @@
 #include <cmath>
 #include "lettuce/Vec.h"
 #include "lettuce/ParticleDot.h"
+#include "lettuce/ParticleOriented.h"
 
-template<typename T>
+template<typename TParticle, typename T = typename TParticle::value_type>
 class LennardJonesOrientedForce {
 public:
     using value_type = T;
@@ -17,9 +18,13 @@ public:
         , m_phiOrder(phiOrder), m_angularScale(angularScale)
         , m_alpha(alpha) {}
 
-    Vec<T, 2> operator()(const T r, const T deltaPhi) const {
-        if (r == 0 || r > m_cutoff) return {{0, 0}};
+    Vec<T, 2> operator()(const TParticle& p1, const TParticle& p2) const {
+        const T r = (p2.r - p1.r).abs();
+        // const T alpha = atan((p2.r[1]-p1.r[1])/p2.r[0]-p1.r[0]);
+        T alpha = 0; 
 
+        if (r == 0 || r > m_cutoff) return {{0, 0}};
+        
         const T min_distance = m_sigma * 0.5;
         const T effective_r = std::max(r, min_distance);
 
@@ -29,6 +34,10 @@ public:
         const T A = m_angularScale / r12;
 
         const T dA_dr = -A * 12 / effective_r;
+
+        const T phi1new = (p1.phi - alpha)*p1.h *p1.d;
+        const T phi2new = (p2.phi - alpha)*p2.h *p2.d;
+        const T deltaPhi = phi2new - phi1new;
         
         const T radialForce 
             = -4.0 * m_epsilon * (-12.0 * (m_sigma12 / r12) / effective_r + 6.0 * (m_sigma6 / r6) / effective_r) 
@@ -50,7 +59,7 @@ private:
     T m_alpha;
 };
 
-template<typename T>
+template<typename TParticle, typename T = typename TParticle::value_type>
 class LennardJonesOrientedPotential {
 public:
     LennardJonesOrientedPotential(T epsilon, T sigma, T cutoff, int phiOrder, T angularScale, T alpha)
@@ -60,7 +69,14 @@ public:
         , m_phiOrder(phiOrder), m_angularScale(angularScale)
         , m_alpha(alpha) {}
 
-    T operator()(const T r, const T deltaPhi) const {
+    T operator()(const TParticle& p1, const TParticle& p2) const {
+        const T r = (p2.r - p1.r).abs();
+        // const T alpha = atan((p2.r[1]-p1.r[1])/p2.r[0]-p1.r[0]);
+        T alpha = 0;
+        
+        const T phi1new = (p1.phi - alpha)*p1.h *p1.d;
+        const T phi2new = (p2.phi - alpha)*p2.h *p2.d;
+
         if (r == 0 || r > m_cutoff) return 0;
 
         const T r6 = r * r * r * r * r * r;
@@ -69,7 +85,7 @@ public:
         const T A = m_angularScale / r12;
 
         return 4.0 * m_epsilon * (m_sigma12 / r12 - m_sigma6 / r6) 
-               + A * (1 + std::cos(m_phiOrder * deltaPhi + m_alpha));
+               + A * (1 + std::cos(m_phiOrder * (phi2new - phi1new) + m_alpha));
     }
 
 private:
