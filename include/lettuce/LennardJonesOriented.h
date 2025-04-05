@@ -18,7 +18,13 @@ public:
         , m_phiOrder(phiOrder), m_angularScale(angularScale)
         , m_alpha(alpha) {}
 
-    Vec<T, 2> operator()(const TParticle& p1, const TParticle& p2, const T r) const {
+    Vec<T, 2> operator()(const TParticle& p1, const TParticle& p2, const Vec<T, 2>& dr, const T r) const {
+        T const faceAng = std::atan2(dr[1], dr[0]);
+        
+        const T phi1new = p1.h * p1.d * (p1.phi - faceAng);
+        const T phi2new = p2.h * p2.d * (p2.phi - faceAng);
+
+        const T deltaPhi = phi2new - phi1new;
 
         if (r == 0 || r > m_cutoff) return {{0, 0}};
         
@@ -31,12 +37,6 @@ public:
         const T A = m_angularScale / r12;
 
         const T dA_dr = -A * 12 / effective_r;
-
-        const T phi1new = p1.h * p1.d * p1.phi;
-        const T phi2new = p2.h * p2.d * p2.phi;
-
-        // const T deltaPhi = phi2new - phi1new;
-        const T deltaPhi = p2.phi - p1.phi;
         
         const T radialForce 
             = -4.0 * m_epsilon * (-12.0 * (m_sigma12 / r12) / effective_r + 6.0 * (m_sigma6 / r6) / effective_r) 
@@ -68,17 +68,13 @@ public:
         , m_phiOrder(phiOrder), m_angularScale(angularScale)
         , m_alpha(alpha) {}
 
-    T operator()(const TParticle& p1, const TParticle& p2, const T r) const {
-        T dx = p2.r[0] - p1.r[0];
-        T dy = p2.r[1] - p1.r[1];
-        T faceAng = std::atan2(dy, dx);
+    T operator()(const TParticle& p1, const TParticle& p2, const Vec<T, 2>& dr, const T r) const {
+        T const faceAng = std::atan2(dr[1], dr[0]);
 
-        const T phi1new = p1.h * p1.d * p1.phi;
-        const T phi2new = p2.h * p2.d * p2.phi;
+        const T phi1new = p1.h * p1.d * (p1.phi - faceAng);
+        const T phi2new = p2.h * p2.d * (p2.phi - faceAng);
 
-        // const T deltaPhi = phi2new - phi1new;
-        const T deltaPhi = p2.phi - p1.phi;
-
+        const T deltaPhi = phi2new - phi1new;
 
         if (r == 0 || r > m_cutoff) return 0;
 

@@ -107,13 +107,7 @@ T calPotentialEnergy(const std::vector<TParticle>& particles, const std::vector<
 
                 const T r = dr.abs();
                 if (r == 0) continue;
-
-                if constexpr (std::is_same_v<TParticle, ParticleOriented<T>>) {
-                    T deltaPhi = p.phi - p1.phi;
-                    pot += potential(p1, p, r);
-                } else {
-                    pot += potential(p1, p, r);
-                }
+                pot += potential(p1, p, dr, r);
             }
         }
         ePot.push_back(pot);

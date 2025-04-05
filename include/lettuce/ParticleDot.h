@@ -185,7 +185,7 @@ Vec<T> calForceTwo(const ParticleDot<T> &p1, const ParticleDot<T> &p2, const T& 
     T r = dr.abs();
     if (r == 0) return {{0, 0}};
     
-    T f = force(p1, p2, r);
+    T f = force(p1, p2, dr, r);
     return f * dr / r;
 }
 
