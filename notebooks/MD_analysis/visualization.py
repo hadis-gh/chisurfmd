@@ -10,8 +10,7 @@ import data_extraction
 
 ############## plot system properties, Energy, Temperature, Neighbors, Order, COM vel ##############
 
-def plot_temperature(m_temperatures, 
-                     temperature_label=False):
+def plot_temperature(m_temperatures, temperature_label=False):
     temperature_data = m_temperatures['data']
     temp_labels = m_temperatures['temperature label']
     fig, ax = plt.subplots(figsize=(7, 4))
@@ -43,8 +42,7 @@ def plot_temperature(m_temperatures,
     plt.tight_layout()
     plt.show()
 
-def plot_neighbors(neighbors_array, m_temperatures, 
-                   temperature_show=False, temperature_label=False):
+def plot_neighbors(neighbors_array, m_temperatures, temperature_show=False, temperature_label=False):
     neighbors_data = neighbors_array['data']
     temp_labels = neighbors_array['temperature label']
     fig, ax = plt.subplots(figsize=(7, 4))
@@ -78,8 +76,7 @@ def plot_neighbors(neighbors_array, m_temperatures,
     if temperature_show:
         plot_temperature(m_temperatures)
 
-def plot_energies(kinetic_energy, potential_energy, m_temperatures, 
-                  show_potential=True, temperature_show=False, temperature_label=False):
+def plot_energies(kinetic_energy, potential_energy, m_temperatures, show_potential=True, temperature_show=False, temperature_label=False):
     kinetic_energy_data = kinetic_energy['data']
     temp_labels = kinetic_energy['temperature label']
     potential_energy_data = potential_energy['data']
@@ -119,8 +116,7 @@ def plot_energies(kinetic_energy, potential_energy, m_temperatures,
     if temperature_show:
         plot_temperature(m_temperatures)
 
-def plot_com_velocity(com_velocity, m_temperatures, 
-                      temperature_show=False, temperature_label=False):
+def plot_com_velocity(com_velocity, m_temperatures, temperature_show=False, temperature_label=False):
     com_vel_data = com_velocity['data']
     temp_labels = com_velocity['temperature label']
     fig, ax = plt.subplots(figsize=(7, 4))
@@ -154,8 +150,7 @@ def plot_com_velocity(com_velocity, m_temperatures,
     if temperature_show:
         plot_temperature(m_temperatures)
 
-def plot_com_ang_velocity(com_ang_velocity, m_temperatures, 
-                          temperature_show=False, temperature_label=False):
+def plot_com_ang_velocity(com_ang_velocity, m_temperatures, temperature_show=False, temperature_label=False):
     data = com_ang_velocity['data']
     temp_labels = com_ang_velocity['temperature label']
 
@@ -184,8 +179,7 @@ def plot_com_ang_velocity(com_ang_velocity, m_temperatures,
     if temperature_show:
         plot_temperature(m_temperatures)
         
-def plot_order_parameter(order, m_temperatures, 
-                         temperature_show=False, temperature_label=False):
+def plot_order_parameter(order, m_temperatures, temperature_show=False, temperature_label=False):
     order_data = order['data']
     temp_labels = order['temperature label']
     fig, ax = plt.subplots(figsize=(6, 3.8))  
