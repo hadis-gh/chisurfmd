@@ -39,7 +39,7 @@ numCoolingRuns=$(echo "($highTemperature - $lowTemperature) / $stepTemperature" 
 numHeatingRuns=$(echo "($highTemperature - $lowTemperature) / $stepTemperature" | bc)
 totalRuns=$((numCoolingRuns + numHeatingRuns))
 
-MD_EXE=${MD_EXE:-../test/testNParticleMD}
+MD_EXE=${MD_EXE:-../build/test/testNParticleMD}
 outputDir=${outputDir:-"./outputs"}
 mkdir -p "$outputDir"
 
