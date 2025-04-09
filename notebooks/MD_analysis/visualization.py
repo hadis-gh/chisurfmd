@@ -473,6 +473,126 @@ def plot_deltaphi_hist_steps(positions, step_target, min_dis=20, step_window=100
 
     plt.show()
 
+#------------------------------   TEMPERATURE LOOP   ------------------------------
+
+############## snapshot of system at specific Temperature ##############
+
+def target_temperature_index (variable_name, target_temperature):
+    data = variable_name['data']
+    temperature_labels = variable_name['temperature label'].flatten()
+    print(f"available temperatures are from {min(temperature_labels)} to {max(temperature_labels)}.")
+          
+    try:
+        index = np.where(temperature_labels == target_temperature)[0][0]
+    except IndexError:
+        print(f"Target temperature {target_temperature} not found in temperature_labels.")
+        return 0
+
+    total_snapshots = data.shape[0]
+    return int(total_snapshots / len(temperature_labels) * index)
+
+def plot_trajectory_temperature(positions, target_temperature, step_window=10000):
+    positions_data = positions['data']
+
+    step_min = target_temperature_index(positions, target_temperature)
+    step_max = step_min + step_window
+
+    fig, ax = plt.subplots(1, 2, figsize=(8, 4), dpi=200)
+
+    num_particles = positions_data.shape[1]
+
+    for i in range(num_particles):
+        ax[0].scatter(
+            positions_data[step_min:step_max, i, 0], 
+            positions_data[step_min:step_max, i, 1], 
+            c=np.linspace(0, 1, step_max - step_min),
+            cmap="plasma",
+            s=0.02, alpha=0.6
+        )
+
+    ax[0].set_title(f"Trajectories at T={target_temperature} for {step_window} steps")
+    ax[0].set_xlabel("X Position")
+    ax[0].set_ylabel("Y Position")
+
+    # Plot initial vs final positions
+    ax[1].scatter(
+        positions_data[step_min, :, 0], positions_data[step_min, :, 1], 
+        marker='o', s=20, color='#00aabb', label='Initial Position'
+    )
+    ax[1].scatter(
+        positions_data[step_max - 1, :, 0], positions_data[step_max - 1, :, 1], 
+        marker='x', s=20, color='#ff7777', label='Final Position'
+    )
+    print("available steps: ", positions_data.shape[0])
+    ax[1].set_title("Initial vs. Final Positions")
+    ax[1].set_xlabel("X Position")
+    ax[1].set_ylabel("Y Position")
+    ax[1].legend()
+
+    for ax_i in ax:
+        ax_i.set_xlim(0,20)
+        ax_i.set_ylim(0,20)
+        ax_i.set_aspect('equal', adjustable='datalim')
+        ax_i.grid(linestyle='--', alpha=0.5)
+
+    plt.tight_layout()
+    plt.show()
+
+def plot_snapshot_temperature(positions, handedness, target_temperature, line_length=0.45, area=20, radius=True, color_palette='hsv', dpi=120):
+    positions_data = positions['data']
+    handedness_data = handedness['data']
+    shot = target_temperature_index(positions, target_temperature)
+
+    fig, ax = plt.subplots(figsize=(6, 4), dpi=dpi)
+    
+    x = positions_data[shot, :, 0]
+    y = positions_data[shot, :, 1]
+    h = handedness_data[shot, :]
+
+    if radius:
+        phi = positions_data[shot, :, 2]
+        x_end = x + line_length * np.cos(phi)
+        y_end = y + line_length * np.sin(phi)
+
+        # Create color array based on handedness
+        colors = ['lightcoral' if val == 1 else 'lightsteelblue' for val in h]
+        
+        ax.scatter(
+            x, y, 
+            s=110,
+            edgecolors='black',
+            facecolor=colors,
+            alpha=0.8
+        )
+
+        for i in range(len(x)):
+            ax.plot([x[i], x_end[i]], [y[i], y_end[i]], color='black', linewidth=0.8, alpha=0.8)
+    else:  
+        scatter = ax.scatter(
+            x, y,
+            c=phi,  # Orientation
+            s=60,
+            alpha=0.8,
+            vmin=-np.pi,
+            vmax=np.pi,
+            cmap=color_palette
+        )
+            
+        cbar = plt.colorbar(scatter, ax=ax)
+        cbar.set_label('φ in radian')
+
+    ax.set_xlabel('X Position')
+    ax.set_ylabel('Y Position')
+    ax.set_title(f'Configuration (T={target_temperature})')
+    
+    ax.set_xlim(0, area)
+    ax.set_ylim(0, area)
+    ax.set_aspect('equal', adjustable='box')
+    ax.grid(linestyle='--', alpha=0.5)
+    ax.set_axisbelow(True)
+    plt.tight_layout()
+    plt.show()
+    
 #------------------------------   AGGREGATION   ------------------------------
 
 ############## snapshot of system over steps/ aggregation with specific Temperature & Deposition ##############
