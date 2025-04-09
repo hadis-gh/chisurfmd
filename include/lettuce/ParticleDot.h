@@ -22,7 +22,7 @@ struct ParticleDot
     using value_type = T;
 
     Vec<value_type> r, v;
-    int h,d;
+    int8_t h,d;
     
     unsigned int species;
 

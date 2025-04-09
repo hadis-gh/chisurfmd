@@ -313,6 +313,9 @@ std::vector<TParticle> initialParticles(const unsigned int& particlesNum,
     // Set species for all particles
     for (auto& p : particles) {
         p.species = speciesNum;
+        
+        std::uniform_int_distribution<int8_t> dis(0, 1);
+        p.h = dis(gen) * 2 - 1;
     }
 
     return particles;

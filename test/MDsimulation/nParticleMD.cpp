@@ -189,6 +189,7 @@ int main(int argc, char* argv[]) {
     constexpr int D = degreesOfFreedom<ParticleT>();
 
     adios2::Variable<Real> varT = io.DefineVariable<Real>("time");
+    adios2::Variable<int8_t> varHandedness = io.DefineVariable<int8_t>("handedness", {particlesNum}, {0}, {particlesNum});
     adios2::Variable<Real> varPositions = io.DefineVariable<Real>("positions", {particlesNum, D}, {0, 0}, {particlesNum, D});
     adios2::Variable<Real> varVelocities = io.DefineVariable<Real>("velocities", {particlesNum, D}, {0, 0}, {particlesNum, D});
     adios2::Variable<Real> varKineticEnergy = io.DefineVariable<Real>("kinetic energy", {1, 3}, {0, 0}, {1, 3});
@@ -230,6 +231,7 @@ int main(int argc, char* argv[]) {
         thermoStep = 2 * nsteps;
     }
 
+    std::vector<int8_t> handednessVec(particlesNum);
     std::vector<Real> positionsVec(particlesNum * D);
     std::vector<Real> velocitiesVec(particlesNum * D);
 
@@ -252,17 +254,23 @@ int main(int argc, char* argv[]) {
             capVelocity(particles, maxVelocity);
         }
         if (step == writeStateStep) {
+            handednessVec.clear();
             positionsVec.clear();
             velocitiesVec.clear();
             for (auto &p : particles) {
+                auto handedness = p.h;
                 auto pos = getGeneralizedPositions(p);
                 auto vel = getGeneralizedVelocities(p);
+
+                handednessVec.push_back(handedness);
+                
                 for (int i = 0; i < D; ++i) {
                     positionsVec.push_back(pos[i]);
                     velocitiesVec.push_back(vel[i]);
                 }
             }
 
+            engine.Put(varHandedness, handednessVec.data());
             engine.Put(varPositions, positionsVec.data());
             engine.Put(varVelocities, velocitiesVec.data());
             writeStateStep = step + writeStateIntervalSteps;
