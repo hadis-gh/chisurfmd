@@ -199,9 +199,7 @@ int main(int argc, char* argv[]) {
     adios2::Variable<Real> varComVelocity = io.DefineVariable<Real>("center of mass velocity", {1, D}, {0, 0}, {1, D});
     adios2::Variable<Real> varComAngVelocity = io.DefineVariable<Real>("center of mass angular velocity");
     adios2::Variable<Real> varRealTemperature = io.DefineVariable<Real>("real temperature", {1, 3}, {0, 0}, {1, 3});
-    adios2::Variable<Real> varOrientationalOrder = io.DefineVariable<Real>("orientational order");
-    adios2::Variable<Real> varOrderParameter = io.DefineVariable<Real>("order parameter");
-    adios2::Variable<Real> varPositionalOrder = io.DefineVariable<Real>("positional order");
+    adios2::Variable<Real> varRotationalOrder = io.DefineVariable<Real>("rotational order");
     
     std::vector<Real> positionsVec(particlesNumMax * D, NAN);
     std::vector<Real> velocitiesVec(particlesNumMax * D, NAN);
@@ -302,7 +300,7 @@ int main(int argc, char* argv[]) {
                 }
     
                 engine.Put(varPositions, positionsVec.data());
-                engine.Put(varVelocities, velocitiesVec.data());
+                // engine.Put(varVelocities, velocitiesVec.data());
                 writeStateStep = step + writeStateIntervalSteps;
             }
             if (step == writeEnergyStep) {
@@ -310,9 +308,7 @@ int main(int argc, char* argv[]) {
                 auto potentialE = calPotentialEnergy(particles, allSpecies, boxPBC, potential);
     
                 auto neighborCount = calAveNeighborList(particles, neighborDistances, areaL);
-                auto orientationalOrder = calOrientationalOrder(particles);
-                auto orderParameter = calOrderParameter(particles, vm);
-                auto positionalOrder = calPositionalOrder(particles, neighborCutoff);
+                auto rotationalOrder = calRotationalOrder(particles);
     
                 auto COMvelocity = calCOMvelocity(particles, allSpecies);
                 auto COMangularVelocity = calAngularMomentum2D(particles, allSpecies, boxPBC);
@@ -321,9 +317,7 @@ int main(int argc, char* argv[]) {
                 engine.Put(varPotentialEnergy, potentialE);
     
                 engine.Put(varNeighborCount, neighborCount.data());
-                engine.Put(varOrientationalOrder, orientationalOrder);
-                engine.Put(varOrderParameter, orderParameter);
-                engine.Put(varPositionalOrder, positionalOrder);
+                engine.Put(varRotationalOrder, rotationalOrder);
     
                 engine.Put(varComVelocity, COMvelocity.data());
                 engine.Put(varComAngVelocity, COMangularVelocity);

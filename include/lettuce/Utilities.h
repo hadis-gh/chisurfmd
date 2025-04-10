@@ -70,13 +70,7 @@ auto calAveNeighborList(const std::vector<TParticle>& particles, const std::vect
 }
 
 template<typename TParticle, typename T = typename TParticle::value_type>
-T calPositionalOrder (const std::vector<TParticle>& particles, const T& neighborCutoff) {
-    //implement later
-    return neighborCutoff;
-}
-
-template<typename TParticle, typename T = typename TParticle::value_type>
-T calOrientationalOrder(const std::vector<TParticle>& particles) {
+T calRotationalOrder(const std::vector<TParticle>& particles) {
     T orientationalOrder;
     size_t count = 0;
 
@@ -100,39 +94,6 @@ T calOrientationalOrder(const std::vector<TParticle>& particles) {
         }
     }
     return orientationalOrder/count;
-}
-
-// ================================== Useless ones (clean later) ==================================
-
-template<typename TParticle, typename T = typename TParticle::value_type>
-T calOrderParameter(const std::vector<TParticle>& particles, const po::variables_map &vm) {
-    T orderParam = 0;
-    size_t count = 0;
-
-    constexpr bool hasOrientation = (degreesOfFreedom<TParticle>() > 2);
-
-    if constexpr (hasOrientation) {
-        auto n = vm["LJPhiOrder"].as<unsigned int>();
-
-        for (size_t i = 0; i < particles.size(); ++i) {
-            for (size_t j = i + 1; j < particles.size(); ++j) {
-                auto pr1 = getGeneralizedPositions(particles[i]);
-                auto pr2 = getGeneralizedPositions(particles[j]);
-
-                T deltaPhi = pr1[2] - pr2[2];
-                orderParam += std::abs(std::fmod(deltaPhi, 2 * M_PI / n));
-                count++;
-            }
-        }
-
-        if (count > 0) {
-            return orderParam / (count * (2 * M_PI / n));
-        }
-    } else {
-        return 0;
-    }
-
-    return 0;
 }
 
 // ================================== Center of Mass ==================================
