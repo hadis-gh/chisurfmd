@@ -1,10 +1,176 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import data_extraction
+import system_analysis
+import ipywidgets
 
 #  in the notebook you can try:
 # %load_ext autoreload
 # %autoreload 2
+
+#------------------------------   POTENTIAL   ------------------------------
+
+SIGMA = 1.0
+EPSILON = 1.0
+
+def plot_heatmap_lj_mod_potential(phi_order=1, angular_scale=0.1, angular_order=12):
+    """Plot heatmap of potential and force."""
+    L = 100
+    r = np.linspace(0.9 * SIGMA, 1.3 * SIGMA, L)
+    delta_phi = np.linspace(-np.pi, np.pi, L)
+    R, Delta_phi = np.meshgrid(r, delta_phi)
+    
+    potential_values = system_analysis.lj_mod_potential(R, Delta_phi, phi_order, angular_scale, angular_order, SIGMA, EPSILON)
+    
+    fig, axs = plt.subplots(figsize=(7, 7) ,dpi=100)
+      
+    c1 = axs.contourf(R, Delta_phi, potential_values, levels=100, cmap="viridis")
+    fig.colorbar(c1, ax=axs, label='Potential $U_{mod}$')
+    axs.set_title('Potential $U_{mod}(r, \Delta\phi)$')
+    axs.set_xlabel('Distance $r$')
+    axs.set_ylabel('Δφ (rad)')
+    
+    plt.tight_layout()
+    plt.show()
+
+def plot_heatmap_lj_mod_potential_polar(phi_order=1, angular_scale=0.1, angular_order=12):
+    """Plot heatmap of potential and force in polar coordinates with a cleaner look."""
+    L = 100
+    r = np.linspace(0.9 * SIGMA, 1.3 * SIGMA, L)
+    delta_phi = np.linspace(0, 2 * np.pi, L)
+    R, Delta_phi = np.meshgrid(r, delta_phi)
+    
+    potential_values = system_analysis.lj_mod_potential(R, Delta_phi, phi_order, angular_scale, angular_order, SIGMA, EPSILON)
+    
+    fig, axs = plt.subplots(subplot_kw={'projection': 'polar'}, figsize=(7, 7))
+      
+    # Plot the heatmap
+    c1 = axs.contourf(Delta_phi, R, potential_values, levels=100, cmap="viridis")
+    fig.colorbar(c1, ax=axs, label='Potential $V_{mod}$')
+    
+    # Customize the polar plot
+    axs.set_title('Potential $V_{mod}(r, \Delta\phi)$', pad=20)
+    axs.set_xlabel('Δφ (rad)', labelpad=20)
+    axs.set_ylabel('')
+    
+    axs.grid(False)  # Disable the grid
+    axs.set_yticklabels([])  # Remove radial tick labels
+    
+    plt.tight_layout()
+    plt.show()
+
+def plot_heatmap_lj_mod_potential(phi_order=1, angular_scale=0.1, angular_order=12):
+    """Plot heatmap of potential and force."""
+    L = 100
+    r = np.linspace(0.9 * SIGMA, 1.3 * SIGMA, L)
+    delta_phi = np.linspace(-np.pi, np.pi, L)
+    R, Delta_phi = np.meshgrid(r, delta_phi)
+    
+    potential_values = system_analysis.lj_mod_potential(R, Delta_phi, phi_order, angular_scale, angular_order, SIGMA, EPSILON)
+    
+    fig, axs = plt.subplots(figsize=(7, 7) ,dpi=100)
+      
+    c1 = axs.contourf(R, Delta_phi, potential_values, levels=100, cmap="viridis")
+    fig.colorbar(c1, ax=axs, label='Potential $U_{mod}$')
+    axs.set_title('Potential $U_{mod}(r, \Delta\phi)$')
+    axs.set_xlabel('Distance $r$')
+    axs.set_ylabel('Δφ (rad)')
+    
+    plt.tight_layout()
+    plt.show()
+
+def plot_heatmap_lj_chiral_potential(potential_type='RRUU', gamma=0, phi_order=1, angular_scale=0.1, angular_order=12):
+    L = 100
+    R = 0.9 * SIGMA
+    phi1 = np.linspace(-np.pi, np.pi, L)
+    phi2 = np.linspace(-np.pi, np.pi, L)
+    Phi1, Phi2 = np.meshgrid(phi1, phi2)
+    
+    potential_values = system_analysis.lj_chiral_potential(R, Phi1, Phi2, phi_order, gamma, potential_type, 
+                                      angular_scale, angular_order, SIGMA, EPSILON)
+    
+    fig, axs = plt.subplots(figsize=(7, 7), dpi=100)
+      
+    c1 = axs.contourf(Phi1, Phi2, potential_values, levels=100, cmap="viridis")
+    fig.colorbar(c1, ax=axs, label='Potential $U_{mod}$')
+    
+    axs.set_title(f'Potential $U(r, \Delta\phi)$\nType: {potential_type}, γ: {gamma:.2f}')
+    axs.set_xlabel('φ1 (rad)')
+    axs.set_ylabel('φ2 (rad)')
+    
+    axs.set_aspect('equal')
+    plt.tight_layout()
+    plt.show()
+
+############## interactive plots for modified and chiral Potential ############## 
+
+def create_interactive_plots_LJmod():
+    """Create interactive plots with widgets."""
+    phi_order_slider = ipywidgets.IntSlider(value=2, min=1, max=10, step=1, description='φ order:')
+    angular_scale_slider = ipywidgets.FloatSlider(value=1.6, min=0.1, max=5.0, step=0.1, description='Angular scale:')
+    angular_order_slider = ipywidgets.IntSlider(value=12, min=1, max=20, step=1, description='Angular order(r^):')
+    
+    heatmap_potential = ipywidgets.interactive(
+        plot_heatmap_lj_mod_potential,
+        phi_order=phi_order_slider,
+        angular_scale=angular_scale_slider,
+        angular_order=angular_order_slider
+    )
+    
+    heatmap_potential_polar = ipywidgets.interactive(
+        plot_heatmap_lj_mod_potential_polar,
+        phi_order=phi_order_slider,
+        angular_scale=angular_scale_slider,
+        angular_order=angular_order_slider
+    )
+    
+    return heatmap_potential, heatmap_potential_polar
+    
+def create_interactive_plots_chiral():
+    type_slider = ipywidgets.Dropdown(
+        options=['RRUU', 'RLUU', 'RRUD', 'RLUD'],
+        value='RRUU',
+        description='Potential type:'
+    )
+    gamma_slider = ipywidgets.FloatSlider(
+        value=0, 
+        min=0, 
+        max=2*np.pi, 
+        step=np.pi/12, 
+        description='γ face Angle:'
+    )
+    phi_order_slider = ipywidgets.IntSlider(
+        value=2, 
+        min=1, 
+        max=10, 
+        step=1, 
+        description='φ order:'
+    )
+    angular_scale_slider = ipywidgets.FloatSlider(
+        value=1.6, 
+        min=0.1, 
+        max=5.0, 
+        step=0.1, 
+        description='A0:'
+    )
+    angular_order_slider = ipywidgets.IntSlider(
+        value=12, 
+        min=1, 
+        max=20, 
+        step=1, 
+        description='m (r^m):'
+    )
+    
+    heatmap_potential = ipywidgets.interactive(
+        plot_heatmap_lj_chiral_potential,
+        potential_type=type_slider,
+        gamma=gamma_slider,
+        phi_order=phi_order_slider,
+        angular_scale=angular_scale_slider,
+        angular_order=angular_order_slider
+    )
+        
+    return heatmap_potential
 
 #------------------------------   SINGLE MD   ------------------------------
 
@@ -372,7 +538,68 @@ def animate_position_simple(positions, output_name, line_length=0.4, area=50, co
     print("Processing complete.            ", end='\r')
     print("Video saved as", output_name)
 
-############## Depiction and alalysis of phi and delta phi of particles ##############
+def animate_position_handedness(positions, handedness, output_name, line_length=0.38, area=20, color_p=False, frame_skip=1000, frame_size=800, fps=20):
+    positions_data = positions['data']
+    num_steps = positions_data.shape[0]
+    num_particles = positions_data.shape[1]
+    has_phi = positions_data.shape[2] == 3
+
+    handedness_data = handedness['data']
+
+    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+    out = cv2.VideoWriter(output_name, fourcc, fps, (frame_size, frame_size))
+
+    particle_radius = max(5, frame_size // int(2.5* area))
+    for step in range(0, num_steps, frame_skip):
+        frame = np.ones((frame_size, frame_size, 3), dtype=np.uint8) * 255  # White background
+        
+        draw_grid(frame, frame_size, area, grid_spacing=10, color=(200, 200, 200))
+
+        for i in range(num_particles):
+            x, y = positions_data[step, i, :2]
+            h = handedness_data[step, i]
+            
+            color = [(255,204,204) if h == 1 else (205,230,255)]
+
+            # Skip NaN values (particle not yet deposited)
+            if np.isnan(x) or np.isnan(y):
+                continue
+
+            cx, cy = map_to_frame(x, y, frame_size, area)
+
+            if has_phi:
+                phi = positions_data[step, i, 2]
+            
+            # Draw circle with black outline and white fill
+            cv2.circle(frame, (cx, cy), particle_radius, (0, 0, 0), 2, lineType=cv2.LINE_AA)
+            cv2.circle(frame, (cx, cy), particle_radius - 1, color[0], -1, lineType=cv2.LINE_AA)
+
+            if has_phi and not color_p and not np.isnan(phi):
+                # Draw direction line from center to end of radius
+                x_end = x + line_length * np.cos(phi)
+                y_end = y + line_length * np.sin(phi)
+
+                # Skip NaN values in phi-based calculations
+                if np.isnan(x_end) or np.isnan(y_end):
+                    continue
+
+                cx_end, cy_end = map_to_frame(x_end, y_end, frame_size, area)
+                cv2.line(frame, (cx, cy), (cx_end, cy_end), (0, 0, 0), 2, lineType=cv2.LINE_AA)
+
+        # Add text for step count
+        text = f"Step {step}/{num_steps}"
+        cv2.putText(frame, text, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 0), 2, lineType=cv2.LINE_AA)
+
+        out.write(frame)
+
+        if step % (50 * frame_skip) == 0:
+            print(f"Processing frame{step}/{num_steps}      ", end='\r')
+
+    out.release()
+    print("Processing complete.            ", end='\r')
+    print("Video saved as", output_name)
+
+############## Histogram of φ and Δφ at specific step ##############
 
 def plot_trajectory_steps(positions, step_target, step_window=10000, area=50):
     positions_data = positions['data']
@@ -421,25 +648,29 @@ def plot_trajectory_steps(positions, step_target, step_window=10000, area=50):
     plt.tight_layout()
     plt.show()
 
-def plot_hist_phi_steps(positions, step_target, step_window=1000, bins_num=100):
+def plot_hist_phi_steps(positions, step_target, step_window=1000, bins_num=100, dpi=120):
     positions_data = positions['data']
     
     step_max = step_target + step_window
     print(f"available steps: {positions_data.shape[0]}, chosen step: {step_target} - {step_max}")
     
-    fig, ax = plt.subplots(subplot_kw={'projection': 'polar'},figsize=(6, 4))
+    fig, ax = plt.subplots(subplot_kw={'projection': 'polar'},figsize=(6, 4), dpi=dpi)
 
     ax.hist(positions_data[step_target:step_max,:,2].flatten(), bins=bins_num, color='#954965', alpha=0.7)
-    ax.set_title(f'Histogram of particles $\phi$')
-    ax.set_xlabel('Orientation Angle $\phi$')
+
+    ax.set_title(r'Histogram of particles $\phi$')
+    ax.set_xlabel(r'Rotational Angle $\phi$')
     # ax.set_ylabel('Frequency')
+
     ax.set_axisbelow(True)
     ax.grid(color='gray', linestyle='dashed', alpha=0.5)
-    
+
+    ax.set_theta_zero_location("E")
+
     plt.tight_layout()
     plt.show()
 
-def plot_deltaphi_hist_steps(positions, step_target, min_dis=20, step_window=1000, bins_num= 100):
+def plot_deltaphi_hist_steps(positions, step_target, min_dis=20, step_window=1000, bins_num= 100, dpi=120):
     
     step_max = step_target + step_window
     print(f"available steps: {positions['data'].shape[0]}, chosen step: {step_target} - {step_max}")
@@ -456,26 +687,27 @@ def plot_deltaphi_hist_steps(positions, step_target, min_dis=20, step_window=100
                     delta_phi = (delta_phi + np.pi) % (2 * np.pi) - np.pi
                     total_delta_phi.append(delta_phi)
 
-    fig, ax = plt.subplots(subplot_kw={'projection': 'polar'},figsize=(6, 4))
+    fig, ax = plt.subplots(subplot_kw={'projection': 'polar'},figsize=(6, 4), dpi=dpi)
     
     bins = np.linspace(-np.pi, np.pi, bins_num + 1)
     hist, bin_edges = np.histogram(total_delta_phi, bins=bins)
 
     ax.bar(bin_edges[:-1], hist, width=np.diff(bin_edges), color='#55b3d1', align='edge', alpha=0.7)
 
-    ax.set_title(f'Histogram of $\Delta \phi$')
-    ax.set_xlabel('Orientation Angle $\phi$')
+    ax.set_title(r'Histogram of $\Delta \phi$')
+    ax.set_xlabel(r'Rotational Angle $\phi$')
     
     ax.set_axisbelow(True)
     ax.grid(color='gray', linestyle='dashed', alpha=0.5)
     
     ax.set_theta_zero_location("E")
-
+    
+    plt.tight_layout()
     plt.show()
 
 #------------------------------   TEMPERATURE LOOP   ------------------------------
 
-############## snapshot of system at specific Temperature ##############
+############## snapshot of configuration at specific Temperature ##############
 
 def target_temperature_index (variable_name, target_temperature):
     data = variable_name['data']
@@ -485,7 +717,7 @@ def target_temperature_index (variable_name, target_temperature):
     try:
         index = np.where(temperature_labels == target_temperature)[0][0]
     except IndexError:
-        print(f"Target temperature {target_temperature} not found in temperature_labels.")
+        print(f"🞩🞩🞩 Target temperature {target_temperature} not found in temperature_labels. Please choose a valid temperature! 🞩🞩🞩")
         return 0
 
     total_snapshots = data.shape[0]
@@ -593,6 +825,16 @@ def plot_snapshot_temperature(positions, handedness, target_temperature, line_le
     plt.tight_layout()
     plt.show()
     
+############## histogram of φ and Δφ at specific Temperature ##############
+
+def plot_hist_phi_temperature(positions, target_t, step_window, bins_num=100, dpi=120):
+    step_target = target_temperature_index(positions, target_t)
+    plot_hist_phi_steps(positions, step_target, step_window, bins_num, dpi)
+
+def plot_delta_phi_hist_temperature(positions, target_t, min_dis, step_window, bins_num=100, dpi=120):
+    step_target = target_temperature_index(positions, target_t)
+    plot_deltaphi_hist_steps(positions, step_target, min_dis, step_window, bins_num, dpi)
+
 #------------------------------   AGGREGATION   ------------------------------
 
 ############## snapshot of system over steps/ aggregation with specific Temperature & Deposition ##############
