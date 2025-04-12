@@ -249,7 +249,8 @@ std::vector<TParticle> initialParticles(const unsigned int& particlesNum,
                                         const std::vector<Species<T>>& allSpecies, 
                                         const int& speciesNum, 
                                         const T& L, std::mt19937& gen, 
-                                        const std::string& configuration) {
+                                        const std::string& configuration,
+                                        const std::string& particlesType) {
     std::vector<TParticle> particles;
 
     if (configuration == "RANDOM") {
@@ -315,7 +316,16 @@ std::vector<TParticle> initialParticles(const unsigned int& particlesNum,
         p.species = speciesNum;
         
         std::uniform_int_distribution<int8_t> dis(0, 1);
-        p.h = dis(gen) * 2 - 1;
+        if (particlesType == "RLUU") {
+            p.h = dis(gen) * 2 - 1;
+        } else if (particlesType == "RRUD") {
+            p.d = dis(gen) * 2 - 1;
+        } else if (particlesType == "RRUU" || particlesType == "RLUD") {
+            p.h = 1;
+            p.d = 1;
+        } else {
+            throw std::runtime_error("Wrong Particles Type: " + particlesType);
+        }
     }
 
     return particles;

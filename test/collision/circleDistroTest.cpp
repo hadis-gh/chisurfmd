@@ -17,9 +17,9 @@ int main() {
     std::random_device rd;
     std::mt19937 gen(rd());
 
-    auto particles1 = initialParticles<ParticleDot<double>>(particlesNum, allSpecies, speciesInd, areaL, gen, "RANDOM");
-    auto particles2 = initialParticles<ParticleDot<double>>(particlesNum, allSpecies, speciesInd, areaL, gen, "RANDOM2");
-    auto particles3 = initialParticles<ParticleDot<double>>(particlesNum, allSpecies, speciesInd, areaL, gen, "DLA");
+    auto particles1 = initialParticles<ParticleDot<double>>(particlesNum, allSpecies, speciesInd, areaL, gen, "RANDOM", "RRUU");
+    auto particles2 = initialParticles<ParticleDot<double>>(particlesNum, allSpecies, speciesInd, areaL, gen, "RANDOM2", "RRUU");
+    auto particles3 = initialParticles<ParticleDot<double>>(particlesNum, allSpecies, speciesInd, areaL, gen, "DLA", "RRUU");
 
     std::ofstream outputFile1("particleGeneralizedTest_RANDOM1.dat");
     std::ofstream outputFile2("particleGeneralizedTest_RANDOM2.dat");

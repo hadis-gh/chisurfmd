@@ -82,10 +82,11 @@ int main(int argc, char* argv[]) {
         ("time,t",                po::value<Real>()->default_value(10.0),                     "max simulation time")
         ("dt",                    po::value<Real>()->default_value(.01),                      "integration step size")
         ("writeStateInterval",    po::value<Real>()->default_value(.05),                      "measurement State interval")
-        ("writeEnergyInterval",   po::value<Real>()->default_value(.005),                       "measurement Energy interval")
+        ("writeEnergyInterval",   po::value<Real>()->default_value(.005),                     "measurement Energy interval")
         ("thermoInterval",        po::value<Real>()->default_value(.1),                       "interval after which to apply thermostat")
         ("temperature,T",         po::value<Real>()->default_value(.3),                       "temperature")
         ("particlesInit",         po::value<std::string>()->default_value("RANDOM"),          "particle initialization")
+        ("particlesType",         po::value<std::string>()->default_value("RRUU"),            "particles type handedness & orientation")
         ("mass",                  po::value<Real>()->default_value(1.0),                      "mass of particles")       
         ("momentI",               po::value<Real>()->default_value(1.0),                      "moment of inersia")
         ("exclusionRadius",       po::value<Real>()->default_value(.8),                       "exclusion radius")
@@ -132,6 +133,7 @@ int main(int argc, char* argv[]) {
     std::vector<Species<Real>> allSpecies {species1, species2};
 
     auto particlesInit = vm["particlesInit"].as<std::string>(); 
+    auto particlesType = vm["particlesType"].as<std::string>(); 
 
     auto gen = [&]() {
         if (vm.count("seed") > 0) {
@@ -141,7 +143,7 @@ int main(int argc, char* argv[]) {
             return std::mt19937(rd());
         }
     }();
-    auto particles = initialParticles<ParticleT>(particlesNum, allSpecies, speciesInd, areaL, gen, particlesInit);
+    auto particles = initialParticles<ParticleT>(particlesNum, allSpecies, speciesInd, areaL, gen, particlesInit, particlesType);
     particlesNum = particles.size();
 
     auto force = Potential::force(vm);
@@ -270,7 +272,7 @@ int main(int argc, char* argv[]) {
 
             engine.Put(varHandedness, handednessVec.data());
             engine.Put(varPositions, positionsVec.data());
-            // engine.Put(varVelocities, velocitiesVec.data());
+            engine.Put(varVelocities, velocitiesVec.data());
             writeStateStep = step + writeStateIntervalSteps;
         }
         if (step == writeEnergyStep) {

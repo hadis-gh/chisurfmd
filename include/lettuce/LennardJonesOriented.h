@@ -21,8 +21,10 @@ public:
     Vec<T, 2> operator()(const TParticle& p1, const TParticle& p2, const Vec<T, 2>& dr, const T r) const {
         T const faceAng = std::atan2(dr[1], dr[0]);
         
-        const T phi1new = p1.h * p1.d * (p1.phi);
-        const T phi2new = p2.h * p2.d * (p2.phi);
+        const T phi1new = p1.h * p1.d * (p1.phi - faceAng);
+        const T phi2new = p2.h * p2.d * (p2.phi - faceAng);        
+        // const T phi1new = p1.phi - p1.h * p1.d * faceAng;
+        // const T phi2new = p2.phi - p2.h * p2.d * faceAng;
 
         const T deltaPhi = phi2new - phi1new;
 
@@ -71,8 +73,10 @@ public:
     T operator()(const TParticle& p1, const TParticle& p2, const Vec<T, 2>& dr, const T r) const {
         T const faceAng = std::atan2(dr[1], dr[0]);
 
-        const T phi1new = p1.h * p1.d * (p1.phi);
-        const T phi2new = p2.h * p2.d * (p2.phi);
+        const T phi1new = p1.h * p1.d * (p1.phi - faceAng);
+        const T phi2new = p2.h * p2.d * (p2.phi - faceAng);     
+        // const T phi1new = p1.phi - p1.h * p1.d * faceAng;
+        // const T phi2new = p2.phi - p2.h * p2.d * faceAng;
 
         const T deltaPhi = phi2new - phi1new;
 
