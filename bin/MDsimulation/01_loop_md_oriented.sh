@@ -10,6 +10,7 @@ particleNum=${particleNum:-49}
 areaL=${areaL:-20}
 particlesDensity=${particlesDensity:-70.0}
 particlesInit=${particlesInit:-"RANDOM"}
+particlesType=${particlesType:-"RRUU"}
 seed=${seed:-15}
 
 timeCooling=${timeCooling:-100}
@@ -55,6 +56,7 @@ run_md() {
     echo "Starting simulation #${runIndex} | Temperature: ${temperature}"
 
     $MD_EXE --particlesInit "$particleInit" \
+        --particlesType "$particlesType"\
         --temperature "$temperature" \
         --time "$timeCooling" --dt "$dt" \
         --particlesNum "$particleNum" \

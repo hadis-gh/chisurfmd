@@ -26,7 +26,7 @@ def plot_heatmap_lj_mod_potential(phi_order=1, angular_scale=0.1, angular_order=
       
     c1 = axs.contourf(R, Delta_phi, potential_values, levels=100, cmap="viridis")
     fig.colorbar(c1, ax=axs, label='Potential $U_{mod}$')
-    axs.set_title('Potential $U_{mod}(r, \Delta\phi)$')
+    axs.set_title(r'Potential $U_{mod}(r, \Delta\phi)$')
     axs.set_xlabel('Distance $r$')
     axs.set_ylabel('Δφ (rad)')
     
@@ -49,7 +49,7 @@ def plot_heatmap_lj_mod_potential_polar(phi_order=1, angular_scale=0.1, angular_
     fig.colorbar(c1, ax=axs, label='Potential $V_{mod}$')
     
     # Customize the polar plot
-    axs.set_title('Potential $V_{mod}(r, \Delta\phi)$', pad=20)
+    axs.set_title(r'Potential $V_{mod}(r, \Delta\phi)$', pad=20)
     axs.set_xlabel('Δφ (rad)', labelpad=20)
     axs.set_ylabel('')
     
@@ -72,7 +72,7 @@ def plot_heatmap_lj_mod_potential(phi_order=1, angular_scale=0.1, angular_order=
       
     c1 = axs.contourf(R, Delta_phi, potential_values, levels=100, cmap="viridis")
     fig.colorbar(c1, ax=axs, label='Potential $U_{mod}$')
-    axs.set_title('Potential $U_{mod}(r, \Delta\phi)$')
+    axs.set_title(r'Potential $U_{mod}(r, \Delta\phi)$')
     axs.set_xlabel('Distance $r$')
     axs.set_ylabel('Δφ (rad)')
     
@@ -94,7 +94,7 @@ def plot_heatmap_lj_chiral_potential(potential_type='RRUU', gamma=0, phi_order=1
     c1 = axs.contourf(Phi1, Phi2, potential_values, levels=100, cmap="viridis")
     fig.colorbar(c1, ax=axs, label='Potential $U_{mod}$')
     
-    axs.set_title(f'Potential $U(r, \Delta\phi)$\nType: {potential_type}, γ: {gamma:.2f}')
+    axs.set_title(rf'Potential $U(r, \Delta\phi)$\nType: {potential_type}, γ: {gamma:.2f}')
     axs.set_xlabel('φ1 (rad)')
     axs.set_ylabel('φ2 (rad)')
     
@@ -363,8 +363,8 @@ def plot_order_parameter(order, m_temperatures, temperature_show=False, temperat
     else:
         ax.set_xlabel("Steps")
 
-    ax.set_ylabel("Order Parameter")
-    ax.set_title(f"Orientational Order Parameter")
+    ax.set_ylabel("Rotational Order")
+    ax.set_title(f"Rotational Order Parameter")
         
     plt.tight_layout()
     plt.show()
@@ -374,7 +374,7 @@ def plot_order_parameter(order, m_temperatures, temperature_show=False, temperat
 
 ############## snapshot of system over steps/ single file --one MD simulation or one aggregation ##############
 
-def plot_configuration(positions, step_target=-1, radius=0.4, color_phi=False, diameter=20, 
+def plot_configuration(positions, handedness, step_target=-1, radius=0.4, color_phi=False, diameter=20, 
                        x_limit=(0, 50),y_limit=(0, 50), aggregation=False, 
                        save_fig=False, save_name='output.pdf', 
                        set_title=None):
@@ -383,11 +383,15 @@ def plot_configuration(positions, step_target=-1, radius=0.4, color_phi=False, d
     y0, y1 = y_limit
         
     positions_data = positions['data']
+    handedness_data = handedness['data']
+    
     availble_steps = positions_data.shape[0]
     print('available steps: ', availble_steps, '\tchoosed step: ', step_target)
 
     x = positions_data[step_target, :, 0]
     y = positions_data[step_target, :, 1]
+    h = handedness_data[step_target, :]
+    
     if positions_data.shape[2] == 3:
         phi = positions_data[step_target, :, 2]
 
@@ -425,11 +429,12 @@ def plot_configuration(positions, step_target=-1, radius=0.4, color_phi=False, d
                 cbar = fig.colorbar(scatter, ax=ax, label='deposited particles order', orientation='vertical', shrink=0.8, pad=0.02)
                 
             else:
+                colors_h = ['lightcoral' if val == 1 else 'lightsteelblue' for val in h]
                 scatter = ax.scatter(
                     x, y, 
                     s=diameter,
                     edgecolors='black',
-                    facecolors='none',
+                    facecolors= colors_h,
                     alpha=0.8
                 )
                 x_end = x + radius * np.cos(phi)
