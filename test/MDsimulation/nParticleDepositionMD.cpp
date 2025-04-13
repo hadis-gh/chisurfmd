@@ -193,6 +193,8 @@ int main(int argc, char* argv[]) {
     constexpr int D = degreesOfFreedom<ParticleT>();
 
     adios2::Variable<Real> varT = io.DefineVariable<Real>("time");
+    adios2::Variable<int8_t> varHandedness = io.DefineVariable<int8_t>("handedness", {particlesNum}, {0}, {particlesNum});
+    adios2::Variable<int8_t> varOrientation = io.DefineVariable<int8_t>("orientation", {particlesNum}, {0}, {particlesNum});
     adios2::Variable<Real> varPositions = io.DefineVariable<Real>("positions", {particlesNumMax, D}, {0, 0}, {particlesNumMax, D});
     adios2::Variable<Real> varVelocities = io.DefineVariable<Real>("velocities", {particlesNumMax, D}, {0, 0}, {particlesNumMax, D});
     adios2::Variable<Real> varKineticEnergy = io.DefineVariable<Real>("kinetic energy", {1, 3}, {0, 0}, {1, 3});
@@ -203,9 +205,7 @@ int main(int argc, char* argv[]) {
     adios2::Variable<Real> varRealTemperature = io.DefineVariable<Real>("real temperature", {1, 3}, {0, 0}, {1, 3});
     adios2::Variable<Real> varRotationalOrder = io.DefineVariable<Real>("rotational order");
     
-    std::vector<Real> positionsVec(particlesNumMax * D, NAN);
-    std::vector<Real> velocitiesVec(particlesNumMax * D, NAN);
-
+    io.DefineAttribute<Real>("particlesType", particlesType); 
     io.DefineAttribute<Real>("temperature", temperature);
     io.DefineAttribute<Real>("radius", radius);
     io.DefineAttribute<Real>("mass", mass);
@@ -214,6 +214,11 @@ int main(int argc, char* argv[]) {
     io.DefineAttribute<Real>("particlesNum", particlesNum);
     io.DefineAttribute<Real>("particlesNumMax", particlesNumMax);
     io.DefineAttribute<Real>("neighborCutoff", neighborCutoff);
+
+    std::vector<int8_t> handednessVec(particlesNumMax, NAN);
+    std::vector<int8_t> orientationVec(particlesNumMax, NAN);
+    std::vector<Real> positionsVec(particlesNumMax * D, NAN);
+    std::vector<Real> velocitiesVec(particlesNumMax * D, NAN);
     
     adios2::Engine engine = io.Open(adiosOutput, adios2::Mode::Write);
 
@@ -289,6 +294,8 @@ int main(int argc, char* argv[]) {
             }
             
             if (step == writeStateStep) {
+                handednessVec.resize(particlesNumMax, NAN);
+                orientationVec.resize(particlesNumMax, NAN);
                 positionsVec.resize(particlesNumMax * D, NAN);
                 velocitiesVec.resize(particlesNumMax * D, NAN);
     
@@ -299,8 +306,12 @@ int main(int argc, char* argv[]) {
                         positionsVec[i * D + j] = pos[j];
                         velocitiesVec[i * D + j] = vel[j];
                     }
+                    handednessVec[i] = particles[i].h;
+                    orientationVec[i] = particles[i].d;
                 }
     
+                engine.Put(varHandedness, handednessVec.data());
+                engine.Put(varOrientation, orientationVec.data());
                 engine.Put(varPositions, positionsVec.data());
                 engine.Put(varVelocities, velocitiesVec.data());
                 writeStateStep = step + writeStateIntervalSteps;
