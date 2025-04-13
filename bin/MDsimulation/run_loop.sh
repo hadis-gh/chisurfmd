@@ -16,7 +16,7 @@ numCoolingRuns=$(echo "scale=0; ($highTemperature - $lowTemperature) / $stepTemp
 numHeatingRuns=$(echo "scale=0; ($highTemperature - $lowTemperature) / $stepTemperature" | bc)
 totalRuns=$((numCoolingRuns + numHeatingRuns))
 
-MD_EXE=${MD_EXE:-"../test/testNParticleMD"}
+MD_EXE=${MD_EXE:-"../build/test/testNParticleMD"}
 outputDir=${outputDir:-"./outputs"}
 mkdir -p "$outputDir"
 
@@ -28,14 +28,15 @@ simulationType=${simulationType:-"oriented"}
 
 run_simulation() {
     local runIndex="$1"
-    local particleInit="$2"
+    local particlesInit="$2"
     local temperature="$3"
     local saveFile="${outputDir}/run_${runIndex}.bp"
 
     printf "Starting simulation #%s | Temperature: %s\n" "$runIndex" "$temperature"
 
     local args=(
-        --particlesInit "$particleInit"
+        --particlesInit "$particlesInit"
+        --particlesType "$particlesType"
         --temperature "$temperature"
         --time "$timeCooling" --dt "$dt"
         --saveFile "$saveFile"
@@ -66,27 +67,6 @@ run_simulation() {
     echo "------------------------------------------------------------"
 }
 
-run_temperature_loop() {
-    local startTemp="$1"
-    local stepTemp="$2"
-    local numRuns="$3"
-    local startIndex="$4"
-
-    for ((i = 0; i < numRuns; i++)); do
-        local runIndex=$((startIndex + i + 1))
-        local temperature=$(echo "$startTemp + $i * $stepTemp" | bc)
-        local prevOutput="${outputDir}/run_$((runIndex - 1)).bp"
-
-        # Check if the previous output file exists
-        if [ ! -f "$prevOutput" ]; then
-            printf "Error: Previous output file '%s' not found. Aborting.\n" "$prevOutput"
-            exit 1
-        fi
-
-        run_simulation "$runIndex" "$prevOutput" "$temperature"
-    done
-}
-
 echo "======================================================="
 echo "    Temperature Loop Molecular Dynamics Simulation     "
 echo "======================================================="
@@ -94,11 +74,23 @@ echo "======================================================="
 initialRunIndex=0
 run_simulation "$initialRunIndex" "RANDOM" "$highTemperature"
 
-# Cooling process: temperature decreases from highTemperature to lowTemperature
-run_temperature_loop "$highTemperature" "$((-stepTemperature))" "$numCoolingRuns" 0
+# Cooling process: 
+for ((i = 1; i <= numCoolingRuns; i++)); do
+    temperature=$(echo "$highTemperature - $i * $stepTemperature" | bc)
+    prevOutput="${outputDir}/run_$((i - 1)).bp"
 
-# Heating process: temperature increases from lowTemperature to highTemperature
-run_temperature_loop "$lowTemperature" "$stepTemperature" "$numHeatingRuns" "$numCoolingRuns"
+    run_simulation "$i" "$prevOutput" "$temperature"
+done
+
+# Heating process:
+for ((i = 1; i <= numHeatingRuns; i++)); do
+    runIndex=$((numCoolingRuns + i))
+    temperature=$(echo "$lowTemperature + $i * $stepTemperature" | bc)
+    prevOutput="${outputDir}/run_$((runIndex - 1)).bp"
+    run_simulation "$runIndex" "$prevOutput" "$temperature"
+done
+
+echo "All simulations completed. Total runs: ${totalRuns}"
 
 # Record time
 end_time=$(date +%s)
