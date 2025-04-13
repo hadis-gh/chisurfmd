@@ -1,9 +1,10 @@
-simulationType="oriented"
+simulationType="rotation"
 
 particleNum=49
 areaL=20
 particlesDensity=70.0
 particlesInit="RANDOM"
+particlesType="RRUU"
 seed=15
 
 timeCooling=120

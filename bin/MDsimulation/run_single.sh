@@ -42,7 +42,7 @@ args=(
     --collisionFr "$collisionFr"
 )
 
-if [ "$simulationType" == "oriented" ]; then
+if [ "$simulationType" == "rotation" ]; then
     args+=(--LJangularScale "$LJangularScale"
            --LJPhiOrder "$LJPhiOrder"
            --LJalpha "$LJalpha"
