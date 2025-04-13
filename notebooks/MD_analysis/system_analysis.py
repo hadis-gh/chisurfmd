@@ -38,7 +38,8 @@ def lj_mod_force(r, delta_phi, phi_order, angular_scale, angular_order, sigma=SI
     return radial_force, angular_force
 
 def function_m(phi1, phi2, gamma, h1, h2, d1, d2, n, alpha):
-    delta_phi = h2*d2*(phi2 - gamma) - h1*d1*(phi1 - gamma)
+    # delta_phi = h2*d2*(phi2 - gamma) - h1*d1*(phi1 - gamma)
+    delta_phi = phi2 - phi1 - (h1*d1 - h2*d2) * gamma
     return np.cos(n * delta_phi + alpha)
 
 def lj_chiral_potential(r, phi1, phi2, phi_order, gamma, potential_type, angular_scale, angular_order, sigma=SIGMA, epsilon=EPSILON, alpha=np.pi): 
