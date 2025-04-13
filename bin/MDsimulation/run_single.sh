@@ -28,6 +28,7 @@ echo "============================================="
 
 args=(
     --particlesInit "$particleInit"
+    --particlesType "$particlesType"
     --temperature "$temperature"
     --time "$timeCooling" --dt "$dt"
     --saveFile "$saveFile"
