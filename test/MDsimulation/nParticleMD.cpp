@@ -191,7 +191,7 @@ int main(int argc, char* argv[]) {
 
     adios2::Variable<Real> varT = io.DefineVariable<Real>("time");
     adios2::Variable<int8_t> varHandedness = io.DefineVariable<int8_t>("handedness", {particlesNum}, {0}, {particlesNum});
-    adios2::Variable<int8_t> varOrientation = io.DefineVariable<int8_t>("orientation", {particlesNum}, {0}, {particlesNum});
+    adios2::Variable<int8_t> varAlignment = io.DefineVariable<int8_t>("alignment", {particlesNum}, {0}, {particlesNum});
     adios2::Variable<Real> varPositions = io.DefineVariable<Real>("positions", {particlesNum, D}, {0, 0}, {particlesNum, D});
     adios2::Variable<Real> varVelocities = io.DefineVariable<Real>("velocities", {particlesNum, D}, {0, 0}, {particlesNum, D});
     adios2::Variable<Real> varKineticEnergy = io.DefineVariable<Real>("kinetic energy", {1, 3}, {0, 0}, {1, 3});
@@ -234,7 +234,7 @@ int main(int argc, char* argv[]) {
     }
 
     std::vector<int8_t> handednessVec(particlesNum);
-    std::vector<int8_t> orientationVec(particlesNum);
+    std::vector<int8_t> alignmentVec(particlesNum);
     std::vector<Real> positionsVec(particlesNum * D);
     std::vector<Real> velocitiesVec(particlesNum * D);
 
@@ -258,7 +258,7 @@ int main(int argc, char* argv[]) {
         }
         if (step == writeStateStep) {
             handednessVec.clear();
-            orientationVec.clear();
+            alignmentVec.clear();
             positionsVec.clear();
             velocitiesVec.clear();
             for (auto &p : particles) {
@@ -268,7 +268,7 @@ int main(int argc, char* argv[]) {
                 auto vel = getGeneralizedVelocities(p);
 
                 handednessVec.push_back(handedness);
-                orientationVec.push_back(orientation);
+                alignmentVec.push_back(orientation);
                 
                 for (int i = 0; i < D; ++i) {
                     positionsVec.push_back(pos[i]);
@@ -277,7 +277,7 @@ int main(int argc, char* argv[]) {
             }
 
             engine.Put(varHandedness, handednessVec.data());
-            engine.Put(varOrientation, orientationVec.data());
+            engine.Put(varAlignment, alignmentVec.data());
             engine.Put(varPositions, positionsVec.data());
             engine.Put(varVelocities, velocitiesVec.data());
             writeStateStep = step + writeStateIntervalSteps;
