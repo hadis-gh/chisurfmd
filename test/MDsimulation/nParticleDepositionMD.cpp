@@ -215,10 +215,12 @@ int main(int argc, char* argv[]) {
     io.DefineAttribute<Real>("particlesNumMax", particlesNumMax);
     io.DefineAttribute<Real>("neighborCutoff", neighborCutoff);
 
-    std::vector<int8_t> handednessVec(particlesNumMax, NAN);
-    std::vector<int8_t> orientationVec(particlesNumMax, NAN);
-    std::vector<Real> positionsVec(particlesNumMax * D, NAN);
-    std::vector<Real> velocitiesVec(particlesNumMax * D, NAN);
+    const int8_t INVALID_VALUE = std::numeric_limits<int8_t>::min();
+
+    std::vector<int8_t> handednessVec(particlesNumMax, INVALID_VALUE);
+    std::vector<int8_t> orientationVec(particlesNumMax, INVALID_VALUE);
+    std::vector<Real> positionsVec(particlesNumMax * D, INVALID_VALUE);
+    std::vector<Real> velocitiesVec(particlesNumMax * D, INVALID_VALUE);
     
     adios2::Engine engine = io.Open(adiosOutput, adios2::Mode::Write);
 
@@ -294,10 +296,10 @@ int main(int argc, char* argv[]) {
             }
             
             if (step == writeStateStep) {
-                handednessVec.resize(particlesNumMax, NAN);
-                orientationVec.resize(particlesNumMax, NAN);
-                positionsVec.resize(particlesNumMax * D, NAN);
-                velocitiesVec.resize(particlesNumMax * D, NAN);
+                handednessVec.resize(particlesNumMax, INVALID_VALUE);
+                orientationVec.resize(particlesNumMax, INVALID_VALUE);
+                positionsVec.resize(particlesNumMax * D, INVALID_VALUE);
+                velocitiesVec.resize(particlesNumMax * D, INVALID_VALUE);
     
                 for (size_t i = 0; i < particles.size(); ++i) {
                     auto pos = getGeneralizedPositions(particles[i]);
