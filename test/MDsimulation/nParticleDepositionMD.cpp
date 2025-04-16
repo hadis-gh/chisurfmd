@@ -22,7 +22,7 @@
 #include "lettuce/LennardJones.h"
 #include "lettuce/LennardJonesOriented.h"
 #include "lettuce/CircleDistribution.h"
-#include "lettuce/LennarJonesParticles.h"
+#include "lettuce/LennardJonesParticles.h"
 
 enum class ThermostatID {
     None = 0, VelocityScaling = 1, Berendsen = 2, NoseHoover = 3, Andersen = 4
