@@ -3,7 +3,9 @@ import matplotlib.pyplot as plt
 import data_extraction
 import system_analysis
 import ipywidgets
-
+from ipywidgets import interactive, FloatSlider, IntSlider, Dropdown
+import ipywidgets as widgets
+from IPython.display import display
 #  in the notebook you can try:
 # %load_ext autoreload
 # %autoreload 2
@@ -26,6 +28,7 @@ def plot_heatmap_lj_mod_potential(phi_order=1, angular_scale=0.1, angular_order=
       
     c1 = axs.contourf(R, Delta_phi, potential_values, levels=100, cmap="viridis")
     fig.colorbar(c1, ax=axs, label='Potential $U_{mod}$')
+
     axs.set_title(r'Potential $U_{mod}(r, \Delta\phi)$')
     axs.set_xlabel('Distance $r$')
     axs.set_ylabel('Δφ (rad)')
@@ -34,7 +37,7 @@ def plot_heatmap_lj_mod_potential(phi_order=1, angular_scale=0.1, angular_order=
     plt.show()
 
 def plot_heatmap_lj_mod_potential_polar(phi_order=1, angular_scale=0.1, angular_order=12):
-    """Plot heatmap of potential and force in polar coordinates with a cleaner look."""
+    """Plot heatmap of potential in polar coordinates"""
     L = 100
     r = np.linspace(0.9 * SIGMA, 1.3 * SIGMA, L)
     delta_phi = np.linspace(0, 2 * np.pi, L)
@@ -59,34 +62,14 @@ def plot_heatmap_lj_mod_potential_polar(phi_order=1, angular_scale=0.1, angular_
     plt.tight_layout()
     plt.show()
 
-def plot_heatmap_lj_mod_potential(phi_order=1, angular_scale=0.1, angular_order=12):
-    """Plot heatmap of potential and force."""
-    L = 100
-    r = np.linspace(0.9 * SIGMA, 1.3 * SIGMA, L)
-    delta_phi = np.linspace(-np.pi, np.pi, L)
-    R, Delta_phi = np.meshgrid(r, delta_phi)
-    
-    potential_values = system_analysis.lj_mod_potential(R, Delta_phi, phi_order, angular_scale, angular_order, SIGMA, EPSILON)
-    
-    fig, axs = plt.subplots(figsize=(7, 7) ,dpi=100)
-      
-    c1 = axs.contourf(R, Delta_phi, potential_values, levels=100, cmap="viridis")
-    fig.colorbar(c1, ax=axs, label='Potential $U_{mod}$')
-    axs.set_title(r'Potential $U_{mod}(r, \Delta\phi)$')
-    axs.set_xlabel('Distance $r$')
-    axs.set_ylabel('Δφ (rad)')
-    
-    plt.tight_layout()
-    plt.show()
-
-def plot_heatmap_lj_chiral_potential(potential_type='RRUU', gamma=0, phi_order=1, angular_scale=0.1, angular_order=12):
+def plot_heatmap_LJmod_pair(potential_type='RRUU', gamma=0, phi_order=1, angular_scale=0.1, angular_order=12):
     L = 100
     R = 0.9 * SIGMA
     phi1 = np.linspace(-np.pi, np.pi, L)
     phi2 = np.linspace(-np.pi, np.pi, L)
     Phi1, Phi2 = np.meshgrid(phi1, phi2)
     
-    potential_values = system_analysis.lj_chiral_potential(R, Phi1, Phi2, phi_order, gamma, potential_type, 
+    potential_values = system_analysis.LJmod_pair(R, Phi1, Phi2, phi_order, gamma, potential_type, 
                                       angular_scale, angular_order, SIGMA, EPSILON)
     
     fig, axs = plt.subplots(figsize=(7, 7), dpi=100)
@@ -126,7 +109,7 @@ def create_interactive_plots_LJmod():
     
     return heatmap_potential, heatmap_potential_polar
     
-def create_interactive_plots_chiral():
+def create_interactive_plots_LJmod_pair():
     type_slider = ipywidgets.Dropdown(
         options=['RRUU', 'RLUU', 'RRUD', 'RLUD'],
         value='RRUU',
@@ -162,12 +145,136 @@ def create_interactive_plots_chiral():
     )
     
     heatmap_potential = ipywidgets.interactive(
-        plot_heatmap_lj_chiral_potential,
+        plot_heatmap_LJmod_pair,
         potential_type=type_slider,
         gamma=gamma_slider,
         phi_order=phi_order_slider,
         angular_scale=angular_scale_slider,
         angular_order=angular_order_slider
+    )
+        
+    return heatmap_potential
+
+#------------------------------   NEW CHIRAL POTENTIAL VISUALIZATION   ------------------------------
+
+def plot_heatmap_lj_chiral_new(C=1.0, gamma=0):
+    """Plot heatmap of the new chiral potential U(r, φ2) for fixed φ1=0"""
+    L = 100
+    r = np.linspace(0.9 * SIGMA, 1.5 * SIGMA, L)
+    phi2 = np.linspace(-np.pi, np.pi, L)
+    R, Phi2 = np.meshgrid(r, phi2)
+    
+    phi1_fixed = 0  # fixed orientation for first particle
+    potential_values = system_analysis.chiral_new(R, phi1_fixed, Phi2, gamma, C)
+    
+    fig, ax = plt.subplots(figsize=(8, 6))
+    c = ax.contourf(R, Phi2, potential_values, levels=100, cmap='viridis')
+    fig.colorbar(c, ax=ax, label='Potential Energy')
+
+    ax.set_title(fr'Chiral Potential $U(r, \varphi_2)$ (C={C}, γ={gamma:.2f})')
+    ax.set_xlabel('Distance $r$')
+    ax.set_ylabel(r'$\varphi_2$ (rad)')
+
+    plt.tight_layout()
+    plt.show()
+
+def plot_heatmap_lj_chiral_new_polar(C=1.0, gamma=0):
+    """Plot heatmap of the chiral potential in polar coordinates (φ2 vs r, φ1 fixed)"""
+    L = 100
+    r = np.linspace(0.9 * SIGMA, 1.3 * SIGMA, L)
+    phi2 = np.linspace(0, 2 * np.pi, L)
+    R, Phi2 = np.meshgrid(r, phi2)
+
+    phi1_fixed = 0
+    potential_values = system_analysis.chiral_new(R, phi1_fixed, Phi2, gamma, C)
+
+    fig, ax = plt.subplots(subplot_kw={'projection': 'polar'}, figsize=(7, 7))
+    c = ax.contourf(Phi2, R, potential_values, levels=100, cmap="viridis")
+    fig.colorbar(c, ax=ax, label='Potential Energy')
+
+    ax.set_title(r'Chiral Potential $U(r, \varphi_2)$', pad=20)
+    ax.set_yticklabels([])  # Optional: Hide radial labels
+    ax.grid(False)
+
+    plt.tight_layout()
+    plt.show()
+
+def plot_chiral_new_pair(potential_type='RRUU', gamma=0, coupling_scale=1.0, coupling_order=6):
+    L = 100
+    R = 1.1 * SIGMA
+    phi1 = np.linspace(-np.pi, np.pi, L)
+    phi2 = np.linspace(-np.pi, np.pi, L)
+    Phi1, Phi2 = np.meshgrid(phi1, phi2)
+    
+    potential_values = system_analysis.chiral_new_pair(R, Phi1, Phi2, gamma, potential_type, coupling_scale, coupling_order, SIGMA, EPSILON)
+    
+    fig, axs = plt.subplots(figsize=(7, 7), dpi=100)
+      
+    c1 = axs.contourf(Phi1, Phi2, potential_values, levels=100, cmap="viridis")
+    fig.colorbar(c1, ax=axs, label='Potential $U_{mod}$')
+    
+    axs.set_title(rf'Potential $U(r, \Delta\phi)$\nType: {potential_type}, γ: {gamma:.2f}')
+    axs.set_xlabel('φ1 (rad)')
+    axs.set_ylabel('φ2 (rad)')
+    
+    axs.set_aspect('equal')
+    plt.tight_layout()
+    plt.show()
+
+############## interactive plots for new chiral Potential ############## 
+
+def create_interactive_chiral_new():
+    """Interactive widgets for the new chiral potential"""
+    C_slider = ipywidgets.FloatSlider(value=1.0, min=0.1, max=5.0, step=0.1, description='C:')
+    gamma_slider = ipywidgets.FloatSlider(value=0, min=0, max=2*np.pi, step=np.pi/12, description='γ:')
+
+    heatmap = ipywidgets.interactive(
+        plot_heatmap_lj_chiral_new,
+        C=C_slider,
+        gamma=gamma_slider
+    )
+
+    polar_plot = ipywidgets.interactive(
+        plot_heatmap_lj_chiral_new_polar,
+        C=C_slider,
+        gamma=gamma_slider
+    )
+
+    return heatmap, polar_plot
+
+def create_interactive_plots_chiral_new_pair():
+    type_slider = ipywidgets.Dropdown(
+        options=['RRUU', 'RLUU', 'RRUD', 'RLUD'],
+        value='RRUU',
+        description='Potential type:'
+    )
+    gamma_slider = ipywidgets.FloatSlider(
+        value=0, 
+        min=0, 
+        max=2*np.pi, 
+        step=np.pi/12, 
+        description='γ face Angle:'
+    )
+    coupling_scale_slider = ipywidgets.FloatSlider(
+        value=1.6, 
+        min=0.1, 
+        max=5.0, 
+        step=0.1, 
+        description='coupling scale:'
+    )
+    coupling_order_slider = ipywidgets.IntSlider(
+        value=12, 
+        min=1, 
+        max=20, 
+        step=1, 
+        description='m (r^m):'
+    )
+
+    heatmap_potential = ipywidgets.interactive(
+        plot_chiral_new_pair,
+        gamma=gamma_slider,
+        coupling_scale=coupling_scale_slider,
+        coupling_order=coupling_order_slider
     )
         
     return heatmap_potential

@@ -42,7 +42,7 @@ def function_m(phi1, phi2, gamma, h1, h2, d1, d2, n, alpha):
     delta_phi = phi2 - phi1 - (h1*d1 - h2*d2) * gamma
     return np.cos(n * delta_phi + alpha)
 
-def lj_chiral_potential(r, phi1, phi2, phi_order, gamma, potential_type, angular_scale, angular_order, sigma=SIGMA, epsilon=EPSILON, alpha=np.pi): 
+def lj_mod_pair(r, phi1, phi2, phi_order, gamma, potential_type, angular_scale, angular_order, sigma=SIGMA, epsilon=EPSILON, alpha=np.pi): 
     lj_term = lj_potential(r, sigma=sigma, epsilon=epsilon)
     A = angular_scale / r**angular_order
     
@@ -58,6 +58,40 @@ def lj_chiral_potential(r, phi1, phi2, phi_order, gamma, potential_type, angular
         raise ValueError(f"Unknown potential type: {potential_type}")
     
     angular_term = A * (1 + function_m(phi1, phi2, gamma, h1, h2, d1, d2, phi_order, alpha))
+    
+    return lj_term + angular_term
+
+#------------------------------   NEW CHIRAL POTENTIAL   ------------------------------
+
+def chiral_new(r, phi1, phi2, gamma, coupling_scale=1.0, coupling_order=2, sigma=SIGMA, epsilon=EPSILON):
+    if np.any(r <= 0):
+        raise ValueError("Distance r must be greater than zero.")
+
+    lj_term = 4 * epsilon * ((sigma / r)**12 - (sigma / r)**6)
+    
+    psi1 = phi1 - gamma
+    psi2 = phi2 - gamma
+    chiral_term = coupling_scale / r**coupling_order * np.sin(psi1) * np.sin(psi2)
+    
+    return lj_term + chiral_term
+
+def chiral_new_pair(r, phi1, phi2, gamma, potential_type, coupling_scale, coupling_order, sigma=SIGMA, epsilon=EPSILON):
+    lj_term = lj_potential(r, sigma=sigma, epsilon=epsilon)
+    
+    if potential_type == 'RRUU':
+        h1, h2, d1, d2 = 1, 1, 1, 1
+    elif potential_type == 'RLUU':
+        h1, h2, d1, d2 = 1, -1, 1, 1
+    elif potential_type == 'RRUD':
+        h1, h2, d1, d2 = 1, 1, 1, -1
+    elif potential_type == 'RLUD':
+        h1, h2, d1, d2 = 1, -1, 1, -1
+    else:
+        raise ValueError(f"Unknown potential type: {potential_type}")
+    
+    psi1 = phi1 - h1 * d1 * gamma
+    psi2 = phi2 - h2 * d2 * gamma
+    angular_term = coupling_scale / r**coupling_order * np.sin(psi1) * np.sin(psi2)
     
     return lj_term + angular_term
 
