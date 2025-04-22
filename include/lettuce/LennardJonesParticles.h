@@ -10,6 +10,7 @@
 #include "LennardJones.h"
 #include "LennardJonesOriented.h"
 #include "LennardJonesChiral.h"
+#include "TabularDFT.h"
 
 namespace po = boost::program_options;
 
@@ -137,4 +138,41 @@ struct LennardJonesChiral<ParticleOriented<T>>
     }
 
     using ForceType = LennardJonesChiralForce<ParticleOriented<T>>;
+};
+
+template<typename Particle, typename SFINAE = void>
+struct TabularDFT;
+
+template<typename T>
+struct TabularDFT<ParticleOriented<T>>
+{
+    static void initProgramOptions(po::options_description &desc) {
+        LennardJones<ParticleDot<T>>::initProgramOptions(desc);
+        desc.add_options()
+        ("tabularPotentialFile", po::value<std::string>() ,"file path of potential data")
+        ("tabularForceFile", po::value<std::string>() ,"file path of force data")    
+        ("bpIO", po::value<adios2::IO>() ,"adios IO")    
+        ("parametersTabular", po::value<std::vector<T>>() ,"parameters for tabular potential")    
+        ;
+    }
+
+    static auto force(const po::variables_map &vm) {
+        return TabularDFTForce<ParticleOriented<T>>(
+            vm["particlesType"].as<std::string>(),
+            vm["tabularForceFile"].as<std::string>(),
+            vm["bpIO"].as<adios2::IO>(),
+            vm["parametersTabular"].as<std::vector<T>>()
+        );
+    }
+
+    static auto potential(const po::variables_map &vm) {
+        return TabularDFTPotential<ParticleOriented<T>>(
+            vm["particlesType"].as<std::string>(),
+            vm["tabularForceFile"].as<std::string>(),
+            vm["bpIO"].as<adios2::IO>(),
+            vm["parametersTabular"].as<std::vector<T>>()
+        );
+    }
+
+    using ForceType = TabularDFT<ParticleOriented<T>>;
 };
