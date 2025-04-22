@@ -63,7 +63,7 @@ def lj_mod_pair(r, phi1, phi2, phi_order, gamma, potential_type, angular_scale, 
 
 #------------------------------   NEW CHIRAL POTENTIAL   ------------------------------
 
-def chiral_new(r, phi1, phi2, gamma, coupling_scale=1.0, coupling_order=2, sigma=SIGMA, epsilon=EPSILON):
+def chiral_new(r, phi1, phi2, gamma, coupling_scale=1.0, coupling_power=2, sigma=SIGMA, epsilon=EPSILON):
     if np.any(r <= 0):
         raise ValueError("Distance r must be greater than zero.")
 
@@ -71,11 +71,11 @@ def chiral_new(r, phi1, phi2, gamma, coupling_scale=1.0, coupling_order=2, sigma
     
     psi1 = phi1 - gamma
     psi2 = phi2 - gamma
-    chiral_term = coupling_scale / r**coupling_order * np.sin(psi1) * np.sin(psi2)
+    chiral_term = 2 * coupling_scale / r**coupling_power * np.sin(psi1) * np.sin(psi2)
     
     return lj_term + chiral_term
 
-def chiral_new_pair(r, phi1, phi2, gamma, potential_type, coupling_scale, coupling_order, sigma=SIGMA, epsilon=EPSILON):
+def chiral_new_pair(r, phi1, phi2, gamma, potential_type, coupling_scale, coupling_power, sigma=SIGMA, epsilon=EPSILON):
     lj_term = lj_potential(r, sigma=sigma, epsilon=epsilon)
     
     if potential_type == 'RRUU':
@@ -91,7 +91,7 @@ def chiral_new_pair(r, phi1, phi2, gamma, potential_type, coupling_scale, coupli
     
     psi1 = phi1 - h1 * d1 * gamma
     psi2 = phi2 - h2 * d2 * gamma
-    angular_term = coupling_scale / r**coupling_order * np.sin(psi1) * np.sin(psi2)
+    angular_term = 2 * coupling_scale / r**coupling_power * np.sin(psi1) * np.sin(psi2)
     
     return lj_term + angular_term
 

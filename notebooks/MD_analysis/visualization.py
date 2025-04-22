@@ -193,20 +193,20 @@ def plot_heatmap_lj_chiral_new_polar(C=1.0, gamma=0):
     fig.colorbar(c, ax=ax, label='Potential Energy')
 
     ax.set_title(r'Chiral Potential $U(r, \varphi_2)$', pad=20)
-    ax.set_yticklabels([])  # Optional: Hide radial labels
+    ax.set_yticklabels([])  # Hide radial labels
     ax.grid(False)
 
     plt.tight_layout()
     plt.show()
 
-def plot_chiral_new_pair(potential_type='RRUU', gamma=0, coupling_scale=1.0, coupling_order=6):
+def plot_chiral_new_pair(potential_type='RRUU', gamma=0, coupling_scale=1.0, coupling_power=6):
     L = 100
     R = 1.1 * SIGMA
     phi1 = np.linspace(-np.pi, np.pi, L)
     phi2 = np.linspace(-np.pi, np.pi, L)
     Phi1, Phi2 = np.meshgrid(phi1, phi2)
     
-    potential_values = system_analysis.chiral_new_pair(R, Phi1, Phi2, gamma, potential_type, coupling_scale, coupling_order, SIGMA, EPSILON)
+    potential_values = system_analysis.chiral_new_pair(R, Phi1, Phi2, gamma, potential_type, coupling_scale, coupling_power, SIGMA, EPSILON)
     
     fig, axs = plt.subplots(figsize=(7, 7), dpi=100)
       
