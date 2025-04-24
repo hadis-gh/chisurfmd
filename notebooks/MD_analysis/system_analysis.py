@@ -63,37 +63,51 @@ def lj_mod_pair(r, phi1, phi2, phi_order, gamma, potential_type, angular_scale, 
 
 #------------------------------   NEW CHIRAL POTENTIAL   ------------------------------
 
-def chiral_new(r, phi1, phi2, gamma, coupling_scale=1.0, coupling_power=2, sigma=SIGMA, epsilon=EPSILON):
+def field(r, psi1, coupling_scale=1.0, coupling_power=2, shape_func=np.sin, period = 1, phase = 0):
+    return coupling_scale * (1 + shape_func(period * psi1 + phase)) / ( r ** coupling_power )
+
+def constantCharge(psi2):
+    return 1.
+
+def chiral_new(r, phi1, phi2, gamma, field=field, charge=constantCharge, lj_potential = lj_potential, field_kwargs={}):
     if np.any(r <= 0):
         raise ValueError("Distance r must be greater than zero.")
 
-    lj_term = 4 * epsilon * ((sigma / r)**12 - (sigma / r)**6)
-    
-    psi1 = phi1 - gamma
-    psi2 = phi2 - gamma
-    chiral_term = 2 * coupling_scale / r**coupling_power * np.sin(psi1) * np.sin(psi2)
-    
-    return lj_term + chiral_term
+    psi1 = - phi1 + gamma
+    psi2 = np.pi - phi2 + gamma
 
-def chiral_new_pair(r, phi1, phi2, gamma, potential_type, coupling_scale, coupling_power, sigma=SIGMA, epsilon=EPSILON):
-    lj_term = lj_potential(r, sigma=sigma, epsilon=epsilon)
+    angular_term = charge(psi2) * field(r, psi1, **field_kwargs)
+
+    return lj_potential(r) + angular_term
+
+def pair_pot(r, phi_i, phi_j, gamma, pot=chiral_new, pot_kwargs={}):
+    return pot(r, phi_i, phi_j, gamma, **pot_kwargs) + pot(r, phi_j, phi_i, gamma, **pot_kwargs)
+
+def pair_pot_psi(r, psi1, psi2, field=field, charge=constantCharge, field_kwargs={}):
+    angular_term = charge(psi2) * field(r, psi1, **field_kwargs) - charge(psi1) * field(r, psi2, **field_kwargs)
+    return angular_term
+    #return pot(r, psi_i, phi_j, gamma, **pot_kwargs) + pot(r, phi_j, phi_i, gamma, **pot_kwargs)
+
+
+# def chiral_new_pair(r, phi1, phi2, gamma, potential_type, coupling_scale, coupling_power, sigma=SIGMA, epsilon=EPSILON):
+#     lj_term = lj_potential(r, sigma=sigma, epsilon=epsilon)
     
-    if potential_type == 'RRUU':
-        h1, h2, d1, d2 = 1, 1, 1, 1
-    elif potential_type == 'RLUU':
-        h1, h2, d1, d2 = 1, -1, 1, 1
-    elif potential_type == 'RRUD':
-        h1, h2, d1, d2 = 1, 1, 1, -1
-    elif potential_type == 'RLUD':
-        h1, h2, d1, d2 = 1, -1, 1, -1
-    else:
-        raise ValueError(f"Unknown potential type: {potential_type}")
+#     if potential_type == 'RRUU':
+#         h1, h2, d1, d2 = 1, 1, 1, 1
+#     elif potential_type == 'RLUU':
+#         h1, h2, d1, d2 = 1, -1, 1, 1
+#     elif potential_type == 'RRUD':
+#         h1, h2, d1, d2 = 1, 1, 1, -1
+#     elif potential_type == 'RLUD':
+#         h1, h2, d1, d2 = 1, -1, 1, -1
+#     else:
+#         raise ValueError(f"Unknown potential type: {potential_type}")
     
-    psi1 = phi1 - h1 * d1 * gamma
-    psi2 = phi2 - h2 * d2 * gamma
-    angular_term = 2 * coupling_scale / r**coupling_power * np.sin(psi1) * np.sin(psi2)
+#     psi1 = phi1 - h1 * d1 * gamma
+#     psi2 = phi2 - h2 * d2 * gamma
+#     angular_term = 2 * coupling_scale / r**coupling_power * np.sin(psi1) * np.sin(psi2)
     
-    return lj_term + angular_term
+#     return lj_term + angular_term
 
 #------------------------------   AGGREGATION   ------------------------------
 

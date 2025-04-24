@@ -157,16 +157,21 @@ def create_interactive_plots_LJmod_pair():
 
 #------------------------------   NEW CHIRAL POTENTIAL VISUALIZATION   ------------------------------
 
-def plot_heatmap_lj_chiral_new(C=1.0, gamma=0):
+def plot_heatmap_lj_chiral_new(
+        C=1.0, gamma=0.,
+        pot=system_analysis.pair_pot, pot_kwargs={},
+        r_range=(0.9 * SIGMA, 1.5 * SIGMA)):
     """Plot heatmap of the new chiral potential U(r, φ2) for fixed φ1=0"""
     L = 100
-    r = np.linspace(0.9 * SIGMA, 1.5 * SIGMA, L)
+    r = np.linspace(*r_range, L)
     phi2 = np.linspace(-np.pi, np.pi, L)
     R, Phi2 = np.meshgrid(r, phi2)
     
     phi1_fixed = 0  # fixed orientation for first particle
-    potential_values = system_analysis.chiral_new(R, phi1_fixed, Phi2, gamma, C)
-    
+    potential_values = pot(R, phi1_fixed, Phi2, gamma,
+        pot_kwargs={**pot_kwargs, "field":system_analysis.field,
+            "field_kwargs":{**pot_kwargs.get('field_kwargs', {}), 'coupling_scale':C}})
+
     fig, ax = plt.subplots(figsize=(8, 6))
     c = ax.contourf(R, Phi2, potential_values, levels=100, cmap='viridis')
     fig.colorbar(c, ax=ax, label='Potential Energy')
@@ -178,15 +183,17 @@ def plot_heatmap_lj_chiral_new(C=1.0, gamma=0):
     plt.tight_layout()
     plt.show()
 
-def plot_heatmap_lj_chiral_new_polar(C=1.0, gamma=0):
+def plot_heatmap_lj_chiral_new_polar(C=1.0, gamma=0, pot=system_analysis.pair_pot, pot_kwargs={}, r_range=(0.9 * SIGMA, 1.5 * SIGMA)):
     """Plot heatmap of the chiral potential in polar coordinates (φ2 vs r, φ1 fixed)"""
     L = 100
-    r = np.linspace(0.9 * SIGMA, 1.3 * SIGMA, L)
+    r = np.linspace(*r_range, L)
     phi2 = np.linspace(0, 2 * np.pi, L)
     R, Phi2 = np.meshgrid(r, phi2)
 
     phi1_fixed = 0
-    potential_values = system_analysis.chiral_new(R, phi1_fixed, Phi2, gamma, C)
+    potential_values = pot(R, phi1_fixed, Phi2, gamma,
+        pot_kwargs={**pot_kwargs, "field":system_analysis.field,
+            "field_kwargs":{**pot_kwargs.get('field_kwargs', {}), 'coupling_scale':C}})
 
     fig, ax = plt.subplots(subplot_kw={'projection': 'polar'}, figsize=(7, 7))
     c = ax.contourf(Phi2, R, potential_values, levels=100, cmap="viridis")
@@ -199,21 +206,23 @@ def plot_heatmap_lj_chiral_new_polar(C=1.0, gamma=0):
     plt.tight_layout()
     plt.show()
 
-def plot_chiral_new_pair(potential_type='RRUU', gamma=0, coupling_scale=1.0, coupling_power=6):
+def plot_chiral_new(gamma=0, coupling_scale=1.0, coupling_power=6, pot=system_analysis.pair_pot, pot_kwargs={}):
     L = 100
     R = 1.1 * SIGMA
     phi1 = np.linspace(-np.pi, np.pi, L)
     phi2 = np.linspace(-np.pi, np.pi, L)
     Phi1, Phi2 = np.meshgrid(phi1, phi2)
     
-    potential_values = system_analysis.chiral_new_pair(R, Phi1, Phi2, gamma, potential_type, coupling_scale, coupling_power, SIGMA, EPSILON)
+    potential_values = pot(R, Phi1, Phi2, gamma,
+        pot_kwargs={**pot_kwargs, "field":system_analysis.field,
+            "field_kwargs":{**pot_kwargs.get('field_kwargs', {}), 'coupling_scale':coupling_scale, 'coupling_power':coupling_power}})
     
     fig, axs = plt.subplots(figsize=(7, 7), dpi=100)
       
     c1 = axs.contourf(Phi1, Phi2, potential_values, levels=100, cmap="viridis")
     fig.colorbar(c1, ax=axs, label='Potential $U_{mod}$')
     
-    axs.set_title(rf'Potential $U(r, \Delta\phi)$\nType: {potential_type}, γ: {gamma:.2f}')
+    axs.set_title(rf'Potential $U(r, \Delta\phi)$\nType: γ: {gamma:.2f}')
     axs.set_xlabel('φ1 (rad)')
     axs.set_ylabel('φ2 (rad)')
     
@@ -221,28 +230,79 @@ def plot_chiral_new_pair(potential_type='RRUU', gamma=0, coupling_scale=1.0, cou
     plt.tight_layout()
     plt.show()
 
+def plot_angular_psi(coupling_scale=1.0, coupling_power=6, pot=system_analysis.pair_pot_psi, pot_kwargs={}):
+    L = 100
+    R = 1.1 * SIGMA
+    phi1 = np.linspace(-np.pi, np.pi, L)
+    phi2 = np.linspace(-np.pi, np.pi, L)
+    Phi1, Phi2 = np.meshgrid(phi1, phi2)
+    
+    if "field_kwargs" not in pot_kwargs:
+        pot_kwargs['field_kwargs'] = {}
+    pot_kwargs['field_kwargs']['coupling_scale'] = coupling_scale
+    pot_kwargs['field_kwargs']['coupling_power'] = coupling_power
+
+    potential_values = pot(R, Phi1, Phi2,
+        **pot_kwargs)
+    
+    fig, axs = plt.subplots(figsize=(7, 7), dpi=100)
+      
+    c1 = axs.contourf(Phi1, Phi2, potential_values, levels=100, cmap="viridis")
+    fig.colorbar(c1, ax=axs, label='Potential $U_{mod}$')
+    
+    axs.set_title(rf'Potential $U(r, \Delta\phi)$')
+    axs.set_xlabel('$\psi_1$ (rad)')
+    axs.set_ylabel('$\psi_2$ (rad)')
+    
+    axs.set_aspect('equal')
+    plt.tight_layout()
+    plt.show()
+
+
+# def plot_chiral_new_pair(potential_type='RRUU', gamma=0, coupling_scale=1.0, coupling_power=6):
+#     L = 100
+#     R = 1.1 * SIGMA
+#     phi1 = np.linspace(-np.pi, np.pi, L)
+#     phi2 = np.linspace(-np.pi, np.pi, L)
+#     Phi1, Phi2 = np.meshgrid(phi1, phi2)
+    
+#     potential_values = system_analysis.chiral_new_pair(R, Phi1, Phi2, gamma, potential_type, coupling_scale, coupling_power, SIGMA, EPSILON)
+    
+#     fig, axs = plt.subplots(figsize=(7, 7), dpi=100)
+      
+#     c1 = axs.contourf(Phi1, Phi2, potential_values, levels=100, cmap="viridis")
+#     fig.colorbar(c1, ax=axs, label='Potential $U_{mod}$')
+    
+#     axs.set_title(rf'Potential $U(r, \Delta\phi)$\nType: {potential_type}, γ: {gamma:.2f}')
+#     axs.set_xlabel('φ1 (rad)')
+#     axs.set_ylabel('φ2 (rad)')
+    
+#     axs.set_aspect('equal')
+#     plt.tight_layout()
+#     plt.show()
+
 ############## interactive plots for new chiral Potential ############## 
 
-def create_interactive_chiral_new():
+def create_interactive_chiral_new(pot=system_analysis.pair_pot, pot_kwargs={}):
     """Interactive widgets for the new chiral potential"""
-    C_slider = ipywidgets.FloatSlider(value=1.0, min=0.1, max=5.0, step=0.1, description='C:')
+    C_slider = ipywidgets.FloatSlider(value=10.0, min=0.1, max=50.0, step=0.1, description='C:')
     gamma_slider = ipywidgets.FloatSlider(value=0, min=0, max=2*np.pi, step=np.pi/12, description='γ:')
 
     heatmap = ipywidgets.interactive(
-        plot_heatmap_lj_chiral_new,
+        lambda C, gamma: plot_heatmap_lj_chiral_new(C, gamma, pot=pot, pot_kwargs=pot_kwargs),
         C=C_slider,
-        gamma=gamma_slider
+        gamma=gamma_slider,
     )
 
     polar_plot = ipywidgets.interactive(
-        plot_heatmap_lj_chiral_new_polar,
+        lambda C, gamma: plot_heatmap_lj_chiral_new_polar(C, gamma, pot=pot, pot_kwargs=pot_kwargs),
         C=C_slider,
         gamma=gamma_slider
     )
 
     return heatmap, polar_plot
 
-def create_interactive_plots_chiral_new_pair():
+def create_interactive_plots_chiral_new_pair(pot=system_analysis.pair_pot, pot_kwargs={}):
     type_slider = ipywidgets.Dropdown(
         options=['RRUU', 'RLUU', 'RRUD', 'RLUD'],
         value='RRUU',
@@ -271,13 +331,38 @@ def create_interactive_plots_chiral_new_pair():
     )
 
     heatmap_potential = ipywidgets.interactive(
-        plot_chiral_new_pair,
+        lambda gamma, coupling_scale, coupling_order: plot_chiral_new(gamma, coupling_scale=coupling_scale, coupling_power=coupling_order, pot=pot, pot_kwargs=pot_kwargs),
         gamma=gamma_slider,
         coupling_scale=coupling_scale_slider,
         coupling_order=coupling_order_slider
     )
         
     return heatmap_potential
+
+def create_interactive_plots_chiral_new_pair_psi(pot=system_analysis.pair_pot_psi, pot_kwargs={}):
+    coupling_scale_slider = ipywidgets.FloatSlider(
+        value=1.6, 
+        min=0.1, 
+        max=5.0, 
+        step=0.1, 
+        description='coupling scale:'
+    )
+    coupling_order_slider = ipywidgets.IntSlider(
+        value=12, 
+        min=1, 
+        max=20, 
+        step=1, 
+        description='m (r^m):'
+    )
+
+    heatmap_potential = ipywidgets.interactive(
+        lambda coupling_scale, coupling_order: plot_angular_psi(coupling_scale=coupling_scale, coupling_power=coupling_order, pot=pot, pot_kwargs=pot_kwargs),
+        coupling_scale=coupling_scale_slider,
+        coupling_order=coupling_order_slider
+    )
+        
+    return heatmap_potential
+
 
 #------------------------------   SINGLE MD   ------------------------------
 
