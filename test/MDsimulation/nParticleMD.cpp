@@ -38,7 +38,7 @@ enum class ThermostatID {
 #endif
 
 #ifndef LETTUCE_POTENTIAL
-#define LETTUCE_POTENTIAL LennardJonesChiral<ParticleT>
+#define LETTUCE_POTENTIAL LennardJones<ParticleT>
 #endif
 
 #define STRINGIFY(x) #x

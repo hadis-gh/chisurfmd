@@ -38,7 +38,7 @@ public:
 
         const T A = m_angularScale / r12;
 
-        const T dA_dr = -A * 12 / effective_r;
+        const T dA_dr = -A * 12 / (effective_r);
         
         const T radialForce 
             = -4.0 * m_epsilon * (-12.0 * (m_sigma12 / r12) / effective_r + 6.0 * (m_sigma6 / r6) / effective_r) 
@@ -50,14 +50,9 @@ public:
     }
 
 private:
-    T m_epsilon;
-    T m_sigma;
-    T m_cutoff;
-    T m_sigma6;
-    T m_sigma12;
+    T m_epsilon, m_sigma, m_cutoff, m_sigma6, m_sigma12;
     int m_phiOrder;
-    T m_angularScale;
-    T m_alpha;
+    T m_angularScale, m_alpha;
 };
 
 template<typename TParticle, typename T = typename TParticle::value_type>
@@ -82,7 +77,10 @@ public:
 
         if (r == 0 || r > m_cutoff) return 0;
 
-        const T r6 = r * r * r * r * r * r;
+        const T min_distance = m_sigma * 0.5;
+        const T effective_r = std::max(r, min_distance);
+
+        const T r6 = effective_r * effective_r * effective_r * effective_r * effective_r * effective_r;
         const T r12 = r6 * r6;
 
         const T A = m_angularScale / r12;
@@ -92,12 +90,7 @@ public:
     }
 
 private:
-    T m_epsilon;
-    T m_sigma;
-    T m_cutoff;
-    T m_sigma6;
-    T m_sigma12;
+    T m_epsilon, m_sigma, m_cutoff, m_sigma6, m_sigma12;
     int m_phiOrder;
-    T m_angularScale;
-    T m_alpha;
+    T m_angularScale, m_alpha;
 };

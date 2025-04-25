@@ -42,7 +42,7 @@ def function_m(phi1, phi2, gamma, h1, h2, d1, d2, n, alpha):
     delta_phi = phi2 - phi1 - (h1*d1 - h2*d2) * gamma
     return np.cos(n * delta_phi + alpha)
 
-def lj_mod_pair(r, phi1, phi2, phi_order, gamma, potential_type, angular_scale, angular_order, sigma=SIGMA, epsilon=EPSILON, alpha=np.pi): 
+def LJmod_pair(r, phi1, phi2, phi_order, gamma, potential_type, angular_scale, angular_order, sigma=SIGMA, epsilon=EPSILON, alpha=np.pi): 
     lj_term = lj_potential(r, sigma=sigma, epsilon=epsilon)
     A = angular_scale / r**angular_order
     
