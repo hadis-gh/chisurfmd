@@ -10,6 +10,7 @@
 #include "LennardJones.h"
 #include "LennardJonesOriented.h"
 #include "LennardJonesChiral.h"
+#include "LJChiral.h"
 #include "TabularDFT.h"
 
 namespace po = boost::program_options;
@@ -138,6 +139,39 @@ struct LennardJonesChiral<ParticleOriented<T>>
     }
 
     using ForceType = LennardJonesChiralForce<ParticleOriented<T>>;
+};
+
+template<typename Particle, typename SFINAE = void>
+struct LJChiral;
+
+template<typename T>
+struct LJChiral<ParticleOriented<T>>
+{
+    static void initProgramOptions(po::options_description &desc) {
+        LennardJones<ParticleDot<T>>::initProgramOptions(desc);
+        desc.add_options()
+            ("LJchiralStrength", po::value<T>()->default_value(0.5), "Strength of chiral interaction");
+    }
+
+    static auto force(const po::variables_map &vm) {
+        return LJChiralForce<ParticleOriented<T>>(
+            vm["LJepsilon"].as<T>(), 
+            vm["LJsigma"].as<T>(), 
+            vm["LJcutoff"].as<T>(),
+            vm["exclusionRadius"].as<T>()
+        );
+    }
+
+    static auto potential(const po::variables_map &vm) {
+        return LJChiralPotential<ParticleOriented<T>>(
+            vm["LJepsilon"].as<T>(), 
+            vm["LJsigma"].as<T>(), 
+            vm["LJcutoff"].as<T>(),
+            vm["exclusionRadius"].as<T>()
+        );
+    }
+
+    using ForceType = LJChiralForce<ParticleOriented<T>>;
 };
 
 template<typename Particle, typename SFINAE = void>

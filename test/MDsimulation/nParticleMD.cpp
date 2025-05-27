@@ -22,6 +22,7 @@
 #include "lettuce/LennardJones.h"
 #include "lettuce/LennardJonesOriented.h"
 #include "lettuce/LennardJonesChiral.h"
+#include "lettuce/LJChiral.h"
 #include "lettuce/LennardJonesParticles.h"
 #include "lettuce/CircleDistribution.h"
 
@@ -38,7 +39,7 @@ enum class ThermostatID {
 #endif
 
 #ifndef LETTUCE_POTENTIAL
-#define LETTUCE_POTENTIAL LennardJones<ParticleT>
+#define LETTUCE_POTENTIAL LJChiral<ParticleT>
 #endif
 
 #define STRINGIFY(x) #x
