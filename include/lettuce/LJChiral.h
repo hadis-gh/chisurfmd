@@ -71,7 +71,7 @@ public:
 
         T delta_phi = phi_j - phi_i;
         T cos_delta_phi = std::cos(delta_phi);
-        T term_phi_diff = 2.0 * m_particle_radius * m_particle_radius * std::pow(1 - cos_delta_phi, 2);
+        T term_phi_diff = 2.0 * m_particle_radius * m_particle_radius * (1 - cos_delta_phi);
 
         T force_radial = 0;
         T torque = 0;
