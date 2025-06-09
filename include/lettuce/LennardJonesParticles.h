@@ -15,6 +15,8 @@
 
 namespace po = boost::program_options;
 
+// ================================== Lennard-Jones V(r_ij) ,simple ==================================
+
 template<typename Particle, typename SFINAE = void>
 struct LennardJones;
 
@@ -57,6 +59,8 @@ struct LennardJones<ParticleDot<T>>
 
     using ForceType = LennardJonesForce<ParticleDot<T>>;
 };
+
+// ================================== modified Lennard-Jones V(r, pi, pj) = V_LJ + cos(ΔΦ) ==================================
 
 template<typename T>
 struct LennardJones<ParticleOriented<T>> 
@@ -108,6 +112,8 @@ struct LennardJones<ParticleOriented<T>>
     using ForceType = LennardJonesOrientedForce<ParticleOriented<T>>;
 };
 
+// ================================== Electric Field Idea V(r, pi, pj) = v_i*Q_i + v_j*Q_j ==================================
+
 template<typename Particle, typename SFINAE = void>
 struct LennardJonesChiral;
 
@@ -141,6 +147,8 @@ struct LennardJonesChiral<ParticleOriented<T>>
     using ForceType = LennardJonesChiralForce<ParticleOriented<T>>;
 };
 
+// ================================== Lennard-Jones but replace r_ij with distance of amino acids V_LJ(R_ij) ... R_ij(r_ij, phi_i, phi_j) ==================================
+
 template<typename Particle, typename SFINAE = void>
 struct LJChiral;
 
@@ -173,6 +181,8 @@ struct LJChiral<ParticleOriented<T>>
 
     using ForceType = LJChiralForce<ParticleOriented<T>>;
 };
+
+// ================================== Extract Potential and Force from file ->> DFTB-based ==================================
 
 template<typename Particle, typename SFINAE = void>
 struct TabularDFT;
