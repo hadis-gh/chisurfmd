@@ -91,7 +91,7 @@ int main(int argc, char* argv[]) {
         ("particlesType",         po::value<std::string>()->default_value("RRUU"),            "particles type handedness & orientation")
         ("mass",                  po::value<Real>()->default_value(1.0),                      "mass of particles")       
         ("momentI",               po::value<Real>()->default_value(1.0),                      "moment of inersia")
-        ("exclusionRadius",       po::value<Real>()->default_value(.8),                       "exclusion radius")
+        ("exclusionRadius",       po::value<Real>()->default_value(.5),                       "exclusion radius")
         ("seed",                  po::value<unsigned int>(),                                  "random seed")
         ("areaL",                 po::value<Real>()->default_value(20.0),                     "simulation size")
         ("particlesDensity",      po::value<Real>(),                                          "packing density of particles")
