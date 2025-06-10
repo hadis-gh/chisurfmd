@@ -9,8 +9,8 @@
 #include "lettuce/ParticleOriented.h"
 #include "LennardJones.h"
 #include "LennardJonesOriented.h"
-#include "LennardJonesChiral.h"
-#include "LJChiral.h"
+#include "FieldCoupled.h"
+#include "ChiralLJGeometric.h"
 #include "TabularDFT.h"
 
 namespace po = boost::program_options;
@@ -115,54 +115,54 @@ struct LennardJones<ParticleOriented<T>>
 // ================================== Electric Field Idea V(r, pi, pj) = v_i*Q_i + v_j*Q_j ==================================
 
 template<typename Particle, typename SFINAE = void>
-struct LennardJonesChiral;
+struct FieldCoupled;
 
 template<typename T>
-struct LennardJonesChiral<ParticleOriented<T>>
+struct FieldCoupled<ParticleOriented<T>>
 {
     static void initProgramOptions(po::options_description &desc) {
         LennardJones<ParticleDot<T>>::initProgramOptions(desc);
         desc.add_options()
-            ("LJchiralStrength", po::value<T>()->default_value(0.5), "Strength of chiral interaction");
+            ("ChiralLJGeometricStrength", po::value<T>()->default_value(0.5), "Strength of chiral interaction");
     }
 
     static auto force(const po::variables_map &vm) {
-        return LennardJonesChiralForce<ParticleOriented<T>>(
+        return FieldCoupledForce<ParticleOriented<T>>(
             vm["LJepsilon"].as<T>(), 
             vm["LJsigma"].as<T>(), 
             vm["LJcutoff"].as<T>(), 
-            vm["LJchiralStrength"].as<T>()
+            vm["ChiralLJGeometricStrength"].as<T>()
         );
     }
 
     static auto potential(const po::variables_map &vm) {
-        return LennardJonesChiralPotential<ParticleOriented<T>>(
+        return FieldCoupledPotential<ParticleOriented<T>>(
             vm["LJepsilon"].as<T>(), 
             vm["LJsigma"].as<T>(), 
             vm["LJcutoff"].as<T>(), 
-            vm["LJchiralStrength"].as<T>()
+            vm["ChiralLJGeometricStrength"].as<T>()
         );
     }
 
-    using ForceType = LennardJonesChiralForce<ParticleOriented<T>>;
+    using ForceType = FieldCoupledForce<ParticleOriented<T>>;
 };
 
 // ================================== Lennard-Jones but replace r_ij with distance of amino acids V_LJ(R_ij) ... R_ij(r_ij, phi_i, phi_j) ==================================
 
 template<typename Particle, typename SFINAE = void>
-struct LJChiral;
+struct ChiralLJGeometric;
 
 template<typename T>
-struct LJChiral<ParticleOriented<T>>
+struct ChiralLJGeometric<ParticleOriented<T>>
 {
     static void initProgramOptions(po::options_description &desc) {
         LennardJones<ParticleDot<T>>::initProgramOptions(desc);
         desc.add_options()
-            ("LJchiralStrength", po::value<T>()->default_value(0.5), "Strength of chiral interaction");
+            ("ChiralLJGeometricStrength", po::value<T>()->default_value(0.5), "Strength of chiral interaction");
     }
 
     static auto force(const po::variables_map &vm) {
-        return LJChiralForce<ParticleOriented<T>>(
+        return ChiralLJGeometricForce<ParticleOriented<T>>(
             vm["LJepsilon"].as<T>(), 
             vm["LJsigma"].as<T>(), 
             vm["LJcutoff"].as<T>(),
@@ -171,7 +171,7 @@ struct LJChiral<ParticleOriented<T>>
     }
 
     static auto potential(const po::variables_map &vm) {
-        return LJChiralPotential<ParticleOriented<T>>(
+        return ChiralLJGeometricPotential<ParticleOriented<T>>(
             vm["LJepsilon"].as<T>(), 
             vm["LJsigma"].as<T>(), 
             vm["LJcutoff"].as<T>(),
@@ -179,7 +179,7 @@ struct LJChiral<ParticleOriented<T>>
         );
     }
 
-    using ForceType = LJChiralForce<ParticleOriented<T>>;
+    using ForceType = ChiralLJGeometricForce<ParticleOriented<T>>;
 };
 
 // ================================== Extract Potential and Force from file ->> DFTB-based ==================================

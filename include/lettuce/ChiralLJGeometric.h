@@ -7,9 +7,9 @@
 #include "lettuce/ParticleOriented.h"
 
 template<typename TParticle, typename T = typename TParticle::value_type>
-class LJChiralPotential {
+class ChiralLJGeometricPotential {
 public:
-    LJChiralPotential(T epsilon, T sigma, T cutoff, T particle_radius)
+    ChiralLJGeometricPotential(T epsilon, T sigma, T cutoff, T particle_radius)
         : m_epsilon(epsilon), m_sigma(sigma), m_cutoff(cutoff), m_particle_radius(particle_radius),
           m_sigma6(std::pow(sigma, 6)), m_sigma12(std::pow(sigma, 12)) {}
 
@@ -53,9 +53,9 @@ private:
 };
 
 template<typename TParticle, typename T = typename TParticle::value_type>
-class LJChiralForce {
+class ChiralLJGeometricForce {
 public:
-    LJChiralForce(T epsilon, T sigma, T cutoff, T particle_radius)
+    ChiralLJGeometricForce(T epsilon, T sigma, T cutoff, T particle_radius)
         : m_epsilon(epsilon), m_sigma(sigma), m_cutoff(cutoff), m_particle_radius(particle_radius),
           m_sigma6(std::pow(sigma, 6)), m_sigma12(std::pow(sigma, 12)) {}
 

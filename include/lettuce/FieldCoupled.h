@@ -7,9 +7,9 @@
 #include "lettuce/ParticleOriented.h"
 
 template<typename TParticle, typename T = typename TParticle::value_type>
-class LennardJonesChiralForce {
+class FieldCoupledForce {
 public:
-    LennardJonesChiralForce(T epsilon, T sigma, T cutoff, T chiralStrength)
+    FieldCoupledForce(T epsilon, T sigma, T cutoff, T chiralStrength)
         : m_epsilon(epsilon), m_sigma(sigma), m_cutoff(cutoff), m_chiralStrength(chiralStrength)
         , m_sigma6(std::pow(sigma, 6)), m_sigma12(std::pow(sigma, 12)) {}
 
@@ -51,9 +51,9 @@ private:
 };
 
 template<typename TParticle, typename T = typename TParticle::value_type>
-class LennardJonesChiralPotential {
+class FieldCoupledPotential {
 public:
-    LennardJonesChiralPotential(T epsilon, T sigma, T cutoff, T chiralStrength)
+    FieldCoupledPotential(T epsilon, T sigma, T cutoff, T chiralStrength)
         : m_epsilon(epsilon), m_sigma(sigma), m_cutoff(cutoff), m_chiralStrength(chiralStrength)
         , m_sigma6(std::pow(sigma, 6)), m_sigma12(std::pow(sigma, 12)) {}
 

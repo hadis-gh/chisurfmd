@@ -21,8 +21,8 @@
 #include "lettuce/Thermostat.h"
 #include "lettuce/LennardJones.h"
 #include "lettuce/LennardJonesOriented.h"
-#include "lettuce/LennardJonesChiral.h"
-#include "lettuce/LJChiral.h"
+#include "lettuce/FieldCoupled.h"
+#include "lettuce/ChiralLJGeometric.h"
 #include "lettuce/LennardJonesParticles.h"
 #include "lettuce/CircleDistribution.h"
 
@@ -39,7 +39,7 @@ enum class ThermostatID {
 #endif
 
 #ifndef LETTUCE_POTENTIAL
-#define LETTUCE_POTENTIAL LJChiral<ParticleT>
+#define LETTUCE_POTENTIAL ChiralLJGeometric<ParticleT>
 #endif
 
 #define STRINGIFY(x) #x
