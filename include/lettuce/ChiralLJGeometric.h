@@ -41,7 +41,7 @@ public:
             T r3 = std::pow(r_eff_sq, 3);
             T r6 = r3 * r3;
 
-            total_LJ += 4 * m_epsilon * (m_sigma12 / r6 - m_sigma6 / r3);
+            total_LJ += 4 * m_epsilon / N * (m_sigma12 / r6 - m_sigma6 / r3);
         }
 
         return total_LJ;
@@ -86,7 +86,7 @@ public:
             T r_eff_sq = R * R + term_phi_diff + term_chiral;
 
             // dV/dr_eff_sq
-            T dV_dr_eff = 4 * m_epsilon * (
+            T dV_dr_eff = 4 * m_epsilon / N * (
                 -6.0 * m_sigma12 * std::pow(r_eff_sq, -7) +
                  3.0 * m_sigma6  * std::pow(r_eff_sq, -4)
             );
