@@ -19,11 +19,11 @@
 #include "lettuce/FileIO.h"
 #include "lettuce/Integration.h"
 #include "lettuce/Thermostat.h"
-#include "lettuce/LennardJones.h"
-#include "lettuce/LennardJonesOriented.h"
+#include "lettuce/IsotropicLJ.h"
+#include "lettuce/OrientedLJ.h"
 #include "lettuce/FieldCoupled.h"
 #include "lettuce/ChiralLJGeometric.h"
-#include "lettuce/LennardJonesParticles.h"
+#include "lettuce/PotentialFactory.h"
 #include "lettuce/CircleDistribution.h"
 
 enum class ThermostatID {

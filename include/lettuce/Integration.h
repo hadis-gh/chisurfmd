@@ -12,8 +12,6 @@
 
 #include "lettuce/Vec.h"
 #include "lettuce/Circle.h"
-#include "lettuce/LennardJones.h"
-#include "lettuce/LennardJonesOriented.h"
 #include "lettuce/Thermostat.h"
 
 template<typename TParticle, typename Force, typename T = typename TParticle::value_type>

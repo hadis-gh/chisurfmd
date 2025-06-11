@@ -7,11 +7,11 @@
 #include "lettuce/ParticleOriented.h"
 
 template<typename TParticle, typename T = typename TParticle::value_type>
-class LennardJonesOrientedForce {
+class OrientedLJForce {
 public:
     using value_type = T;
 
-    LennardJonesOrientedForce(T epsilon, T sigma, T cutoff, int phiOrder, T angularScale, T alpha)
+    OrientedLJForce(T epsilon, T sigma, T cutoff, int phiOrder, T angularScale, T alpha)
         : m_epsilon(epsilon), m_sigma(sigma), m_cutoff(cutoff)
         , m_sigma6(sigma * sigma * sigma * sigma * sigma * sigma)
         , m_sigma12(m_sigma6 * m_sigma6)
@@ -56,9 +56,9 @@ private:
 };
 
 template<typename TParticle, typename T = typename TParticle::value_type>
-class LennardJonesOrientedPotential {
+class OrientedLJPotential {
 public:
-    LennardJonesOrientedPotential(T epsilon, T sigma, T cutoff, int phiOrder, T angularScale, T alpha)
+    OrientedLJPotential(T epsilon, T sigma, T cutoff, int phiOrder, T angularScale, T alpha)
         : m_epsilon(epsilon), m_sigma(sigma), m_cutoff(cutoff)
         , m_sigma6(sigma * sigma * sigma * sigma * sigma * sigma)
         , m_sigma12(m_sigma6 * m_sigma6)

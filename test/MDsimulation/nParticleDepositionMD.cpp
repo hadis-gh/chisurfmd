@@ -19,10 +19,10 @@
 #include "lettuce/FileIO.h"
 #include "lettuce/Integration.h"
 #include "lettuce/Thermostat.h"
-#include "lettuce/LennardJones.h"
-#include "lettuce/LennardJonesOriented.h"
+#include "lettuce/IsotropicLJ.h"
+#include "lettuce/OrientedLJ.h"
 #include "lettuce/CircleDistribution.h"
-#include "lettuce/LennardJonesParticles.h"
+#include "lettuce/PotentialFactory.h"
 
 enum class ThermostatID {
     None = 0, VelocityScaling = 1, Berendsen = 2, NoseHoover = 3, Andersen = 4
@@ -37,7 +37,7 @@ enum class ThermostatID {
 #endif
 
 #ifndef LETTUCE_POTENTIAL
-#define LETTUCE_POTENTIAL LennardJones<ParticleT>
+#define LETTUCE_POTENTIAL OrientedLJ<ParticleT>
 #endif
 
 #define STRINGIFY(x) #x

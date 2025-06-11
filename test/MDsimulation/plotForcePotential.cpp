@@ -8,7 +8,7 @@
 #include "lettuce/ParticleDot.h"
 #include "lettuce/Utilities.h"
 #include "lettuce/Integration.h"
-#include "lettuce/LennardJones.h"
+#include "lettuce/IsotropicLJ.h"
 #include "lettuce/CircleDistribution.h"
 #include "lettuce/CirclesIntersectionFuncs.h"
 

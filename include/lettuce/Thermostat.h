@@ -6,7 +6,6 @@
 #include "lettuce/Vec.h"
 #include "lettuce/Circle.h"
 #include "lettuce/constants.h"
-#include "lettuce/LennardJones.h"
 
 template<typename TParticle, typename T = typename TParticle::value_type>
 class AndersenThermostat {
