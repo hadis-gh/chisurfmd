@@ -5,6 +5,7 @@
 #include <random>
 #include <iomanip>
 #include <sstream>
+#include <typeinfo>
 
 #include <boost/program_options.hpp>
 
@@ -33,11 +34,11 @@ enum class ThermostatID {
 #endif
 
 #ifndef LETTUCE_PARTICLE
-#define LETTUCE_PARTICLE ParticleOriented
+#define LETTUCE_PARTICLE ParticleDot
 #endif
 
 #ifndef LETTUCE_POTENTIAL
-#define LETTUCE_POTENTIAL OrientedLJ<ParticleT>
+#define LETTUCE_POTENTIAL IsotropicLJ<ParticleT>
 #endif
 
 #define STRINGIFY(x) #x
@@ -261,11 +262,10 @@ int main(int argc, char* argv[]) {
         ParticleT newParticle(speciesInd, newPos);
 
         constexpr bool hasOrientation = (degreesOfFreedom<ParticleT>() > 2);
-
+        // std::is_same<newParticle, ParticleOriented<Real>>::value typeid()==typeid()
         if constexpr (hasOrientation) {
             std::uniform_real_distribution<Real> phiDist(0.0, 2.0 * M_PI);
             newParticle.phi = phiDist(gen);
-            // newParticle.phi = 0.0;
         }
         
         particles.push_back(newParticle);

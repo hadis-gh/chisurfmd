@@ -39,7 +39,7 @@ enum class ThermostatID {
 #endif
 
 #ifndef LETTUCE_POTENTIAL
-#define LETTUCE_POTENTIAL ChiralLJGeometric<ParticleT>
+#define LETTUCE_POTENTIAL IsotropicLJ<ParticleT>
 #endif
 
 #define STRINGIFY(x) #x
