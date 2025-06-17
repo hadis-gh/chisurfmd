@@ -35,7 +35,7 @@ enum class ThermostatID {
 #endif
 
 #ifndef LETTUCE_PARTICLE
-#define LETTUCE_PARTICLE ParticleOriented
+#define LETTUCE_PARTICLE ParticleDot
 #endif
 
 #ifndef LETTUCE_POTENTIAL
