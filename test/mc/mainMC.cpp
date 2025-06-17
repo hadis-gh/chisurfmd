@@ -4,13 +4,44 @@
 #include <cmath>
 #include <random>
 #include <iomanip>
-#include <unordered_map>
+#include <sstream>
 
 #include <boost/program_options.hpp>
+
 #include <adios2.h>
 
 #include "lettuce/Vec.h"
+#include "lettuce/Circle.h"
+#include "lettuce/ParticleDot.h"
+#include "lettuce/ParticleOriented.h"
 #include "lettuce/Utilities.h"
+#include "lettuce/Energy.h"
+#include "lettuce/FileIO.h"
+#include "lettuce/Integration.h"
+#include "lettuce/Thermostat.h"
+#include "lettuce/IsotropicLJ.h"
+#include "lettuce/OrientedLJ.h"
+#include "lettuce/FieldCoupled.h"
+#include "lettuce/ChiralLJGeometric.h"
+#include "lettuce/PotentialFactory.h"
+#include "lettuce/CircleDistribution.h"
+
+#ifndef LETTUCE_PARTICLE
+#define LETTUCE_PARTICLE ParticleOriented
+#endif
+
+#ifndef LETTUCE_POTENTIAL
+#define LETTUCE_POTENTIAL ChiralLJGeometric<ParticleT>
+#endif
+
+#define STRINGIFY(x) #x
+#define TOSTRING(x) STRINGIFY(x)
+
+namespace po = boost::program_options;
+using Real = double;
+
+using ParticleT = LETTUCE_PARTICLE<Real>;
+using Potential = LETTUCE_POTENTIAL;
 
 namespace po = boost::program_options;
 using Real = double;
@@ -36,25 +67,24 @@ void printOptions(const po::variables_map& vm) {
 }
 
 int main(int argc, char* argv[]) {
+    po::variables_map vm;
     po::options_description desc("Allowed Options");
     desc.add_options()
-        ("help,h")
+        ("help,h", "print help")
         ("steps",               po::value<unsigned int>()->default_value(100),                  "Steps per walker")
         ("particlesNum,n",      po::value<unsigned int>()->default_value(100),                  "Number of walkers")
-        ("boxL",                po::value<Real>()->default_value(20.0),                         "Simulation box size (square)")
+        ("boxL",                po::value<unsigned int>()->default_value(20),                         "Simulation box size (square)")
         ("latticeType",         po::value<std::string>()->default_value("square"),              "Lattice type")
         ("saveFile",            po::value<std::string>()->default_value("outputs/mc_0.bp"),     "ADIOS2 output file")
         ("seed",                po::value<unsigned int>(),                                      "Random seed")
         ("printOptions",        po::bool_switch()->default_value(true),                         "Print runtime options");
 
-    po::variables_map vm;
-    po::store(po::parse_command_line(argc, argv, desc), vm);
-    po::notify(vm);
-    if (vm.count("help")) {
-        std::cout << desc << "\n";
-        return 0;
-    }
+    Potential::initProgramOptions(desc);
 
+    po::store(po::command_line_parser(argc, argv).options(desc).run(), vm);
+    po::notify(vm);
+
+    if (vm.count("help") > 0) {std::cout << desc << std::endl; return 0;}
     printOptions(vm);
 
 // ================================== parameters ==================================
@@ -62,17 +92,18 @@ int main(int argc, char* argv[]) {
     unsigned int steps = vm["steps"].as<unsigned int>();
     unsigned int N = vm["particlesNum"].as<unsigned int>();
 
-    Real boxL = vm["boxL"].as<Real>();
+    unsigned int boxL = vm["boxL"].as<unsigned int>();
     std::string latticeType = vm["latticeType"].as<std::string>();
 
     std::mt19937 gen = vm.count("seed") ? std::mt19937(vm["seed"].as<unsigned int>()) : std::mt19937(std::random_device{}());
 
-    std::vector<Vec<int, 2>> directions = getLatticeDirections(latticeType);
+    // std::vector<Vec<int, 2>> directions = getLatticeDirections(latticeType);
+    std::vector<Vec<int, 2>> directions = {{{1, 0}}, {{-1, 0}}, {{0, 1}}, {{0, -1}}};
+
     std::uniform_int_distribution<> dirDist(0, directions.size() - 1);
 
-    int boxSize = static_cast<int>(boxL);
-    std::vector<unsigned int> visitCounts(boxSize * boxSize, 0);
-    std::vector<unsigned int> endpointCounts(boxSize * boxSize, 0);
+    std::vector<unsigned int> visitCounts(boxL * boxL, 0);
+    std::vector<unsigned int> endpointCounts(boxL * boxL, 0);
 
 // ================================== output ==================================
 
@@ -80,9 +111,9 @@ int main(int argc, char* argv[]) {
     adios2::ADIOS adios;
     adios2::IO io = adios.DeclareIO("walk");
 
-    auto varVisit = io.DefineVariable<unsigned int>("visitCounts", {boxSize * boxSize}, {0}, {boxSize * boxSize});
-    auto varEnd = io.DefineVariable<unsigned int>("endpointCounts", {boxSize * boxSize}, {0}, {boxSize * boxSize});
-    io.DefineAttribute<Real>("boxL", boxL);
+    auto varVisit = io.DefineVariable<unsigned int>("visitCounts", {boxL * boxL}, {0}, {boxL * boxL});
+    auto varEnd = io.DefineVariable<unsigned int>("endpointCounts", {boxL * boxL}, {0}, {boxL * boxL});
+    io.DefineAttribute<unsigned int>("boxL", boxL);
     io.DefineAttribute<unsigned int>("steps", steps);
     io.DefineAttribute<unsigned int>("particlesNum", N);
 
@@ -93,18 +124,19 @@ int main(int argc, char* argv[]) {
     clock_t startTime = clock();
 
     for (unsigned int walker = 0; walker < N; ++walker) {
-        Vec<int, 2> pos = {boxSize / 2, boxSize / 2};
+        Vec<int, 2> pos = {{static_cast<int>(boxL / 2), static_cast<int>(boxL / 2)}};
+        
         for (unsigned int s = 0; s < steps; ++s) {
             int dir = dirDist(gen);
             pos += directions[dir];
 
-            if (pos[0] >= 0 && pos[0] < boxSize && pos[1] >= 0 && pos[1] < boxSize) {
-                int idx = pos[0] + boxSize * pos[1];
+            if (pos[0] >= 0 && pos[0] < boxL && pos[1] >= 0 && pos[1] < boxL) {
+                int idx = pos[0] + boxL * pos[1];
                 visitCounts[idx]++;
             }
         }
-        if (pos[0] >= 0 && pos[0] < boxSize && pos[1] >= 0 && pos[1] < boxSize) {
-            int idx = pos[0] + boxSize * pos[1];
+        if (pos[0] >= 0 && pos[0] < boxL && pos[1] >= 0 && pos[1] < boxL) {
+            int idx = pos[0] + boxL * pos[1];
             endpointCounts[idx]++;
         }
     }
