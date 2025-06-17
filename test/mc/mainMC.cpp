@@ -31,7 +31,7 @@
 #endif
 
 #ifndef LETTUCE_POTENTIAL
-#define LETTUCE_POTENTIAL IsotropicLJ<ParticleT>
+#define LETTUCE_POTENTIAL OrientedLJ<ParticleT>
 #endif
 
 #define STRINGIFY(x) #x

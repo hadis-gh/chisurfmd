@@ -38,7 +38,7 @@ enum class ThermostatID {
 #endif
 
 #ifndef LETTUCE_POTENTIAL
-#define LETTUCE_POTENTIAL IsotropicLJ<ParticleT>
+#define LETTUCE_POTENTIAL OrientedLJ<ParticleT>
 #endif
 
 #define STRINGIFY(x) #x
@@ -261,13 +261,23 @@ int main(int argc, char* argv[]) {
         
         ParticleT newParticle(speciesInd, newPos);
 
+        // auto generalizedPos = getGeneralizedVelocities(newParticle);
+        
+        // for (size_t i = 0; i < generalizedPos.size(); ++i) {
+        //     if (i == 2) {
+        //         std::uniform_real_distribution<Real> phiDist(0.0, 2.0 * M_PI);
+        //         generalizedPos[2] = phiDist(gen);
+        //     }
+        // }
+        // setGeneralizedPositions(newParticle, generalizedPos);
+
         constexpr bool hasOrientation = (degreesOfFreedom<ParticleT>() > 2);
         // std::is_same<newParticle, ParticleOriented<Real>>::value typeid()==typeid()
         if constexpr (hasOrientation) {
             std::uniform_real_distribution<Real> phiDist(0.0, 2.0 * M_PI);
             newParticle.phi = phiDist(gen);
         }
-        
+
         particles.push_back(newParticle);
         std::cout << "\rNew particle added! System size: " << particles.size() << std::flush;
 
