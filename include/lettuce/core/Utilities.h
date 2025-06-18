@@ -4,8 +4,8 @@
 #include <cmath>
 #include <boost/program_options.hpp>
 
-#include "lettuce/Vec.h"
-#include "lettuce/ParticleDot.h"
+#include "lettuce/core/Vec.h"
+#include "lettuce/core/ParticleDot.h"
 
 namespace po = boost::program_options;
 

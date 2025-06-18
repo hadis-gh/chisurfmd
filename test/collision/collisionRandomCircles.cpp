@@ -4,10 +4,10 @@
 #include <utility>
 #include <cmath>
 #include <algorithm>
-#include "lettuce/Vec.h"
-#include "lettuce/Circle.h"
-#include "lettuce/CircleDistribution.h"
-#include "lettuce/CirclesIntersectionFuncs.h"
+#include "lettuce/core/Vec.h"
+#include "lettuce/core/Circle.h"
+#include "lettuce/core/CircleDistribution.h"
+#include "lettuce/core/CirclesIntersectionFuncs.h"
 
 float r = 1.0;
 

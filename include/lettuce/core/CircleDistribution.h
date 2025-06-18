@@ -12,9 +12,9 @@
 
 #include "Vec.h"
 #include "Circle.h"
-#include "lettuce/ParticleDot.h"
-#include "lettuce/ParticleOriented.h"
-#include "lettuce/CirclesIntersectionFuncs.h"
+#include "lettuce/core/ParticleDot.h"
+#include "lettuce/core/ParticleOriented.h"
+#include "lettuce/core/CirclesIntersectionFuncs.h"
 
 // ================================== Circle-Particle conversion ==================================
 template<typename TParticle, typename T = typename TParticle::value_type>

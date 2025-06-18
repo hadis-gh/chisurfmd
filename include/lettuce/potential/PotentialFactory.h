@@ -3,10 +3,10 @@
 #include <vector>
 #include <cmath>
 #include <iostream>
-#include "lettuce/Vec.h"
-#include "lettuce/Circle.h"
-#include "lettuce/ParticleDot.h"
-#include "lettuce/ParticleOriented.h"
+#include "lettuce/core/Vec.h"
+#include "lettuce/core/Circle.h"
+#include "lettuce/core/ParticleDot.h"
+#include "lettuce/core/ParticleOriented.h"
 #include "IsotropicLJ.h"
 #include "OrientedLJ.h"
 #include "FieldCoupled.h"

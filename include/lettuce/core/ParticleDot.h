@@ -2,7 +2,7 @@
 
 #include <vector>
 #include <cmath>
-#include "lettuce/Vec.h"
+#include "lettuce/core/Vec.h"
 
 template<typename T>
 struct Species

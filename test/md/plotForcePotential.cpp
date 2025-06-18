@@ -3,14 +3,14 @@
 #include <vector>
 #include <cmath>
 #include <random>
-#include "lettuce/Vec.h"
-#include "lettuce/Circle.h"
-#include "lettuce/ParticleDot.h"
-#include "lettuce/Utilities.h"
-#include "lettuce/Integration.h"
-#include "lettuce/IsotropicLJ.h"
-#include "lettuce/CircleDistribution.h"
-#include "lettuce/CirclesIntersectionFuncs.h"
+#include "lettuce/core/Vec.h"
+#include "lettuce/core/Circle.h"
+#include "lettuce/core/ParticleDot.h"
+#include "lettuce/core/Utilities.h"
+#include "lettuce/md/Integration.h"
+#include "lettuce/potential/IsotropicLJ.h"
+#include "lettuce/core/CircleDistribution.h"
+#include "lettuce/core/CirclesIntersectionFuncs.h"
 
 
 const double sigma = 1;

@@ -10,9 +10,9 @@
 
 #include <adios2.h>
 
-#include "lettuce/Vec.h"
-#include "lettuce/Circle.h"
-#include "lettuce/Thermostat.h"
+#include "lettuce/core/Vec.h"
+#include "lettuce/core/Circle.h"
+#include "lettuce/md/Thermostat.h"
 
 template<typename TParticle, typename Force, typename T = typename TParticle::value_type>
 void EulerSymplecticStep(std::vector<TParticle>& particles, const std::vector<Species<T>>& allSpecies, const T& dt, const T& boxPBC, const Force& force) {

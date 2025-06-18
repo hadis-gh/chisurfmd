@@ -2,8 +2,8 @@
 
 #include <vector>
 #include <cmath>
-#include "lettuce/Vec.h"
-#include "lettuce/ParticleDot.h"
+#include "lettuce/core/Vec.h"
+#include "lettuce/core/ParticleDot.h"
 
 template<typename T>
 struct ParticleOriented : public ParticleDot<T>

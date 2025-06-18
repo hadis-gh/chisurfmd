@@ -6,8 +6,8 @@
 #include <random>
 #include <chrono>
 
-#include "lettuce/Vec.h"
-#include "lettuce/Mat.h"
+#include "lettuce/core/Vec.h"
+#include "lettuce/core/Mat.h"
 
 void simulateRandomWalk(std::vector<unsigned int>& visitCounts,
                         std::vector<unsigned int>& endpointCounts,

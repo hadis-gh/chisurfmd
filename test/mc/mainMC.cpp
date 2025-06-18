@@ -10,21 +10,21 @@
 
 #include <adios2.h>
 
-#include "lettuce/Vec.h"
-#include "lettuce/Circle.h"
-#include "lettuce/ParticleDot.h"
-#include "lettuce/ParticleOriented.h"
-#include "lettuce/Utilities.h"
-#include "lettuce/Energy.h"
-#include "lettuce/FileIO.h"
-#include "lettuce/Integration.h"
-#include "lettuce/Thermostat.h"
-#include "lettuce/IsotropicLJ.h"
-#include "lettuce/OrientedLJ.h"
-#include "lettuce/FieldCoupled.h"
-#include "lettuce/ChiralLJGeometric.h"
-#include "lettuce/PotentialFactory.h"
-#include "lettuce/CircleDistribution.h"
+#include "lettuce/core/Vec.h"
+#include "lettuce/core/Circle.h"
+#include "lettuce/core/ParticleDot.h"
+#include "lettuce/core/ParticleOriented.h"
+#include "lettuce/core/Utilities.h"
+#include "lettuce/core/Energy.h"
+#include "lettuce/core/FileIO.h"
+#include "lettuce/md/Integration.h"
+#include "lettuce/md/Thermostat.h"
+#include "lettuce/potential/IsotropicLJ.h"
+#include "lettuce/potential/OrientedLJ.h"
+#include "lettuce/potential/FieldCoupled.h"
+#include "lettuce/potential/ChiralLJGeometric.h"
+#include "lettuce/potential/PotentialFactory.h"
+#include "lettuce/core/CircleDistribution.h"
 
 #ifndef LETTUCE_PARTICLE
 #define LETTUCE_PARTICLE ParticleOriented

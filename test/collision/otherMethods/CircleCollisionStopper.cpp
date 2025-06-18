@@ -3,8 +3,8 @@
 #include <cmath>
 #include <cstdio>
 #include <ctime>
-#include "lettuce/Vec.h"
-#include "lettuce/Circle.h"
+#include "lettuce/core/Vec.h"
+#include "lettuce/core/Circle.h"
 
 //correct one for test the program
 

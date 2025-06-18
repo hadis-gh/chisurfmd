@@ -1,8 +1,9 @@
 #include <iostream>
 #include <fstream>
-#include "lettuce/CircleDistribution.h"
-#include "lettuce/ParticleDot.h"
-#include "lettuce/ParticleOriented.h"
+
+#include "lettuce/core/CircleDistribution.h"
+#include "lettuce/core/ParticleDot.h"
+#include "lettuce/core/ParticleOriented.h"
 
 int main() {
     int particlesNum = 49;

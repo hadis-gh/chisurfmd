@@ -11,19 +11,19 @@
 
 #include <adios2.h>
 
-#include "lettuce/Vec.h"
-#include "lettuce/Circle.h"
-#include "lettuce/ParticleDot.h"
-#include "lettuce/ParticleOriented.h"
-#include "lettuce/Utilities.h"
-#include "lettuce/Energy.h"
-#include "lettuce/FileIO.h"
-#include "lettuce/Integration.h"
-#include "lettuce/Thermostat.h"
-#include "lettuce/IsotropicLJ.h"
-#include "lettuce/OrientedLJ.h"
-#include "lettuce/CircleDistribution.h"
-#include "lettuce/PotentialFactory.h"
+#include "lettuce/core/Vec.h"
+#include "lettuce/core/Circle.h"
+#include "lettuce/core/ParticleDot.h"
+#include "lettuce/core/ParticleOriented.h"
+#include "lettuce/core/Utilities.h"
+#include "lettuce/core/Energy.h"
+#include "lettuce/core/FileIO.h"
+#include "lettuce/md/Integration.h"
+#include "lettuce/md/Thermostat.h"
+#include "lettuce/core/CircleDistribution.h"
+#include "lettuce/potential/IsotropicLJ.h"
+#include "lettuce/potential/OrientedLJ.h"
+#include "lettuce/potential/PotentialFactory.h"
 
 enum class ThermostatID {
     None = 0, VelocityScaling = 1, Berendsen = 2, NoseHoover = 3, Andersen = 4
@@ -261,15 +261,15 @@ int main(int argc, char* argv[]) {
         
         ParticleT newParticle(speciesInd, newPos);
 
-        // auto generalizedPos = getGeneralizedVelocities(newParticle);
+        auto generalizedPos = getGeneralizedVelocities(newParticle);
         
-        // for (size_t i = 0; i < generalizedPos.size(); ++i) {
-        //     if (i == 2) {
-        //         std::uniform_real_distribution<Real> phiDist(0.0, 2.0 * M_PI);
-        //         generalizedPos[2] = phiDist(gen);
-        //     }
-        // }
-        // setGeneralizedPositions(newParticle, generalizedPos);
+        for (size_t i = 0; i < generalizedPos.size(); ++i) {
+            if (i == 2) {
+                std::uniform_real_distribution<Real> phiDist(0.0, 2.0 * M_PI);
+                generalizedPos[2] = phiDist(gen);
+            }
+        }
+        setGeneralizedPositions(newParticle, generalizedPos);
 
         constexpr bool hasOrientation = (degreesOfFreedom<ParticleT>() > 2);
         // std::is_same<newParticle, ParticleOriented<Real>>::value typeid()==typeid()

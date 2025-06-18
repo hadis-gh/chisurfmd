@@ -4,7 +4,7 @@
 #include <cmath>
 #include <iomanip>
 
-#include "lettuce/Vec.h"
+#include "lettuce/core/Vec.h"
 #include "lettuce/constants.h"
 
 // template<typename TParticle, typename T = typename TParticle::value_type>

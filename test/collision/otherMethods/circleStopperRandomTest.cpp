@@ -4,9 +4,9 @@
 #include <cmath>
 #include <cstdio>
 #include <ctime>
-#include "lettuce/Vec.h"
-#include "lettuce/Circle.h"
-#include "lettuce/CircleDistribution.h"
+#include "lettuce/core/Vec.h"
+#include "lettuce/core/Circle.h"
+#include "lettuce/core/CircleDistribution.h"
 
 //with random circles on the surface - but result needs work/ circle distribution does not seem correct
 

@@ -1,10 +1,10 @@
 #include <iostream>
 #include <fstream>
 #include <random>
-#include "lettuce/Vec.h"
-#include "lettuce/Circle.h"
-#include "lettuce/IntersectionLineCircle.h"
-#include "lettuce/CircleDistribution.h"
+#include "lettuce/core/Vec.h"
+#include "lettuce/core/Circle.h"
+#include "lettuce/core/IntersectionLineCircle.h"
+#include "lettuce/core/CircleDistribution.h"
 
 template <typename T>
 void movePoint (Vec<float> &point, const Vec<T> &direction,const T &length){

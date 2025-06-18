@@ -3,8 +3,8 @@
 #include <vector>
 #include <cmath>
 #include <string>
-#include "lettuce/Vec.h"
-#include "lettuce/Circle.h"
+#include "lettuce/core/Vec.h"
+#include "lettuce/core/Circle.h"
 #include "lettuce/constants.h"
 
 template<typename TParticle, typename T = typename TParticle::value_type>
