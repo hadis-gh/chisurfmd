@@ -27,11 +27,11 @@
 #include "lettuce/core/CircleDistribution.h"
 
 #ifndef LETTUCE_PARTICLE
-#define LETTUCE_PARTICLE ParticleOriented
+#define LETTUCE_PARTICLE ParticleDot
 #endif
 
 #ifndef LETTUCE_POTENTIAL
-#define LETTUCE_POTENTIAL OrientedLJ<ParticleT>
+#define LETTUCE_POTENTIAL OrientedLJ
 #endif
 
 #define STRINGIFY(x) #x
@@ -41,10 +41,7 @@ namespace po = boost::program_options;
 using Real = double;
 
 using ParticleT = LETTUCE_PARTICLE<Real>;
-using Potential = LETTUCE_POTENTIAL;
-
-namespace po = boost::program_options;
-using Real = double;
+using Potential = LETTUCE_POTENTIAL<ParticleT>;
 
 void printOptions(const po::variables_map& vm) {
     if (vm["printOptions"].as<bool>()) {
@@ -73,7 +70,7 @@ int main(int argc, char* argv[]) {
         ("help,h", "print help")
         ("steps",               po::value<unsigned int>()->default_value(100),                  "Steps per walker")
         ("particlesNum,n",      po::value<unsigned int>()->default_value(100),                  "Number of walkers")
-        ("boxL",                po::value<unsigned int>()->default_value(20),                         "Simulation box size (square)")
+        ("boxL",                po::value<unsigned int>()->default_value(20),                   "Simulation box size (square)")
         ("latticeType",         po::value<std::string>()->default_value("square"),              "Lattice type")
         ("saveFile",            po::value<std::string>()->default_value("outputs/mc_0.bp"),     "ADIOS2 output file")
         ("seed",                po::value<unsigned int>(),                                      "Random seed")

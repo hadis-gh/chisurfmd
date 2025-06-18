@@ -8,6 +8,13 @@ find_package(Boost COMPONENTS program_options REQUIRED)
 set(Adios2_DIR "/opt/pkg/adios2/lib/cmake/adios2")
 find_package(Adios2 REQUIRED)
 
+set(lettuce_md_PARTICLE_IDs
+	"ParticleDot"
+	"ParticleOriented"
+	)
+set(lettuce_md_PARTICLE "ParticleOriented" CACHE STRING "Particle type")
+set_property(CACHE lettuce_md_PARTICLE PROPERTY STRINGS ${lettuce_md_PARTICLE_IDs})
+
 set(lettuce_md_THERMOSTAT_IDs
 	"ThermostatID::VelocityScaling"
 	"ThermostatID::Berendsen"
@@ -17,15 +24,18 @@ set(lettuce_md_THERMOSTAT_IDs
 set(lettuce_md_THERMOSTAT "ThermostatID::None" CACHE STRING "Thermostat")
 set_property(CACHE lettuce_md_THERMOSTAT PROPERTY STRINGS ${lettuce_md_THERMOSTAT_IDs})
 
-set(lettuce_md_PARTICLE_IDs
-	"ParticleDot"
-	"ParticleOriented"
+set(lettuce_POTENTIAL_IDs
+	"IsotropicLJ"
+	"OrientedLJ"
+	"ChiralLJGeometric"
+	"TabularDFT"
 	)
-set(lettuce_md_PARTICLE "ParticleOriented" CACHE STRING "Particle type")
-set_property(CACHE lettuce_md_PARTICLE PROPERTY STRINGS ${lettuce_md_PARTICLE_IDs})
+set(lettuce_POTENTIAL "IsotropicLJ" CACHE STRING "Potential")
+set_property(CACHE lettuce_POTENTIAL PROPERTY STRINGS ${lettuce_POTENTIAL_IDs})
 
-add_definitions("-DLETTUCE_THERMOSTAT=${lettuce_md_THERMOSTAT}")
 add_definitions("-DLETTUCE_PARTICLE=${lettuce_md_PARTICLE}")
+add_definitions("-DLETTUCE_THERMOSTAT=${lettuce_md_THERMOSTAT}")
+add_definitions("-DLETTUCE_POTENTIAL=${lettuce_POTENTIAL}")
 
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Werror")
 include_directories(

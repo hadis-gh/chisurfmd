@@ -38,7 +38,7 @@ enum class ThermostatID {
 #endif
 
 #ifndef LETTUCE_POTENTIAL
-#define LETTUCE_POTENTIAL OrientedLJ<ParticleT>
+#define LETTUCE_POTENTIAL OrientedLJ
 #endif
 
 #define STRINGIFY(x) #x
@@ -48,7 +48,7 @@ namespace po = boost::program_options;
 using Real = double;
 
 using ParticleT = LETTUCE_PARTICLE<Real>;
-using Potential = LETTUCE_POTENTIAL;
+using Potential = LETTUCE_POTENTIAL<ParticleT>;
 
 void printOptions(const po::variables_map& vm) {
     std::cout << "\nCompile-time options:\n";
@@ -261,8 +261,14 @@ int main(int argc, char* argv[]) {
         
         ParticleT newParticle(speciesInd, newPos);
 
+        // constexpr bool hasOrientation = (degreesOfFreedom<ParticleT>() > 2);
+        // if constexpr (hasOrientation) {
+        //     std::uniform_real_distribution<Real> phiDist(0.0, 2.0 * M_PI);
+        //     newParticle.phi = phiDist(gen);
+        // }
+
+        //Need to be fixed (older version was under complain of compiler- this one is fine but different than above| fix it later)
         auto generalizedPos = getGeneralizedVelocities(newParticle);
-        
         for (size_t i = 0; i < generalizedPos.size(); ++i) {
             if (i == 2) {
                 std::uniform_real_distribution<Real> phiDist(0.0, 2.0 * M_PI);
@@ -270,13 +276,6 @@ int main(int argc, char* argv[]) {
             }
         }
         setGeneralizedPositions(newParticle, generalizedPos);
-
-        constexpr bool hasOrientation = (degreesOfFreedom<ParticleT>() > 2);
-        // std::is_same<newParticle, ParticleOriented<Real>>::value typeid()==typeid()
-        if constexpr (hasOrientation) {
-            std::uniform_real_distribution<Real> phiDist(0.0, 2.0 * M_PI);
-            newParticle.phi = phiDist(gen);
-        }
 
         particles.push_back(newParticle);
         std::cout << "\rNew particle added! System size: " << particles.size() << std::flush;

@@ -49,7 +49,7 @@ namespace po = boost::program_options;
 using Real = double;
 
 using ParticleT = LETTUCE_PARTICLE<Real>;
-using Potential = LETTUCE_POTENTIAL;
+using Potential = LETTUCE_POTENTIAL<ParticleT>;
 
 void printOptions(const po::variables_map& vm) {
     std::cout << "\nCompile-time options:\n";
