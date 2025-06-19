@@ -261,21 +261,11 @@ int main(int argc, char* argv[]) {
         
         ParticleT newParticle(speciesInd, newPos);
 
-        // constexpr bool hasOrientation = (degreesOfFreedom<ParticleT>() > 2);
-        // if constexpr (hasOrientation) {
-        //     std::uniform_real_distribution<Real> phiDist(0.0, 2.0 * M_PI);
-        //     newParticle.phi = phiDist(gen);
-        // }
-
-        //Need to be fixed (older version was under complain of compiler- this one is fine but different than above| fix it later)
-        auto generalizedPos = getGeneralizedVelocities(newParticle);
-        for (size_t i = 0; i < generalizedPos.size(); ++i) {
-            if (i == 2) {
-                std::uniform_real_distribution<Real> phiDist(0.0, 2.0 * M_PI);
-                generalizedPos[2] = phiDist(gen);
-            }
+        constexpr bool hasOrientation = (degreesOfFreedom<ParticleT>() > 2);
+        if constexpr (hasOrientation) {
+            std::uniform_real_distribution<Real> phiDist(0.0, 2.0 * M_PI);
+            newParticle.phi = phiDist(gen);
         }
-        setGeneralizedPositions(newParticle, generalizedPos);
 
         particles.push_back(newParticle);
         std::cout << "\rNew particle added! System size: " << particles.size() << std::flush;

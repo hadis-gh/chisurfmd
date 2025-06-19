@@ -24,7 +24,6 @@
 #include "lettuce/potential/FieldCoupled.h"
 #include "lettuce/potential/ChiralLJGeometric.h"
 #include "lettuce/potential/PotentialFactory.h"
-#include "lettuce/core/CircleDistribution.h"
 
 enum class ThermostatID {
     None = 0, VelocityScaling = 1, Berendsen = 2, NoseHoover = 3, Andersen = 4
