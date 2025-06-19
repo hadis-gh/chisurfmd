@@ -3,11 +3,7 @@ a.out
 *.o
 run
 build
-buildParticleDot
-buildParticleOriented
 *.mp4
 *.pdf
 *.png
 *.pyc
-recourses
-jbMDdocs
