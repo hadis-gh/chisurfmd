@@ -22,18 +22,22 @@ struct ParticleDot
     using value_type = T;
 
     Vec<value_type> r, v;
-    int8_t h,d;
-    
+    int8_t h, d;
+    bool fixed;
+
     unsigned int species;
 
-    ParticleDot() : species(0), r({0, 0}), v({0, 0}), h(1), d(1) {}
+    ParticleDot()
+        : species(0), r({0, 0}), v({0, 0}), h(1), d(1), fixed(false) {}
 
-    ParticleDot(unsigned int speciesIndex) : species(speciesIndex), r({0, 0}), v({0, 0}) {}
+    ParticleDot(unsigned int speciesIndex)
+        : species(speciesIndex), r({0, 0}), v({0, 0}), h(1), d(1), fixed(false) {}
 
-    ParticleDot(unsigned int speciesIndex, Vec<value_type> position) : species(speciesIndex), r(position), v({0, 0}) {}
+    ParticleDot(unsigned int speciesIndex, Vec<value_type> position)
+        : species(speciesIndex), r(position), v({0, 0}), h(1), d(1), fixed(false) {}
 
     ParticleDot(unsigned int speciesIndex, Vec<value_type> position, Vec<value_type> velocity)
-        : species(speciesIndex), r(position), v(velocity) {}
+        : species(speciesIndex), r(position), v(velocity), h(1), d(1), fixed(false) {}
 };
 
 template<typename Particle, typename SFINAE=void>
