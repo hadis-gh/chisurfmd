@@ -93,6 +93,7 @@ int main(int argc, char* argv[]) {
         ("exclusionRadius",       po::value<Real>()->default_value(.5),                       "exclusion radius")
         ("seed",                  po::value<unsigned int>(),                                  "random seed")
         ("areaL",                 po::value<Real>()->default_value(20.0),                     "simulation size")
+        ("fixRadius",             po::value<Real>()->default_value(10.0),                     "cut-off range for the dynamics neighbors")
         ("particlesDensity",      po::value<Real>(),                                          "packing density of particles")
         ("neighborDistances",     po::value<std::vector<Real>>()->multitoken()->default_value(std::vector<Real>{1.2, 1.5, 2.0}, "1.2 1.5 2.0"),
                                                                                               "Distances for counting neighbors {x-y, omega}")
@@ -121,12 +122,16 @@ int main(int argc, char* argv[]) {
     const Real momentI = vm["momentI"].as<Real>();
     const Real radius = vm["exclusionRadius"].as<Real>();
     unsigned int particlesNum = vm["particlesNum"].as<unsigned int>();
-        if (vm.count("particlesDensity") > 0) {
+    Real areaL;
+
+    if (vm.count("particlesDensity") > 0) {
         const Real density = vm["particlesDensity"].as<Real>();
-        const Real areaL = sqrt(particlesNum * M_PI * radius * radius / (density));
+        areaL = std::sqrt(particlesNum * M_PI * radius * radius / density);
+    } else {
+        areaL = vm["areaL"].as<Real>();
     }
-    Real areaL = vm["areaL"].as<Real>();
     const Real boxPBC = vm["areaL"].as<Real>();
+    const Real fixRadius = vm["fixRadius"].as<Real>();
 
     int speciesInd = 0;
     Species<Real> species1 {mass, momentI, radius};
@@ -248,6 +253,7 @@ int main(int argc, char* argv[]) {
 
         const auto nextEventStep = std::min({writeStateStep, writeEnergyStep, thermoStep, nsteps});
         Real currentTime = step * dt;
+        applyFixRadius(particles, fixRadius, areaL);
         integrate(particles, allSpecies, dt, (nextEventStep - step) * dt, boxPBC, force, integrationMethod);
 
         step = nextEventStep;

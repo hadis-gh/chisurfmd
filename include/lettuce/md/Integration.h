@@ -15,51 +15,72 @@
 #include "lettuce/md/Thermostat.h"
 
 template<typename TParticle, typename Force, typename T = typename TParticle::value_type>
-void EulerSymplecticStep(std::vector<TParticle>& particles, const std::vector<Species<T>>& allSpecies, const T& dt, const T& boxPBC, const Force& force) {
+void EulerSymplecticStep(std::vector<TParticle>& particles,
+                         const std::vector<Species<T>>& allSpecies,
+                         const T& dt, const T& boxPBC,
+                         const Force& force) {
     const auto accelerations = calAllAccelerations(particles, allSpecies, boxPBC, force);
     for (size_t i = 0; i < particles.size(); ++i) {
-        const auto r = getGeneralizedPositions(particles[i]);
-        const auto v = getGeneralizedVelocities(particles[i]);
-        setGeneralizedVelocities(particles[i], v + accelerations[i] * dt);
-        setGeneralizedPositions(particles[i], r + v * dt);
-        implementPBC(particles[i], boxPBC);
+        if (!particles[i].fixed) {
+            const auto r = getGeneralizedPositions(particles[i]);
+            const auto v = getGeneralizedVelocities(particles[i]);
+            setGeneralizedVelocities(particles[i], v + accelerations[i] * dt);
+            setGeneralizedPositions(particles[i], r + v * dt);
+            implementPBC(particles[i], boxPBC);
+        }
     }
 }
 
 template<typename TParticle, typename Force, typename T = typename TParticle::value_type>
-void EulerStep(std::vector<TParticle>& particles, const std::vector<Species<T>>& allSpecies, const T& dt, const T& boxPBC, const Force& force) {
+void EulerStep(std::vector<TParticle>& particles,
+               const std::vector<Species<T>>& allSpecies,
+               const T& dt, const T& boxPBC,
+               const Force& force) {
     const auto accelerations = calAllAccelerations(particles, allSpecies, boxPBC, force);
     for (size_t i = 0; i < particles.size(); ++i) {
-        const auto r = getGeneralizedPositions(particles[i]);
-        const auto v = getGeneralizedVelocities(particles[i]);
-        setGeneralizedPositions(particles[i], r + v * dt);
-        setGeneralizedVelocities(particles[i], v + accelerations[i] * dt);
-        implementPBC(particles[i], boxPBC);
+        if (!particles[i].fixed) {
+            const auto r = getGeneralizedPositions(particles[i]);
+            const auto v = getGeneralizedVelocities(particles[i]);
+            setGeneralizedPositions(particles[i], r + v * dt);
+            setGeneralizedVelocities(particles[i], v + accelerations[i] * dt);
+            implementPBC(particles[i], boxPBC);
+        }
     }
 }
 
 template<typename TParticle, typename Force, typename T = typename TParticle::value_type>
-void VelocityVerletStep(std::vector<TParticle>& particles, const std::vector<Species<T>>& allSpecies, const T& dt, const T& boxPBC, const Force& force) {
+void VelocityVerletStep(std::vector<TParticle>& particles,
+                        const std::vector<Species<T>>& allSpecies,
+                        const T& dt, const T& boxPBC,
+                        const Force& force) {
+    
     const auto old_accelerations = calAllAccelerations(particles, allSpecies, boxPBC, force);
 
     for (size_t i = 0; i < particles.size(); ++i) {
-        const auto r = getGeneralizedPositions(particles[i]);
-        const auto v = getGeneralizedVelocities(particles[i]);
-
-        setGeneralizedPositions(particles[i], r + v * dt + old_accelerations[i] * dt * dt / 2.0);
-        implementPBC(particles[i], boxPBC);
+        if (!particles[i].fixed) {
+            const auto r = getGeneralizedPositions(particles[i]);
+            const auto v = getGeneralizedVelocities(particles[i]);
+            setGeneralizedPositions(particles[i], r + v * dt + old_accelerations[i] * dt * dt / 2.0);
+            implementPBC(particles[i], boxPBC);
+        }
     }
 
     const auto new_accelerations = calAllAccelerations(particles, allSpecies, boxPBC, force);
+
     for (size_t i = 0; i < particles.size(); ++i) {
-        const auto v = getGeneralizedVelocities(particles[i]);
-        setGeneralizedVelocities(particles[i], v + (old_accelerations[i] + new_accelerations[i]) * dt / 2.0);
+        if (!particles[i].fixed) {
+            const auto v = getGeneralizedVelocities(particles[i]);
+            setGeneralizedVelocities(particles[i], v + (old_accelerations[i] + new_accelerations[i]) * dt / 2.0);
+        }
     }
 }
 
 template<typename TParticle, typename Integrator, typename Force, typename T = typename TParticle::value_type>
-void integrate(std::vector<TParticle>& particles, const std::vector<Species<T>>& allSpecies, T dt, T Time, const T& boxPBC, Force&& force, Integrator&& integrator) {
-    int numSteps = static_cast<int>(Time / dt);
+void integrate(std::vector<TParticle>& particles, 
+               const std::vector<Species<T>>& allSpecies, 
+               const T& dt, const T& Time, const T& boxPBC, 
+               Force&& force, Integrator&& integrator) {
+    const int numSteps = static_cast<int>(Time / dt);
 
     for (int i = 0; i < numSteps; ++i) {
         integrator(particles, allSpecies, dt, boxPBC, std::forward<Force>(force));
@@ -69,6 +90,8 @@ void integrate(std::vector<TParticle>& particles, const std::vector<Species<T>>&
 template<typename T, typename Particle>
 void capVelocity(std::vector<Particle>& particles, const std::vector<T>& capV) {
     for (auto& particle : particles) {
+        if (particle.fixed) continue;
+
         auto velocities = getGeneralizedVelocities(particle);
 
         const T translationalCap = capV[0];

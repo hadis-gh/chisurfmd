@@ -245,3 +245,16 @@ void moveParticlesToCenter(std::vector<TParticle>& particles, const std::vector<
         }
     }     
 }
+
+// ================================== Fix particles around the moving one ==================================
+
+template<typename TParticle, typename T = typename TParticle::value_type>
+void applyFixRadius(std::vector<TParticle>& particles, const T& fixRadius, const T& areaL)
+{
+    Vec<T> boxCenter {{areaL / 2, areaL / 2}};
+    for (auto& p : particles) {
+        if ((p.r - boxCenter).abs2() > fixRadius * fixRadius) {
+            p.fixed = true;
+        }
+    }
+}
