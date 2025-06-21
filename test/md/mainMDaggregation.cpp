@@ -13,6 +13,7 @@
 
 #include "lettuce/core/Vec.h"
 #include "lettuce/core/Circle.h"
+#include "lettuce/core/CircleDistribution.h"
 #include "lettuce/core/ParticleDot.h"
 #include "lettuce/core/ParticleOriented.h"
 #include "lettuce/core/Utilities.h"
