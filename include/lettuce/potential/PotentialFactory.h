@@ -12,6 +12,7 @@
 #include "FieldCoupled.h"
 #include "GeometricLJ.h"
 #include "TabularDFT.h"
+#include "PatchyLJ.h"
 
 namespace po = boost::program_options;
 
@@ -126,7 +127,7 @@ struct FieldCoupled<ParticleOriented<T>>
     static void initProgramOptions(po::options_description &desc) {
         IsotropicLJ<ParticleDot<T>>::initProgramOptions(desc);
         desc.add_options()
-            ("GeometricLJStrength", po::value<T>()->default_value(0.5), "Strength of chiral interaction");
+            ("sigmaPatchyLJ", po::value<T>()->default_value(0.5), "Strength of chiral interaction");
     }
 
     static auto force(const po::variables_map &vm) {
@@ -134,7 +135,7 @@ struct FieldCoupled<ParticleOriented<T>>
             vm["LJepsilon"].as<T>(), 
             vm["LJsigma"].as<T>(), 
             vm["LJcutoff"].as<T>(), 
-            vm["GeometricLJStrength"].as<T>()
+            vm["sigmaPatchyLJ"].as<T>()
         );
     }
 
@@ -143,7 +144,7 @@ struct FieldCoupled<ParticleOriented<T>>
             vm["LJepsilon"].as<T>(), 
             vm["LJsigma"].as<T>(), 
             vm["LJcutoff"].as<T>(), 
-            vm["GeometricLJStrength"].as<T>()
+            vm["sigmaPatchyLJ"].as<T>()
         );
     }
 
@@ -161,7 +162,7 @@ struct GeometricLJ<ParticleOriented<T>>
     static void initProgramOptions(po::options_description &desc) {
         IsotropicLJ<ParticleDot<T>>::initProgramOptions(desc);
         desc.add_options()
-            ("GeometricLJStrength", po::value<T>()->default_value(0.5), "Strength of chiral interaction");
+            ("sigmaPatchyLJ", po::value<T>()->default_value(0.5), "Strength of chiral interaction");
     }
 
     static auto force(const po::variables_map &vm) {
@@ -183,6 +184,41 @@ struct GeometricLJ<ParticleOriented<T>>
     }
 
     using ForceType = GeometricLJForce<ParticleOriented<T>>;
+};
+
+// ================================== Patchy colloidal potential - multiply of Lennard-Jones with angular term ==================================
+
+template<typename Particle, typename SFINAE = void>
+struct PatchyLJ;
+
+template<typename T>
+struct PatchyLJ<ParticleOriented<T>>
+{
+    static void initProgramOptions(po::options_description &desc) {
+        IsotropicLJ<ParticleDot<T>>::initProgramOptions(desc);
+        desc.add_options()
+            ("sigmaAngularScale", po::value<T>()->default_value(4.), "asitropic strength of potential");
+    }
+
+    static auto force(const po::variables_map &vm) {
+        return PatchyLJForce<ParticleOriented<T>>(
+            vm["LJepsilon"].as<T>(), 
+            vm["LJsigma"].as<T>(), 
+            vm["LJcutoff"].as<T>(),
+            vm["sigmaAngularScale"].as<T>()
+        );
+    }
+
+    static auto potential(const po::variables_map &vm) {
+        return PatchyLJPotential<ParticleOriented<T>>(
+            vm["LJepsilon"].as<T>(), 
+            vm["LJsigma"].as<T>(), 
+            vm["LJcutoff"].as<T>(),
+            vm["sigmaAngularScale"].as<T>()
+        );
+    }
+
+    using ForceType = PatchyLJForce<ParticleOriented<T>>;
 };
 
 // ================================== Extract Potential and Force from file ->> DFTB-based ==================================

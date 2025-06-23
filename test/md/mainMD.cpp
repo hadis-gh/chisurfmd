@@ -23,6 +23,7 @@
 #include "lettuce/potential/IsotropicLJ.h"
 #include "lettuce/potential/OrientedLJ.h"
 #include "lettuce/potential/GeometricLJ.h"
+#include "lettuce/potential/PatchyLJ.h"
 #include "lettuce/potential/FieldCoupled.h"
 #include "lettuce/potential/PotentialFactory.h"
 
