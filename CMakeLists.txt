@@ -27,7 +27,7 @@ set_property(CACHE lettuce_md_THERMOSTAT PROPERTY STRINGS ${lettuce_md_THERMOSTA
 set(lettuce_POTENTIAL_IDs
 	"IsotropicLJ"
 	"OrientedLJ"
-	"ChiralLJGeometric"
+	"GeometricLJ"
 	"TabularDFT"
 	)
 set(lettuce_POTENTIAL "IsotropicLJ" CACHE STRING "Potential")

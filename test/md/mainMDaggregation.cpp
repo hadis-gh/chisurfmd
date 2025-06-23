@@ -21,9 +21,9 @@
 #include "lettuce/core/FileIO.h"
 #include "lettuce/md/Integration.h"
 #include "lettuce/md/Thermostat.h"
-#include "lettuce/core/CircleDistribution.h"
 #include "lettuce/potential/IsotropicLJ.h"
 #include "lettuce/potential/OrientedLJ.h"
+#include "lettuce/potential/GeometricLJ.h"
 #include "lettuce/potential/PotentialFactory.h"
 
 enum class ThermostatID {

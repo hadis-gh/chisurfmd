@@ -22,8 +22,8 @@
 #include "lettuce/md/Thermostat.h"
 #include "lettuce/potential/IsotropicLJ.h"
 #include "lettuce/potential/OrientedLJ.h"
+#include "lettuce/potential/GeometricLJ.h"
 #include "lettuce/potential/FieldCoupled.h"
-#include "lettuce/potential/ChiralLJGeometric.h"
 #include "lettuce/potential/PotentialFactory.h"
 
 enum class ThermostatID {

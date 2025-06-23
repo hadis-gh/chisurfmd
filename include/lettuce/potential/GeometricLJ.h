@@ -7,9 +7,9 @@
 #include "lettuce/core/ParticleOriented.h"
 
 template<typename TParticle, typename T = typename TParticle::value_type>
-class ChiralLJGeometricPotential {
+class GeometricLJPotential {
 public:
-    ChiralLJGeometricPotential(T epsilon, T sigma, T cutoff, T particle_radius)
+    GeometricLJPotential(T epsilon, T sigma, T cutoff, T particle_radius)
         : m_epsilon(epsilon), m_sigma(sigma), m_cutoff(cutoff), m_particle_radius(particle_radius),
           m_sigma6(std::pow(sigma, 6)), m_sigma12(std::pow(sigma, 12)) {}
 
@@ -25,12 +25,12 @@ public:
 
         T delta_phi = phi_j - phi_i;
         T cos_delta_phi = std::cos(delta_phi);
-        T term_phi_diff = 2.0 * m_particle_radius * m_particle_radius * std::pow(1 - cos_delta_phi, 2);
+        T term_phi_diff = 2.0 * m_particle_radius * m_particle_radius * (1 - cos_delta_phi);
         
         T total_LJ = 0;
 
         for (int n = 0; n < patchNum; ++n) {
-            T chiral_shift = 2 * M_PI * n /N;
+            T chiral_shift = n * 2 * M_PI / N;
 
             T cos_j_term = std::cos(phi_j - gamma + chiral_shift);
             T cos_i_term = std::cos(phi_i - gamma + chiral_shift);
@@ -53,9 +53,9 @@ private:
 };
 
 template<typename TParticle, typename T = typename TParticle::value_type>
-class ChiralLJGeometricForce {
+class GeometricLJForce {
 public:
-    ChiralLJGeometricForce(T epsilon, T sigma, T cutoff, T particle_radius)
+    GeometricLJForce(T epsilon, T sigma, T cutoff, T particle_radius)
         : m_epsilon(epsilon), m_sigma(sigma), m_cutoff(cutoff), m_particle_radius(particle_radius),
           m_sigma6(std::pow(sigma, 6)), m_sigma12(std::pow(sigma, 12)) {}
 

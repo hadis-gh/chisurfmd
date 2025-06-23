@@ -10,7 +10,7 @@
 #include "IsotropicLJ.h"
 #include "OrientedLJ.h"
 #include "FieldCoupled.h"
-#include "ChiralLJGeometric.h"
+#include "GeometricLJ.h"
 #include "TabularDFT.h"
 
 namespace po = boost::program_options;
@@ -126,7 +126,7 @@ struct FieldCoupled<ParticleOriented<T>>
     static void initProgramOptions(po::options_description &desc) {
         IsotropicLJ<ParticleDot<T>>::initProgramOptions(desc);
         desc.add_options()
-            ("ChiralLJGeometricStrength", po::value<T>()->default_value(0.5), "Strength of chiral interaction");
+            ("GeometricLJStrength", po::value<T>()->default_value(0.5), "Strength of chiral interaction");
     }
 
     static auto force(const po::variables_map &vm) {
@@ -134,7 +134,7 @@ struct FieldCoupled<ParticleOriented<T>>
             vm["LJepsilon"].as<T>(), 
             vm["LJsigma"].as<T>(), 
             vm["LJcutoff"].as<T>(), 
-            vm["ChiralLJGeometricStrength"].as<T>()
+            vm["GeometricLJStrength"].as<T>()
         );
     }
 
@@ -143,7 +143,7 @@ struct FieldCoupled<ParticleOriented<T>>
             vm["LJepsilon"].as<T>(), 
             vm["LJsigma"].as<T>(), 
             vm["LJcutoff"].as<T>(), 
-            vm["ChiralLJGeometricStrength"].as<T>()
+            vm["GeometricLJStrength"].as<T>()
         );
     }
 
@@ -153,19 +153,19 @@ struct FieldCoupled<ParticleOriented<T>>
 // ================================== Lennard-Jones but replace r_ij with distance of amino acids V_LJ(R_ij) ... R_ij(r_ij, phi_i, phi_j) ==================================
 
 template<typename Particle, typename SFINAE = void>
-struct ChiralLJGeometric;
+struct GeometricLJ;
 
 template<typename T>
-struct ChiralLJGeometric<ParticleOriented<T>>
+struct GeometricLJ<ParticleOriented<T>>
 {
     static void initProgramOptions(po::options_description &desc) {
         IsotropicLJ<ParticleDot<T>>::initProgramOptions(desc);
         desc.add_options()
-            ("ChiralLJGeometricStrength", po::value<T>()->default_value(0.5), "Strength of chiral interaction");
+            ("GeometricLJStrength", po::value<T>()->default_value(0.5), "Strength of chiral interaction");
     }
 
     static auto force(const po::variables_map &vm) {
-        return ChiralLJGeometricForce<ParticleOriented<T>>(
+        return GeometricLJForce<ParticleOriented<T>>(
             vm["LJepsilon"].as<T>(), 
             vm["LJsigma"].as<T>(), 
             vm["LJcutoff"].as<T>(),
@@ -174,7 +174,7 @@ struct ChiralLJGeometric<ParticleOriented<T>>
     }
 
     static auto potential(const po::variables_map &vm) {
-        return ChiralLJGeometricPotential<ParticleOriented<T>>(
+        return GeometricLJPotential<ParticleOriented<T>>(
             vm["LJepsilon"].as<T>(), 
             vm["LJsigma"].as<T>(), 
             vm["LJcutoff"].as<T>(),
@@ -182,7 +182,7 @@ struct ChiralLJGeometric<ParticleOriented<T>>
         );
     }
 
-    using ForceType = ChiralLJGeometricForce<ParticleOriented<T>>;
+    using ForceType = GeometricLJForce<ParticleOriented<T>>;
 };
 
 // ================================== Extract Potential and Force from file ->> DFTB-based ==================================
