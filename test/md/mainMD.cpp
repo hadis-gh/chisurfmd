@@ -95,7 +95,7 @@ int main(int argc, char* argv[]) {
         ("exclusionRadius",       po::value<Real>()->default_value(.5),                       "exclusion radius")
         ("seed",                  po::value<unsigned int>(),                                  "random seed")
         ("areaL",                 po::value<Real>()->default_value(20.0),                     "simulation size")
-        ("fixRadius",             po::value<Real>()->default_value(10.0),                     "cut-off range for the dynamics neighbors")
+        ("fixRadius",             po::value<Real>()->default_value(20.0),                     "cut-off range for the dynamics neighbors")
         ("particlesDensity",      po::value<Real>(),                                          "packing density of particles")
         ("neighborDistances",     po::value<std::vector<Real>>()->multitoken()->default_value(std::vector<Real>{1.2, 1.5, 2.0}, "1.2 1.5 2.0"),
                                                                                               "Distances for counting neighbors {x-y, omega}")
@@ -250,12 +250,13 @@ int main(int argc, char* argv[]) {
 
 // ================================== Integration Loop ==================================
 
+    applyFixRadius(particles, fixRadius, areaL); //later change to split list of fixed and moving particles
+    
     while (step < nsteps) {
         engine.BeginStep();
 
         const auto nextEventStep = std::min({writeStateStep, writeEnergyStep, thermoStep, nsteps});
         Real currentTime = step * dt;
-        applyFixRadius(particles, fixRadius, areaL);
         integrate(particles, allSpecies, dt, (nextEventStep - step) * dt, boxPBC, force, integrationMethod);
 
         step = nextEventStep;

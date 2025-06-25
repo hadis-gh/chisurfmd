@@ -263,17 +263,17 @@ int main(int argc, char* argv[]) {
 // ================================== Integration Loop ==================================
 
 
-    for (unsigned int stepMC = 0; stepMC < nstepsMC; ++stepMC) {
-        auto particlesMDtarget = particleSelector(particles, gen, boxL, areaL);
+    for (unsigned int stepMC = 0; stepMC < nstepsMC; ++stepMC) {  //another for loop for NumParticles
+        auto particlesMDtarget = particleSelector(particles, gen, boxL, areaL); //fixRadius);
         shifProposal(particlesMDtarget, gen, latticeSize, latticeType);
-        auto initialEnergy = calPotentialEnergy(particlesMDtarget, allSpecies, boxL, Potential);
-
+        const auto initialEnergy = calPotentialEnergy(particlesMDtarget, allSpecies, boxL, Potential);
+        
+        applyFixRadius(particlesMDtarget, fixRadius, areaL);
         while (step < nstepsMD) {
             engine.BeginStep();
 
             const auto nextEventStep = std::min({writeStateStep, writeEnergyStep, thermoStep, nstepsMD});
             Real currentTime = step * dt;
-            applyFixRadius(particlesMDtarget, fixRadius, areaL);
             integrate(particlesMDtarget, allSpecies, dt, (nextEventStep - step) * dt, boxPBC, force, integrationMethod);
 
             step = nextEventStep;
@@ -350,8 +350,8 @@ int main(int argc, char* argv[]) {
         }
         engine.Close();
         auto newParticles = makeNewConfig(particles, particlesMDtarget);
-        auto finalEnergy = calPotentialEnergy(particlesMDtarget, allSpecies, boxL, Potential);
-        auto energyDifference = finalEnergy - initialEnergy;
+        const auto finalEnergy = calPotentialEnergy(particlesMDtarget, allSpecies, boxL, Potential);
+        const auto energyDifference = finalEnergy - initialEnergy;
         bool acceptence = metropolis(energyDifference);
         if (acceptence==1) {particles = newParticles};
     }

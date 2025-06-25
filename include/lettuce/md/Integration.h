@@ -14,6 +14,8 @@
 #include "lettuce/core/Circle.h"
 #include "lettuce/md/Thermostat.h"
 
+//make integrators as object
+
 template<typename TParticle, typename Force, typename T = typename TParticle::value_type>
 void EulerSymplecticStep(std::vector<TParticle>& particles,
                          const std::vector<Species<T>>& allSpecies,
