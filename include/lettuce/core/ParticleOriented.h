@@ -138,13 +138,8 @@ Vec<T, 3> calForceTwo(const ParticleOriented<T>& p1, const ParticleOriented<T>& 
     if (r == 0) return {{0, 0}};
     
     Vec<T, 3> f = force(p1, p2, dr, r);
-    Vec<T, 3> force_vec;
-
-    force_vec[0] = f[0] * dr[0] / r;
-    force_vec[1] = f[1] * dr[1] / r;
-    force_vec[2] = f[2];
     
-    return force_vec;
+    return f;
 }
 
 template<typename T, typename Force>
