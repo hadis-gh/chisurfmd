@@ -127,7 +127,7 @@ struct FieldCoupled<ParticleOriented<T>>
     static void initProgramOptions(po::options_description &desc) {
         IsotropicLJ<ParticleDot<T>>::initProgramOptions(desc);
         desc.add_options()
-            ("sigmaPatchyLJ", po::value<T>()->default_value(0.5), "Strength of chiral interaction");
+            ("fieldCoupleFactor", po::value<T>()->default_value(0.5), "Strength of chiral interaction");
     }
 
     static auto force(const po::variables_map &vm) {
@@ -135,7 +135,7 @@ struct FieldCoupled<ParticleOriented<T>>
             vm["LJepsilon"].as<T>(), 
             vm["LJsigma"].as<T>(), 
             vm["LJcutoff"].as<T>(), 
-            vm["sigmaPatchyLJ"].as<T>()
+            vm["fieldCoupleFactor"].as<T>()
         );
     }
 
@@ -144,7 +144,7 @@ struct FieldCoupled<ParticleOriented<T>>
             vm["LJepsilon"].as<T>(), 
             vm["LJsigma"].as<T>(), 
             vm["LJcutoff"].as<T>(), 
-            vm["sigmaPatchyLJ"].as<T>()
+            vm["fieldCoupleFactor"].as<T>()
         );
     }
 
@@ -197,7 +197,10 @@ struct PatchyLJ<ParticleOriented<T>>
     static void initProgramOptions(po::options_description &desc) {
         IsotropicLJ<ParticleDot<T>>::initProgramOptions(desc);
         desc.add_options()
-            ("sigmaAngularScale", po::value<T>()->default_value(4.), "asitropic strength of potential");
+            ("sigmaAngularScale",   po::value<T>()->default_value(4.),              "asitropic strength of potential")
+            ("patchNum",            po::value<unsigned int>()->default_value(3),    "asitropic strength of potential")
+            ("useSumPatch",         po::value<bool>()->default_value(false),        "asitropic strength of potential")    
+        ;
     }
 
     static auto force(const po::variables_map &vm) {
@@ -205,7 +208,9 @@ struct PatchyLJ<ParticleOriented<T>>
             vm["LJepsilon"].as<T>(), 
             vm["LJsigma"].as<T>(), 
             vm["LJcutoff"].as<T>(),
-            vm["sigmaAngularScale"].as<T>()
+            vm["sigmaAngularScale"].as<T>(),
+            vm["patchNum"].as<unsigned int>(),
+            vm["useSumPatch"].as<bool>()
         );
     }
 
@@ -214,7 +219,9 @@ struct PatchyLJ<ParticleOriented<T>>
             vm["LJepsilon"].as<T>(), 
             vm["LJsigma"].as<T>(), 
             vm["LJcutoff"].as<T>(),
-            vm["sigmaAngularScale"].as<T>()
+            vm["sigmaAngularScale"].as<T>(),
+            vm["patchNum"].as<unsigned int>(),
+            vm["useSumPatch"].as<bool>()
         );
     }
 
@@ -232,10 +239,10 @@ struct TabularDFT<ParticleOriented<T>>
     static void initProgramOptions(po::options_description &desc) {
         IsotropicLJ<ParticleDot<T>>::initProgramOptions(desc);
         desc.add_options()
-        ("tabularPotentialFile", po::value<std::string>() ,"file path of potential data")
-        ("tabularForceFile", po::value<std::string>() ,"file path of force data")    
-        ("bpIO", po::value<adios2::IO>() ,"adios IO")    
-        ("parametersTabular", po::value<std::vector<T>>() ,"parameters for tabular potential")    
+        ("tabularPotentialFile",    po::value<std::string>(),      "file path of potential data")
+        ("tabularForceFile",        po::value<std::string>(),      "file path of force data")    
+        ("bpIO",                    po::value<adios2::IO>(),       "adios IO")    
+        ("parametersTabular",       po::value<std::vector<T>>(),   "parameters for tabular potential")    
         ;
     }
 
