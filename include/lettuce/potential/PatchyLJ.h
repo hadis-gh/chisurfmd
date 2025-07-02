@@ -79,14 +79,6 @@ public:
         return LJ_pot * angular_factor;
     }
 
-    // Getter methods
-    T getEpsilon() const { return m_epsilon; }
-    T getSigma() const { return m_sigma; }
-    T getCutoff() const { return m_cutoff; }
-    T getSigmaAngular() const { return m_sigma_angular; }
-    int getNumPatches() const { return m_num_patches; }
-    bool getUseSumMode() const { return m_use_sum_mode; }
-
 private:
     T m_epsilon, m_sigma, m_cutoff, m_sigma_angular;
     unsigned int m_num_patches;
@@ -214,14 +206,6 @@ public:
 
         return {{force_x, force_y, torque}};
     }
-
-    // Getter methods
-    T getEpsilon() const { return m_epsilon; }
-    T getSigma() const { return m_sigma; }
-    T getCutoff() const { return m_cutoff; }
-    T getSigmaAngular() const { return m_sigma_angular; }
-    int getNumPatches() const { return m_num_patches; }
-    bool getUseSumMode() const { return m_use_sum_mode; }
 
 private:
     T m_epsilon, m_sigma, m_cutoff, m_sigma_angular;
