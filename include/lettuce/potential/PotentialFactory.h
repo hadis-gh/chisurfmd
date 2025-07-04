@@ -197,9 +197,7 @@ struct PatchyLJ<ParticleOriented<T>>
     static void initProgramOptions(po::options_description &desc) {
         IsotropicLJ<ParticleDot<T>>::initProgramOptions(desc);
         desc.add_options()
-            ("sigmaAngularScale",   po::value<T>()->default_value(4.),              "asitropic strength of potential")
-            ("patchNum",            po::value<unsigned int>()->default_value(3),    "asitropic strength of potential")
-            ("useSumPatch",         po::value<bool>()->default_value(false),        "asitropic strength of potential")    
+            ("sigmaAngularScale",   po::value<T>()->default_value(2.),              "asitropic strength of potential")   
         ;
     }
 
@@ -208,9 +206,7 @@ struct PatchyLJ<ParticleOriented<T>>
             vm["LJepsilon"].as<T>(), 
             vm["LJsigma"].as<T>(), 
             vm["LJcutoff"].as<T>(),
-            vm["sigmaAngularScale"].as<T>(),
-            vm["patchNum"].as<unsigned int>(),
-            vm["useSumPatch"].as<bool>()
+            vm["sigmaAngularScale"].as<T>()
         );
     }
 
@@ -219,9 +215,7 @@ struct PatchyLJ<ParticleOriented<T>>
             vm["LJepsilon"].as<T>(), 
             vm["LJsigma"].as<T>(), 
             vm["LJcutoff"].as<T>(),
-            vm["sigmaAngularScale"].as<T>(),
-            vm["patchNum"].as<unsigned int>(),
-            vm["useSumPatch"].as<bool>()
+            vm["sigmaAngularScale"].as<T>()
         );
     }
 
