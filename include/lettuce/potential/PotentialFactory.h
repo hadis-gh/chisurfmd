@@ -197,7 +197,7 @@ struct PatchyLJ<ParticleOriented<T>>
     static void initProgramOptions(po::options_description &desc) {
         IsotropicLJ<ParticleDot<T>>::initProgramOptions(desc);
         desc.add_options()
-            ("sigmaAngularScale",   po::value<T>()->default_value(2.),              "asitropic strength of potential")   
+            ("sigmaAngularScale",   po::value<T>()->default_value(.262),              "asitropic strength of potential")   
         ;
     }
 
