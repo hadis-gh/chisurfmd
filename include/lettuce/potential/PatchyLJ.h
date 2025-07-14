@@ -8,7 +8,8 @@
 #include "lettuce/core/ParticleOriented.h"
 
 template<typename T>
-const std::vector<T> patchAngles = {0, M_PI/3, 2*M_PI/3, 3*M_PI/3, 4*M_PI/3, 5*M_PI/3};
+const std::vector<T> patchAngles = {0};
+// const std::vector<T> patchAngles = {0, M_PI/3, 2*M_PI/3, 3*M_PI/3, 4*M_PI/3, 5*M_PI/3};
 
 template<typename T>
 constexpr T wrapAngle(const T& ang) {
@@ -22,20 +23,6 @@ T findBestPatchAngle(const T& phi, const T& gamma, const std::vector<T>& patchAn
         T patchAngle = phi + patchAngs[k];
         T deltaTheta = wrapAngle(patchAngle - gamma);
         minTheta = std::min(minTheta, std::abs(deltaTheta));
-    }
-    return minTheta;
-}
-template<typename T>
-T findBestPatchAngle(const T& phi, const T& gamma, const std::vector<T>& patchAngs, T& bestPatchAngle, T& theta) {
-    T minTheta = M_PI;
-    for (auto patchAng : patchAngs) {
-        T angle = wrapAngle(phi + patchAng - gamma);
-        T absAngle = std::abs(angle);
-        if (absAngle < minTheta) {
-            minTheta = absAngle;
-            bestPatchAngle = phi + patchAng;
-            theta = angle;
-        }
     }
     return minTheta;
 }
@@ -99,19 +86,17 @@ public:
         const auto dx = dr[0];
         const auto dy = dr[1];
         const auto r2 = dx * dx + dy * dy;
+        const auto r6 = r2 * r2 * r2;
 
         const T sr6 = m_sigma6 / std::pow(R, 6);
         const T sr12 = sr6 * sr6;
         const T LJpot = 4.0 * m_epsilon * (sr12 - sr6);
 
         const T fx_lj = - 4.0 * m_epsilon 
-            * (6.0 * m_sigma6 * dx / std::pow(r2, 4) 
-            - 12.0 * m_sigma6 * m_sigma6 * dx / std::pow(r2, 7));
+            * (6.0 * m_sigma6 / (r6 * R) - 12.0 * m_sigma6 * m_sigma6 / (r6 * r6 * R)) * dx / R; 
 
         const T fy_lj = - 4.0 * m_epsilon 
-            * (6.0 * m_sigma6 * dy / std::pow(r2, 4) 
-            - 12.0 * m_sigma6 * m_sigma6 * dy / std::pow(r2, 7));
-
+            * (6.0 * m_sigma6 / (r6 * R) - 12.0 * m_sigma6 * m_sigma6 / (r6 * r6 * R)) * dy / R; 
 
         if (R < m_sigma) {
             return {{fx_lj, fy_lj, 0}};
@@ -126,18 +111,20 @@ public:
         const T gamma_ij = std::atan2(dy, dx);
         const T gamma_ji = wrapAngle(gamma_ij + M_PI);
 
-        T minTheta_i = findBestPatchAngle(phi_i, gamma_ij, phi_i_patcheAngs);
-        T minTheta_j = findBestPatchAngle(phi_j, gamma_ji, phi_j_patcheAngs);
+        T minTheta_i = findBestPatchAngle(phi_i, gamma_ij, phi_i_patcheAngs);       // θi = φi + patch - γ
+        T minTheta_j = findBestPatchAngle(phi_j, gamma_ji, phi_j_patcheAngs);       // θj = φj + patch - (γ + π)
         
         const T angularFactor = std::exp(-minTheta_i * minTheta_i / m_2sigmaAng_sq) *
                         std::exp(-minTheta_j * minTheta_j / m_2sigmaAng_sq);
 
-        const T fx = - (4.0 * m_epsilon * LJpot * (-2 * dy * (minTheta_j + minTheta_i) / r2 * angularFactor)) / m_2sigmaAng_sq
-                     - fx_lj * angularFactor;
-        const T fy = - (4.0 * m_epsilon * LJpot * (2 * dx * (minTheta_j + minTheta_i) / r2 * angularFactor))  / m_2sigmaAng_sq
-                     - fy_lj * angularFactor;
-        const T torquei = - (8.0 * m_epsilon * LJpot * minTheta_i * angularFactor) / m_2sigmaAng_sq;
-        
+        const T dAdphi = - 2.0 * minTheta_j * angularFactor / m_2sigmaAng_sq;
+
+        const T fx = fx_lj * angularFactor - dAdphi * dy / r2 * LJpot;          // -∂U/∂xj = - A * ∂U/∂x - ∂A/∂x * U = fx_lj - ∂A/∂θ * ∂θ/∂γ * ∂γ/dx * Ulj
+
+        const T fy = fy_lj * angularFactor + dAdphi * dx / r2 * LJpot;
+
+        const T torquei = - dAdphi * LJpot;                                     // -∂U/∂φj = -∂A/∂φj * Ulj
+
         return {{fx, fy, torquei}};
     }
 
