@@ -162,7 +162,10 @@ struct GeometricLJ<ParticleOriented<T>>
     static void initProgramOptions(po::options_description &desc) {
         IsotropicLJ<ParticleDot<T>>::initProgramOptions(desc);
         desc.add_options()
-            ("sigmaPatchyLJ", po::value<T>()->default_value(0.5), "Strength of chiral interaction");
+            ("factorPatchyLJ",      po::value<T>()->default_value(0.5),     "Strength of chiral interaction")
+            ("patchNum",            po::value<int>()->default_value(1),     "Number of patches for geometric LJ")
+            ("patchRadius",         po::value<T>()->default_value(0.5),     "Exclusion radius for geometric LJ")
+        ;
     }
 
     static auto force(const po::variables_map &vm) {
@@ -170,7 +173,9 @@ struct GeometricLJ<ParticleOriented<T>>
             vm["LJepsilon"].as<T>(), 
             vm["LJsigma"].as<T>(), 
             vm["LJcutoff"].as<T>(),
-            vm["exclusionRadius"].as<T>()
+            vm["patchRadius"].as<T>(),
+            vm["patchNum"].as<int>(),
+            vm["factorPatchyLJ"].as<T>()
         );
     }
 
@@ -179,7 +184,9 @@ struct GeometricLJ<ParticleOriented<T>>
             vm["LJepsilon"].as<T>(), 
             vm["LJsigma"].as<T>(), 
             vm["LJcutoff"].as<T>(),
-            vm["exclusionRadius"].as<T>()
+            vm["patchRadius"].as<T>(),
+            vm["patchNum"].as<int>(),
+            vm["factorPatchyLJ"].as<T>()
         );
     }
 
