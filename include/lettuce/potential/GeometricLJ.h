@@ -22,7 +22,7 @@ constexpr T lennardJonesDerivative(const T& r, const T& sigma, const T& epsilon)
     const T sr = sigma / r;
     const T sr6 = sr * sr * sr * sr * sr * sr;
     const T sr12 = sr6 * sr6;
-    return -4.0 * epsilon * (6.0 * sr6 / r - 12.0 * sr12 / r);
+    return 4.0 * epsilon * (6.0 * sr6 / r - 12.0 * sr12 / r);
 }
 
 template<typename TParticle, typename T = typename TParticle::value_type>
@@ -39,6 +39,7 @@ public:
         if (R <= 0 || R > m_cutoff) return 0;
 
         T total_potential = lennardJones(R, m_sigma, m_epsilon);
+        // T total_potential = 0;
 
         const T dx = dr[0];
         const T dy = dr[1];
@@ -94,9 +95,10 @@ public:
         const T dRdx = dx / R;
         const T dRdy = dy / R;
         const T dVdR = lennardJonesDerivative(R, m_sigma, m_epsilon);
+        // const T dVdR = 0;
 
-        T fx = dVdR * dRdx;
-        T fy = dVdR * dRdy; 
+        T fx = - dVdR * dRdx;
+        T fy = - dVdR * dRdy; 
         T torque = 0;
 
         for (int n = 0; n < m_num_patches; ++n) {
@@ -114,16 +116,16 @@ public:
 
             const T dVdr_patch = m_factor_patchy_lj * lennardJonesDerivative(r_patch, m_sigma, m_epsilon);
 
-            const T dr_patchdx = r_patch_dx / r_patch;
+            const T dr_patchdx = r_patch_dx / r_patch;   ///there should be a -
             const T dr_patchdy = r_patch_dy / r_patch;
 
-            fx += dVdr_patch * dr_patchdx;
-            fy += dVdr_patch * dr_patchdy;
+            fx -= dVdr_patch * dr_patchdx;
+            fy -= dVdr_patch * dr_patchdy;
 
             const T ddelta_cos_dphi_i = rho * std::sin(theta_i_n);
             const T ddelta_sin_dphi_i = -rho * std::cos(theta_i_n);
 
-            const T dr_patchdphi_i = (r_patch_dx * (-ddelta_cos_dphi_i) + r_patch_dy * (-ddelta_sin_dphi_i)) / r_patch;
+            const T dr_patchdphi_i = (r_patch_dx * (ddelta_cos_dphi_i) + r_patch_dy * (ddelta_sin_dphi_i)) / r_patch;
             torque += -dVdr_patch * dr_patchdphi_i;
         }
 

@@ -71,7 +71,9 @@ void printOptions(const po::variables_map& vm) {
                 std::cout << option.second.as<unsigned int>();
             } else if (value.type() == typeid(bool)) {
                 std::cout << std::boolalpha << option.second.as<bool>();
-            }
+            } else if (value.type() == typeid(int)) {
+                std::cout << option.second.as<int>();
+            } //////fix trow an error for missing types
             std::cout << std::endl;
         }
     }
@@ -93,7 +95,7 @@ int main(int argc, char* argv[]) {
         ("mass",                  po::value<Real>()->default_value(1.0),                      "mass of particles")       
         ("momentI",               po::value<Real>()->default_value(1.0),                      "moment of inersia")
         ("exclusionRadius",       po::value<Real>()->default_value(.5),                       "exclusion radius")
-        ("seed",                  po::value<unsigned int>(),                                  "random seed")
+        ("seed",                  po::value<unsigned int>()->default_value(1),                "random seed")
         ("areaL",                 po::value<Real>()->default_value(20.0),                     "simulation size")
         ("fixRadius",             po::value<Real>()->default_value(20.0),                     "cut-off range for the dynamics neighbors")
         ("particlesDensity",      po::value<Real>(),                                          "packing density of particles")

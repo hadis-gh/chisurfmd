@@ -434,10 +434,12 @@ def plot_neighbors(neighbors_array, m_temperatures, temperature_show=False, temp
     if temperature_show:
         plot_temperature(m_temperatures)
 
-def plot_energies(kinetic_energy, potential_energy, m_temperatures, show_potential=True, temperature_show=False, temperature_label=False):
-    kinetic_energy_data = kinetic_energy['data']
-    temp_labels = kinetic_energy['temperature label']
-    potential_energy_data = potential_energy['data']
+def plot_energies(kinetic_energy, potential_energy, m_temperatures, show_potential=True, temperature_show=False, temperature_label=False, plot_window=None):
+    if plot_window is None:     
+        plot_window = kinetic_energy['data'].shape[0]
+    kinetic_energy_data = kinetic_energy['data'][:plot_window]
+    temp_labels = kinetic_energy['temperature label'][:plot_window]
+    potential_energy_data = potential_energy['data'][:plot_window]
 
     fig, ax = plt.subplots(figsize=(7, 4))
     ax.grid(True, linestyle='--', alpha=0.7, color='gray')
