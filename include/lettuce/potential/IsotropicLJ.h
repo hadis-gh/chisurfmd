@@ -50,7 +50,7 @@ public:
         const T r6 = effective_r * effective_r * effective_r * effective_r * effective_r * effective_r;
         const T r12 = r6 * r6;
 
-        return 48.0 * m_epsilon * (m_sigma12 / (r12 * effective_r) - 0.5 * m_sigma6 / (r6 * effective_r));
+        return (48.0 * m_epsilon * (m_sigma12 / (r12 * effective_r) - 0.5 * m_sigma6 / (r6 * effective_r)))* dr/r;
     }
 
 private:

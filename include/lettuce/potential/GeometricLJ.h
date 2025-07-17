@@ -116,19 +116,19 @@ public:
 
             const T dVdr_patch = m_factor_patchy_lj * lennardJonesDerivative(r_patch, m_sigma, m_epsilon);
 
-            const T dr_patchdx = r_patch_dx / r_patch;   ///there should be a -
+            const T dr_patchdx = r_patch_dx / r_patch;
             const T dr_patchdy = r_patch_dy / r_patch;
 
-            fx -= dVdr_patch * dr_patchdx;
-            fy -= dVdr_patch * dr_patchdy;
+            fx += - dVdr_patch * dr_patchdx;
+            fy += - dVdr_patch * dr_patchdy;
 
-            const T ddelta_cos_dphi_i = rho * std::sin(theta_i_n);
-            const T ddelta_sin_dphi_i = -rho * std::cos(theta_i_n);
+            const T ddelta_cos_dphi_j = rho * std::sin(theta_j_n);
+            const T ddelta_sin_dphi_j = -rho * std::cos(theta_j_n);
 
-            const T dr_patchdphi_i = (r_patch_dx * (ddelta_cos_dphi_i) + r_patch_dy * (ddelta_sin_dphi_i)) / r_patch;
+            const T dr_patchdphi_i = (- ddelta_sin_dphi_j * r_patch_dy - ddelta_cos_dphi_j * r_patch_dx) / r_patch;
             torque += -dVdr_patch * dr_patchdphi_i;
         }
-
+ 
         return {{fx, fy, torque}};
     }
 
