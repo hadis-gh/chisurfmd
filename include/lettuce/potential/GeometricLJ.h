@@ -7,24 +7,6 @@
 #include "lettuce/core/ParticleDot.h"
 #include "lettuce/core/ParticleOriented.h"
 
-template<typename T>
-constexpr T lennardJones(const T& r, const T& sigma, const T& epsilon) {
-    if (r <= 0) return std::numeric_limits<T>::infinity();
-    const T sr = sigma / r;
-    const T sr6 = sr * sr * sr * sr * sr * sr;
-    const T sr12 = sr6 * sr6;
-    return 4.0 * epsilon * (sr12 - sr6);
-}
-
-template<typename T>
-constexpr T lennardJonesDerivative(const T& r, const T& sigma, const T& epsilon) {
-    if (r <= 0) return std::numeric_limits<T>::infinity();
-    const T sr = sigma / r;
-    const T sr6 = sr * sr * sr * sr * sr * sr;
-    const T sr12 = sr6 * sr6;
-    return 4.0 * epsilon * (6.0 * sr6 / r - 12.0 * sr12 / r);
-}
-
 template<typename TParticle, typename T = typename TParticle::value_type>
 class GeometricLJPotential {
 public:

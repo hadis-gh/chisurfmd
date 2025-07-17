@@ -7,6 +7,24 @@
 #include "lettuce/core/ParticleDot.h"
 #include "lettuce/core/ParticleOriented.h"
 
+template<typename T>
+constexpr T lennardJones(const T& r, const T& sigma, const T& epsilon) {
+    if (r <= 0) return std::numeric_limits<T>::infinity();
+    const T sr = sigma / r;
+    const T sr6 = sr * sr * sr * sr * sr * sr;
+    const T sr12 = sr6 * sr6;
+    return 4.0 * epsilon * (sr12 - sr6);
+}
+
+template<typename T>
+constexpr T lennardJonesDerivative(const T& r, const T& sigma, const T& epsilon) {
+    if (r <= 0) return std::numeric_limits<T>::infinity();
+    const T sr = sigma / r;
+    const T sr6 = sr * sr * sr * sr * sr * sr;
+    const T sr12 = sr6 * sr6;
+    return 4.0 * epsilon * (6.0 * sr6 / r - 12.0 * sr12 / r);
+}
+
 template<typename TParticle, typename T = typename TParticle::value_type>
 class IsotropicLJPotential {
 public:
@@ -18,10 +36,7 @@ public:
     T operator()(const TParticle &p1, const TParticle &p2, const Vec<T, 2>& dr, const T r) const {
         if (r == 0 || r > m_cutoff) return 0;
 
-        const T r6 = r * r * r * r * r * r;
-        const T r12 = r6 * r6;
-
-        return 4.0 * m_epsilon * (m_sigma12 / r12 - m_sigma6 / r6);
+        return lennardJones(r, m_sigma, m_epsilon);
     }
 
 private:
@@ -43,14 +58,8 @@ public:
         , m_sigma12(m_sigma6 * m_sigma6) {}
     T operator()(const TParticle &p1, const TParticle &p2, const Vec<T, 2>& dr, const T r) const {
         if (r > m_cutoff) return 0;
-        
-        const T min_distance = m_sigma * 0.5;
-        const T effective_r = std::max(r, min_distance);
 
-        const T r6 = effective_r * effective_r * effective_r * effective_r * effective_r * effective_r;
-        const T r12 = r6 * r6;
-
-        return (48.0 * m_epsilon * (m_sigma12 / (r12 * effective_r) - 0.5 * m_sigma6 / (r6 * effective_r)))* dr/r;
+        return -lennardJonesDerivative(r, m_sigma, m_epsilon) * dr/r;
     }
 
 private:
