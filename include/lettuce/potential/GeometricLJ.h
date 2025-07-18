@@ -107,8 +107,8 @@ public:
             const T ddelta_cos_dphi_j = rho * std::sin(theta_j_n);
             const T ddelta_sin_dphi_j = -rho * std::cos(theta_j_n);
 
-            const T dr_patchdphi_i = (- ddelta_sin_dphi_j * r_patch_dy - ddelta_cos_dphi_j * r_patch_dx) / r_patch;
-            torque += -dVdr_patch * dr_patchdphi_i;
+            const T dr_patchdphi_j = (- ddelta_sin_dphi_j * r_patch_dy - ddelta_cos_dphi_j * r_patch_dx) / r_patch;
+            torque += -dVdr_patch * dr_patchdphi_j;
         }
  
         return {{fx, fy, torque}};
