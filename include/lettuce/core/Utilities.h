@@ -70,8 +70,8 @@ auto calAveNeighborList(const std::vector<TParticle>& particles, const std::vect
 }
 
 template<typename TParticle, typename T = typename TParticle::value_type>
-T calRotationalOrder(const std::vector<TParticle>& particles) {
-    T orientationalOrder;
+T calOrientationOrder(const std::vector<TParticle>& particles) {
+    T orientationOrder;
     size_t count = 0;
 
 
@@ -84,16 +84,16 @@ T calRotationalOrder(const std::vector<TParticle>& particles) {
                 T deltaPhi = pr1[2] - pr2[2];
                 deltaPhi = std::fmod(deltaPhi + 2*M_PI, 2*M_PI);
                 if (deltaPhi > M_PI) deltaPhi -= 2*M_PI;
-    
-                orientationalOrder += std::cos(2.0 * deltaPhi * M_PI / M_PI);
+
+                orientationOrder += std::cos(2.0 * deltaPhi * M_PI / M_PI);
                 count++;
             } else {
-                orientationalOrder = 0;
+                orientationOrder = 0;
                 count = 1;
             }
         }
     }
-    return orientationalOrder/count;
+    return orientationOrder/count;
 }
 
 // ================================== Center of Mass ==================================

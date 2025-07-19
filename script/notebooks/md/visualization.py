@@ -24,14 +24,17 @@ def plot_heatmap_lj_mod_potential(phi_order=1, angular_scale=0.1, angular_order=
     
     potential_values = system_analysis.lj_mod_potential(R, Delta_phi, phi_order, angular_scale, angular_order, SIGMA, EPSILON)
     
-    fig, axs = plt.subplots(figsize=(7, 7) ,dpi=100)
+    fig, axs = plt.subplots(figsize=(7, 7), dpi=100)
       
     c1 = axs.contourf(R, Delta_phi, potential_values, levels=100, cmap="viridis")
-    fig.colorbar(c1, ax=axs, label='Potential $U_{mod}$')
-
-    axs.set_title(r'Potential $U_{mod}(r, \Delta\phi)$')
-    axs.set_xlabel('Distance $r$')
-    axs.set_ylabel('Δφ (rad)')
+    cbar = fig.colorbar(c1, ax=axs, label='Potential Energy')
+    cbar.ax.tick_params(labelsize=16)
+    cbar.set_label('Potential Energy', fontsize=20)
+    
+    axs.set_title(r'Potential $U(r, \Delta\phi)$', fontsize=24)
+    axs.set_xlabel('Distance $r$', fontsize=20)
+    axs.set_ylabel('Δφ (rad)', fontsize=20)
+    axs.tick_params(axis='both', which='major', labelsize=16)
     
     plt.tight_layout()
     plt.show()
@@ -49,12 +52,15 @@ def plot_heatmap_lj_mod_potential_polar(phi_order=1, angular_scale=0.1, angular_
       
     # Plot the heatmap
     c1 = axs.contourf(Delta_phi, R, potential_values, levels=100, cmap="viridis")
-    fig.colorbar(c1, ax=axs, label='Potential $V_{mod}$')
+    cbar = fig.colorbar(c1, ax=axs, label='Potential Energy', shrink=0.8)
+    cbar.ax.tick_params(labelsize=16)
+    cbar.set_label('Potential Energy', fontsize=20)
     
     # Customize the polar plot
-    axs.set_title(r'Potential $V_{mod}(r, \Delta\phi)$', pad=20)
-    axs.set_xlabel('Δφ (rad)', labelpad=20)
-    axs.set_ylabel('')
+    axs.set_title(r'Potential $U(r, \Delta\phi)$', pad=20, fontsize=24)
+    axs.set_xlabel('Δφ (rad)', labelpad=20, fontsize=20)
+    axs.set_ylabel('', fontsize=20)
+    axs.tick_params(axis='both', which='major', labelsize=16)
     
     axs.grid(False)  # Disable the grid
     axs.set_yticklabels([])  # Remove radial tick labels
@@ -75,12 +81,16 @@ def plot_heatmap_LJmod_pair(potential_type='RRUU', gamma=0, phi_order=1, angular
     fig, axs = plt.subplots(figsize=(7, 7), dpi=100)
       
     c1 = axs.contourf(Phi1, Phi2, potential_values, levels=100, cmap="viridis")
-    fig.colorbar(c1, ax=axs, label='Potential $U_{mod}$')
-    
-    axs.set_title(rf'Potential $U(r, \Delta\phi)$\nType: {potential_type}, γ: {gamma:.2f}')
-    axs.set_xlabel('φ1 (rad)')
-    axs.set_ylabel('φ2 (rad)')
-    
+    # Set shrink to make colorbar shorter
+    cbar = fig.colorbar(c1, ax=axs, label='Potential Energy', shrink=0.8)
+    cbar.ax.tick_params(labelsize=16)
+    cbar.set_label('Potential Energy', fontsize=20)
+
+    axs.set_title(rf'Potential $U(r, \Delta\phi)$, {potential_type}', fontsize=24)
+    axs.set_xlabel('φ1 (rad)', fontsize=20)
+    axs.set_ylabel('φ2 (rad)', fontsize=20)
+    axs.tick_params(axis='both', which='major', labelsize=16)
+
     axs.set_aspect('equal')
     plt.tight_layout()
     plt.show()
@@ -220,7 +230,7 @@ def plot_chiral_new(gamma=0, coupling_scale=1.0, coupling_power=6, pot=system_an
     fig, axs = plt.subplots(figsize=(7, 7), dpi=100)
       
     c1 = axs.contourf(Phi1, Phi2, potential_values, levels=100, cmap="viridis")
-    fig.colorbar(c1, ax=axs, label='Potential $U_{mod}$')
+    fig.colorbar(c1, ax=axs, label='Potential Energy')
     
     axs.set_title(rf'Potential $U(r, \Delta\phi)$\nType: γ: {gamma:.2f}')
     axs.set_xlabel('φ1 (rad)')
@@ -248,12 +258,12 @@ def plot_angular_psi(coupling_scale=1.0, coupling_power=6, pot=system_analysis.p
     fig, axs = plt.subplots(figsize=(7, 7), dpi=100)
       
     c1 = axs.contourf(Phi1, Phi2, potential_values, levels=100, cmap="viridis")
-    fig.colorbar(c1, ax=axs, label='Potential $U_{mod}$')
+    fig.colorbar(c1, ax=axs, label='Potential Energy')
     
     axs.set_title(rf'Potential $U(r, \Delta\phi)$')
-    axs.set_xlabel('$\psi_1$ (rad)')
-    axs.set_ylabel('$\psi_2$ (rad)')
-    
+    axs.set_xlabel(rf'$\psi_1$ (rad)')
+    axs.set_ylabel(rf'$\psi_2$ (rad)')
+
     axs.set_aspect('equal')
     plt.tight_layout()
     plt.show()
@@ -271,7 +281,7 @@ def plot_angular_psi(coupling_scale=1.0, coupling_power=6, pot=system_analysis.p
 #     fig, axs = plt.subplots(figsize=(7, 7), dpi=100)
       
 #     c1 = axs.contourf(Phi1, Phi2, potential_values, levels=100, cmap="viridis")
-#     fig.colorbar(c1, ax=axs, label='Potential $U_{mod}$')
+#     fig.colorbar(c1, ax=axs, label='Potential Energy')
     
 #     axs.set_title(rf'Potential $U(r, \Delta\phi)$\nType: {potential_type}, γ: {gamma:.2f}')
 #     axs.set_xlabel('φ1 (rad)')

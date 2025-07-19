@@ -201,7 +201,7 @@ int main(int argc, char* argv[]) {
 
     adios2::Variable<Real> varT = io.DefineVariable<Real>("time");
     adios2::Variable<int8_t> varHandedness = io.DefineVariable<int8_t>("handedness", {particlesNum}, {0}, {particlesNum});
-    adios2::Variable<int8_t> varOrientation = io.DefineVariable<int8_t>("orientation", {particlesNum}, {0}, {particlesNum});
+    adios2::Variable<int8_t> varAlignment = io.DefineVariable<int8_t>("alignment", {particlesNum}, {0}, {particlesNum});
     adios2::Variable<Real> varPositions = io.DefineVariable<Real>("positions", {particlesNum, D}, {0, 0}, {particlesNum, D});
     adios2::Variable<Real> varVelocities = io.DefineVariable<Real>("velocities", {particlesNum, D}, {0, 0}, {particlesNum, D});
     adios2::Variable<Real> varKineticEnergy = io.DefineVariable<Real>("kinetic energy", {1, 3}, {0, 0}, {1, 3});
@@ -210,7 +210,7 @@ int main(int argc, char* argv[]) {
     adios2::Variable<Real> varComVelocity = io.DefineVariable<Real>("center of mass velocity", {1, D}, {0, 0}, {1, D});
     adios2::Variable<Real> varComAngVelocity = io.DefineVariable<Real>("center of mass angular velocity");
     adios2::Variable<Real> varRealTemperature = io.DefineVariable<Real>("real temperature", {1, 3}, {0, 0}, {1, 3});
-    adios2::Variable<Real> varRotationalOrder = io.DefineVariable<Real>("rotational order");
+    adios2::Variable<Real> varOrientationOrder = io.DefineVariable<Real>("orientation order");
 
     io.DefineAttribute<std::string>("particlesType", particlesType);
     io.DefineAttribute<Real>("particlesNum", particlesNum);
@@ -244,7 +244,7 @@ int main(int argc, char* argv[]) {
     }
 
     std::vector<int8_t> handednessVec(particlesNum);
-    std::vector<int8_t> orientationVec(particlesNum);
+    std::vector<int8_t> alignmentVec(particlesNum);
     std::vector<Real> positionsVec(particlesNum * D);
     std::vector<Real> velocitiesVec(particlesNum * D);
 
@@ -270,18 +270,18 @@ int main(int argc, char* argv[]) {
         }
         if (step == writeStateStep) {
             handednessVec.clear();
-            orientationVec.clear();
+            alignmentVec.clear();
             positionsVec.clear();
             velocitiesVec.clear();
             for (auto &p : particles) {
                 auto handedness = p.h;
-                auto orientation = p.d;
+                auto alignment = p.d;
                 auto pos = getGeneralizedPositions(p);
                 auto vel = getGeneralizedVelocities(p);
 
                 handednessVec.push_back(handedness);
-                orientationVec.push_back(orientation);
-                
+                alignmentVec.push_back(alignment);
+
                 for (int i = 0; i < D; ++i) {
                     positionsVec.push_back(pos[i]);
                     velocitiesVec.push_back(vel[i]);
@@ -289,7 +289,7 @@ int main(int argc, char* argv[]) {
             }
 
             engine.Put(varHandedness, handednessVec.data());
-            engine.Put(varOrientation, orientationVec.data());
+            engine.Put(varAlignment, alignmentVec.data());
             engine.Put(varPositions, positionsVec.data());
             engine.Put(varVelocities, velocitiesVec.data());
             writeStateStep = step + writeStateIntervalSteps;
@@ -299,7 +299,7 @@ int main(int argc, char* argv[]) {
             auto potentialE = calPotentialEnergy(particles, allSpecies, boxPBC, potential);
 
             auto neighborCount = calAveNeighborList(particles, neighborDistances, areaL);
-            auto rotationalOrder = calRotationalOrder(particles);
+            auto orientationOrder = calOrientationOrder(particles);
 
             auto COMvelocity = calCOMvelocity(particles, allSpecies);
             auto COMangularVelocity = calAngularMomentum2D(particles, allSpecies, boxPBC);
@@ -310,7 +310,7 @@ int main(int argc, char* argv[]) {
             engine.Put(varPotentialEnergy, potentialE);
 
             engine.Put(varNeighborCount, neighborCount.data());
-            engine.Put(varRotationalOrder, rotationalOrder);
+            engine.Put(varOrientationOrder, orientationOrder);
 
             engine.Put(varComVelocity, COMvelocity.data());
             engine.Put(varComAngVelocity, COMangularVelocity);

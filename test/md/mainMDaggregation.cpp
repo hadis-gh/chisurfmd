@@ -197,7 +197,7 @@ int main(int argc, char* argv[]) {
 
     adios2::Variable<Real> varT = io.DefineVariable<Real>("time");
     adios2::Variable<int8_t> varHandedness = io.DefineVariable<int8_t>("handedness", {particlesNum}, {0}, {particlesNum});
-    adios2::Variable<int8_t> varOrientation = io.DefineVariable<int8_t>("orientation", {particlesNum}, {0}, {particlesNum});
+    adios2::Variable<int8_t> varAlignment = io.DefineVariable<int8_t>("alignment", {particlesNum}, {0}, {particlesNum});
     adios2::Variable<Real> varPositions = io.DefineVariable<Real>("positions", {particlesNumMax, D}, {0, 0}, {particlesNumMax, D});
     adios2::Variable<Real> varVelocities = io.DefineVariable<Real>("velocities", {particlesNumMax, D}, {0, 0}, {particlesNumMax, D});
     adios2::Variable<Real> varKineticEnergy = io.DefineVariable<Real>("kinetic energy", {1, 3}, {0, 0}, {1, 3});
@@ -206,9 +206,9 @@ int main(int argc, char* argv[]) {
     adios2::Variable<Real> varComVelocity = io.DefineVariable<Real>("center of mass velocity", {1, D}, {0, 0}, {1, D});
     adios2::Variable<Real> varComAngVelocity = io.DefineVariable<Real>("center of mass angular velocity");
     adios2::Variable<Real> varRealTemperature = io.DefineVariable<Real>("real temperature", {1, 3}, {0, 0}, {1, 3});
-    adios2::Variable<Real> varRotationalOrder = io.DefineVariable<Real>("rotational order");
-    
-    io.DefineAttribute<std::string>("particlesType", particlesType); 
+    adios2::Variable<Real> varOrientationOrder = io.DefineVariable<Real>("orientation order");
+
+    io.DefineAttribute<std::string>("particlesType", particlesType);
     io.DefineAttribute<Real>("temperature", temperature);
     io.DefineAttribute<Real>("radius", radius);
     io.DefineAttribute<Real>("mass", mass);
@@ -221,7 +221,7 @@ int main(int argc, char* argv[]) {
     const int8_t INVALID_VALUE = std::numeric_limits<int8_t>::min();
 
     std::vector<int8_t> handednessVec(particlesNumMax, INVALID_VALUE);
-    std::vector<int8_t> orientationVec(particlesNumMax, INVALID_VALUE);
+    std::vector<int8_t> alignmentVec(particlesNumMax, INVALID_VALUE);
     std::vector<Real> positionsVec(particlesNumMax * D, INVALID_VALUE);
     std::vector<Real> velocitiesVec(particlesNumMax * D, INVALID_VALUE);
     
@@ -298,7 +298,7 @@ int main(int argc, char* argv[]) {
             
             if (step == writeStateStep) {
                 handednessVec.resize(particlesNumMax, INVALID_VALUE);
-                orientationVec.resize(particlesNumMax, INVALID_VALUE);
+                alignmentVec.resize(particlesNumMax, INVALID_VALUE);
                 positionsVec.resize(particlesNumMax * D, INVALID_VALUE);
                 velocitiesVec.resize(particlesNumMax * D, INVALID_VALUE);
     
@@ -310,11 +310,11 @@ int main(int argc, char* argv[]) {
                         velocitiesVec[i * D + j] = vel[j];
                     }
                     handednessVec[i] = particles[i].h;
-                    orientationVec[i] = particles[i].d;
+                    alignmentVec[i] = particles[i].d;
                 }
     
                 engine.Put(varHandedness, handednessVec.data());
-                engine.Put(varOrientation, orientationVec.data());
+                engine.Put(varAlignment, alignmentVec.data());
                 engine.Put(varPositions, positionsVec.data());
                 engine.Put(varVelocities, velocitiesVec.data());
                 writeStateStep = step + writeStateIntervalSteps;
@@ -324,8 +324,8 @@ int main(int argc, char* argv[]) {
                 auto potentialE = calPotentialEnergy(particles, allSpecies, boxPBC, potential);
     
                 auto neighborCount = calAveNeighborList(particles, neighborDistances, areaL);
-                auto rotationalOrder = calRotationalOrder(particles);
-    
+                auto orientationOrder = calOrientationOrder(particles);
+
                 auto COMvelocity = calCOMvelocity(particles, allSpecies);
                 auto COMangularVelocity = calAngularMomentum2D(particles, allSpecies, boxPBC);
     
@@ -333,8 +333,8 @@ int main(int argc, char* argv[]) {
                 engine.Put(varPotentialEnergy, potentialE);
     
                 engine.Put(varNeighborCount, neighborCount.data());
-                engine.Put(varRotationalOrder, rotationalOrder);
-    
+                engine.Put(varOrientationOrder, orientationOrder);
+
                 engine.Put(varComVelocity, COMvelocity.data());
                 engine.Put(varComAngVelocity, COMangularVelocity);
     
