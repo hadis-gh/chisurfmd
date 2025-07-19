@@ -578,7 +578,7 @@ def plot_order_parameter(order, m_temperatures, temperature_show=False, temperat
 
 ############## snapshot of system over steps/ single file --one MD simulation or one aggregation ##############
 
-def plot_configuration(positions, handedness, step_target=-1, radius=0.4, color_phi=False, diameter=20, 
+def plot_configuration(positions, handedness=None, step_target=-1, radius=0.4, color_phi=False, diameter=20, 
                        x_limit=(0, 50),y_limit=(0, 50), aggregation=False, 
                        save_fig=False, save_name='output.pdf', 
                        set_title=None):
@@ -587,15 +587,15 @@ def plot_configuration(positions, handedness, step_target=-1, radius=0.4, color_
     y0, y1 = y_limit
         
     positions_data = positions['data']
-    handedness_data = handedness['data']
-    
+    handedness_data = handedness['data'] if handedness is not None else None
+
     availble_steps = positions_data.shape[0]
     print('available steps: ', availble_steps, '\tchoosed step: ', step_target)
 
     x = positions_data[step_target, :, 0]
     y = positions_data[step_target, :, 1]
-    h = handedness_data[step_target, :]
-    
+    h = handedness_data[step_target, :] if handedness_data is not None else None
+
     if positions_data.shape[2] == 3:
         phi = positions_data[step_target, :, 2]
 
