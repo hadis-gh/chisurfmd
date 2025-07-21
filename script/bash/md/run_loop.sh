@@ -16,7 +16,7 @@ numCoolingRuns=$(echo "scale=0; ($highTemperature - $lowTemperature) / $stepTemp
 numHeatingRuns=$(echo "scale=0; ($highTemperature - $lowTemperature) / $stepTemperature" | bc)
 totalRuns=$((numCoolingRuns + numHeatingRuns))
 
-MD_EXE=${MD_EXE:-"../build/test/testNParticleMD"}
+MD_EXE=${MD_EXE:-"../build/test/testMD"}
 outputDir=${outputDir:-"./outputs"}
 mkdir -p "$outputDir"
 
@@ -51,11 +51,19 @@ run_simulation() {
         --collisionFr "$collisionFr"
     )
 
-    if [ "$simulationType" == "rotation" ]; then
+    if [ "$simulationType" == "OrientedLJ" ]; then
         args+=(--LJangularScale "$LJangularScale"
                --LJPhiOrder "$LJPhiOrder"
                --LJalpha "$LJalpha"
                --momentI "$momentI")
+    fi
+    if [ "$simulationType" == "GeometricLJ" ]; then
+        args+=(--patchNum "$patchNum"
+               --patchRadius "$patchRadius")
+    fi
+    if [ "$simulationType" == "PatchyLJ" ]; then
+        args+=(--sigmaAngularScale "$sigmaAngularScale")
+            #    --patchAngles "${patchAngles[*]}")
     fi
 
     "$MD_EXE" "${args[@]}" || { 
