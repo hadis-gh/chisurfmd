@@ -56,7 +56,7 @@ public:
         : m_epsilon(epsilon), m_sigma(sigma), m_cutoff(cutoff)
         , m_sigma6(sigma * sigma * sigma * sigma * sigma * sigma)
         , m_sigma12(m_sigma6 * m_sigma6) {}
-    T operator()(const TParticle &p1, const TParticle &p2, const Vec<T, 2>& dr, const T r) const {
+    Vec<T, 2> operator()(const TParticle &p1, const TParticle &p2, const Vec<T, 2>& dr, const T r) const {
         if (r > m_cutoff) return 0;
 
         return -lennardJonesDerivative(r, m_sigma, m_epsilon) * dr/r;
