@@ -567,9 +567,9 @@ def plot_order_parameter(order, m_temperatures, temperature_show=False, temperat
     else:
         ax.set_xlabel("Steps")
 
-    ax.set_ylabel("Rotational Order")
-    ax.set_title(f"Rotational Order Parameter")
-        
+    ax.set_ylabel("Orientation Order")
+    ax.set_title(f"Orientation Order Parameter")
+
     plt.tight_layout()
     plt.show()
 
