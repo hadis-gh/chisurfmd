@@ -73,7 +73,13 @@ void printOptions(const po::variables_map& vm) {
                 std::cout << std::boolalpha << option.second.as<bool>();
             } else if (value.type() == typeid(int)) {
                 std::cout << option.second.as<int>();
-            } //////fix trow an error for missing types
+            } else if (value.type() == typeid(std::vector<Real>)) {
+                std::cout << "[";
+                for (int i=0; i < option.second.as<std::vector<Real>>().size() -1; i++) {
+                    std::cout << option.second.as<std::vector<Real>>()[i] << ", ";
+                }
+                std::cout << option.second.as<std::vector<Real>>().back() << "]";
+            }
             std::cout << std::endl;
         }
     }
