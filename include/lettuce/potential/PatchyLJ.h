@@ -7,9 +7,9 @@
 #include "lettuce/core/ParticleDot.h"
 #include "lettuce/core/ParticleOriented.h"
 
-template<typename T>
+// template<typename T>
 // const std::vector<T> patchAngles = {0, 2*M_PI/4, 4*M_PI/4, 6*M_PI/4};
-const std::vector<T> patchAngles = {0, 2*M_PI/6, 2*M_PI/6, 3*M_PI/6, 4*M_PI/6, 5*M_PI/6};
+// const std::vector<T> patchAngles = {0, 2*M_PI/6, 2*M_PI/6, 3*M_PI/6, 4*M_PI/6, 5*M_PI/6};
 
 template<typename T>
 constexpr T wrapAngle(const T& ang) {
@@ -35,10 +35,11 @@ T findBestPatchSignedAngle(const T& phi, const T& gamma, const std::vector<T>& p
 template<typename TParticle, typename T = typename TParticle::value_type>
 class PatchyLJPotential {
 public:
-    PatchyLJPotential(T epsilon, T sigma, T cutoff, T sigmaAngular)
+    PatchyLJPotential(T epsilon, T sigma, T cutoff, T sigmaAngular, std::vector<T> patchAngles)
         : m_epsilon(epsilon), m_sigma(sigma), m_cutoff(cutoff), m_sigmaAngular(sigmaAngular),
           m_sigma6(std::pow(sigma, 6)),
-          m_2sigmaAng_sq(2.0 * sigmaAngular * sigmaAngular) {}
+          m_2sigmaAng_sq(2.0 * sigmaAngular * sigmaAngular),
+          m_patchAngles(std::move(patchAngles)) {}
 
 T operator()(const TParticle& p1, const TParticle& p2, const Vec<T, 2>& dr, const T R) const {
     if (R <= 0 || R > m_cutoff) return 0;
@@ -55,8 +56,8 @@ T operator()(const TParticle& p1, const TParticle& p2, const Vec<T, 2>& dr, cons
     const T phi_i = p1.phi;
     const T phi_j = p2.phi;
 
-    const std::vector<T> phi_i_patchAngs = patchAngles<T>;
-    const std::vector<T> phi_j_patchAngs = patchAngles<T>;
+    const std::vector<T> phi_i_patchAngs = m_patchAngles;
+    const std::vector<T> phi_j_patchAngs = m_patchAngles;
 
     const T gamma_ij = std::atan2(dy, dx);
     const T gamma_ji = wrapAngle(gamma_ij + M_PI);
@@ -73,15 +74,17 @@ T operator()(const TParticle& p1, const TParticle& p2, const Vec<T, 2>& dr, cons
 private:
     T m_epsilon, m_sigma, m_cutoff, m_sigmaAngular;
     T m_sigma6, m_2sigmaAng_sq;
+    std::vector<T> m_patchAngles;
 };
 
 template<typename TParticle, typename T = typename TParticle::value_type>
 class PatchyLJForce {
 public:
-    PatchyLJForce(T epsilon, T sigma, T cutoff, T sigmaAngular)
+    PatchyLJForce(T epsilon, T sigma, T cutoff, T sigmaAngular, std::vector<T> patchAngles)
         : m_epsilon(epsilon), m_sigma(sigma), m_cutoff(cutoff), m_sigmaAngular(sigmaAngular),
           m_sigma6(std::pow(sigma, 6)),
-          m_2sigmaAng_sq(2.0 * sigmaAngular * sigmaAngular) {}
+          m_2sigmaAng_sq(2.0 * sigmaAngular * sigmaAngular),
+          m_patchAngles(std::move(patchAngles)) {}
 
     Vec<T, 3> operator()(const TParticle& p1, const TParticle& p2, const Vec<T, 2>& dr, const T R) const {
         if (R <= 0 || R > m_cutoff) return {{0, 0, 0}};
@@ -108,8 +111,8 @@ public:
         const T phi_i = p1.phi;
         const T phi_j = p2.phi;
 
-        const std::vector<T> phi_i_patchAngs = patchAngles<T>;
-        const std::vector<T> phi_j_patchAngs = patchAngles<T>;
+        const std::vector<T> phi_i_patchAngs = m_patchAngles;
+        const std::vector<T> phi_j_patchAngs = m_patchAngles;
 
         const T gamma_ij = std::atan2(dy, dx);
         const T gamma_ji = wrapAngle(gamma_ij + M_PI);
@@ -149,4 +152,5 @@ public:
 private:
     T m_epsilon, m_sigma, m_cutoff, m_sigmaAngular;
     T m_sigma6, m_2sigmaAng_sq;
+    std::vector<T> m_patchAngles;
 };

@@ -204,7 +204,10 @@ struct PatchyLJ<ParticleOriented<T>>
     static void initProgramOptions(po::options_description &desc) {
         IsotropicLJ<ParticleDot<T>>::initProgramOptions(desc);
         desc.add_options()
-            ("sigmaAngularScale",   po::value<T>()->default_value(.262),              "asitropic strength of potential")   
+            ("sigmaAngularScale",   po::value<T>()->default_value(.262),              "asitropic strength of potential")
+
+            ("patchAngles",         po::value<std::vector<T>>()->multitoken()->default_value(std::vector<T>{0, 2*M_PI/4, 4*M_PI/4, 6*M_PI/4}, "0 1.0472 2.0944"), 
+                                                                                      "Patch angles for the potential - vector(θ_0, θ_1, θ_2, ... θ_n)")
         ;
     }
 
@@ -213,7 +216,8 @@ struct PatchyLJ<ParticleOriented<T>>
             vm["LJepsilon"].as<T>(), 
             vm["LJsigma"].as<T>(), 
             vm["LJcutoff"].as<T>(),
-            vm["sigmaAngularScale"].as<T>()
+            vm["sigmaAngularScale"].as<T>(),
+            vm["patchAngles"].as<std::vector<T>>()
         );
     }
 
@@ -222,7 +226,8 @@ struct PatchyLJ<ParticleOriented<T>>
             vm["LJepsilon"].as<T>(), 
             vm["LJsigma"].as<T>(), 
             vm["LJcutoff"].as<T>(),
-            vm["sigmaAngularScale"].as<T>()
+            vm["sigmaAngularScale"].as<T>(),
+            vm["patchAngles"].as<std::vector<T>>()
         );
     }
 
