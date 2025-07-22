@@ -8,8 +8,8 @@
 #include "lettuce/core/ParticleOriented.h"
 
 template<typename T>
-const std::vector<T> patchAngles = {0};
-// const std::vector<T> patchAngles = {0, M_PI/3, 2*M_PI/3, 3*M_PI/3, 4*M_PI/3, 5*M_PI/3};
+// const std::vector<T> patchAngles = {0, 2*M_PI/4, 4*M_PI/4, 6*M_PI/4};
+const std::vector<T> patchAngles = {0, 2*M_PI/6, 2*M_PI/6, 3*M_PI/6, 4*M_PI/6, 5*M_PI/6};
 
 template<typename T>
 constexpr T wrapAngle(const T& ang) {
@@ -17,14 +17,19 @@ constexpr T wrapAngle(const T& ang) {
 }
 
 template<typename T>
-T findBestPatchAngle(const T& phi, const T& gamma, const std::vector<T>& patchAngs) {
-    T minTheta = M_PI;
+T findBestPatchSignedAngle(const T& phi, const T& gamma, const std::vector<T>& patchAngs) {
+    T minAbs = M_PI;
+    T bestSigned = 0;
     for (unsigned int k = 0; k < patchAngs.size(); ++k) {
         T patchAngle = phi + patchAngs[k];
         T deltaTheta = wrapAngle(patchAngle - gamma);
-        minTheta = std::min(minTheta, std::abs(deltaTheta));
+        T absDelta = std::abs(deltaTheta);
+        if (absDelta < minAbs) {
+            minAbs = absDelta;
+            bestSigned = deltaTheta;
+        }
     }
-    return minTheta;
+    return bestSigned;
 }
 
 template<typename TParticle, typename T = typename TParticle::value_type>
@@ -38,9 +43,7 @@ public:
 T operator()(const TParticle& p1, const TParticle& p2, const Vec<T, 2>& dr, const T R) const {
     if (R <= 0 || R > m_cutoff) return 0;
 
-    const T sr6 = m_sigma6 / std::pow(R, 6);
-    const T sr12 = sr6 * sr6;
-    const T LJpot = 4.0 * m_epsilon * (sr12 - sr6);
+    const T LJpot = lennardJones(R, m_sigma, m_epsilon);
 
     if (R < m_sigma) {
         return LJpot;
@@ -52,19 +55,19 @@ T operator()(const TParticle& p1, const TParticle& p2, const Vec<T, 2>& dr, cons
     const T phi_i = p1.phi;
     const T phi_j = p2.phi;
 
-    const std::vector<T> phi_i_patcheAngs = patchAngles<T>;
-    const std::vector<T> phi_j_patcheAngs = patchAngles<T>;
+    const std::vector<T> phi_i_patchAngs = patchAngles<T>;
+    const std::vector<T> phi_j_patchAngs = patchAngles<T>;
 
     const T gamma_ij = std::atan2(dy, dx);
     const T gamma_ji = wrapAngle(gamma_ij + M_PI);
 
-    T minTheta_i = findBestPatchAngle(phi_i, gamma_ij, phi_i_patcheAngs);
-    T minTheta_j = findBestPatchAngle(phi_j, gamma_ji, phi_j_patcheAngs);
+    T theta_i = findBestPatchSignedAngle(phi_i, gamma_ij, phi_i_patchAngs);
+    T theta_j = findBestPatchSignedAngle(phi_j, gamma_ji, phi_j_patchAngs);
 
-    const T angularFactor = std::exp(-minTheta_i * minTheta_i / m_2sigmaAng_sq) *
-                            std::exp(-minTheta_j * minTheta_j / m_2sigmaAng_sq);
+    const T A = std::exp(-theta_i * theta_i / m_2sigmaAng_sq) *
+                std::exp(-theta_j * theta_j / m_2sigmaAng_sq);
 
-    return LJpot * angularFactor;
+    return LJpot * A;
 }
 
 private:
@@ -83,20 +86,20 @@ public:
     Vec<T, 3> operator()(const TParticle& p1, const TParticle& p2, const Vec<T, 2>& dr, const T R) const {
         if (R <= 0 || R > m_cutoff) return {{0, 0, 0}};
 
-        const auto dx = dr[0];
-        const auto dy = dr[1];
-        const auto r2 = dx * dx + dy * dy;
-        const auto r6 = r2 * r2 * r2;
-
-        const T sr6 = m_sigma6 / std::pow(R, 6);
-        const T sr12 = sr6 * sr6;
-        const T LJpot = 4.0 * m_epsilon * (sr12 - sr6);
-
-        const T fx_lj = - 4.0 * m_epsilon 
-            * (6.0 * m_sigma6 / (r6 * R) - 12.0 * m_sigma6 * m_sigma6 / (r6 * r6 * R)) * dx / R; 
-
-        const T fy_lj = - 4.0 * m_epsilon 
-            * (6.0 * m_sigma6 / (r6 * R) - 12.0 * m_sigma6 * m_sigma6 / (r6 * r6 * R)) * dy / R; 
+        const T dx = dr[0];
+        const T dy = dr[1];
+        const T r2 = dx * dx + dy * dy;
+        
+        const T LJpot = lennardJones(R, m_sigma, m_epsilon);
+        const T dVdR = lennardJonesDerivative(R, m_sigma, m_epsilon);
+        
+        const T dRdx = dx / R;
+        const T dRdy = dy / R;
+        const T dVdx = dVdR * dRdx;
+        const T dVdy = dVdR * dRdy;
+        
+        const T fx_lj = -dVdx;
+        const T fy_lj = -dVdy;
 
         if (R < m_sigma) {
             return {{fx_lj, fy_lj, 0}};
@@ -105,27 +108,42 @@ public:
         const T phi_i = p1.phi;
         const T phi_j = p2.phi;
 
-        const std::vector<T> phi_i_patcheAngs = patchAngles<T>;
-        const std::vector<T> phi_j_patcheAngs = patchAngles<T>;
+        const std::vector<T> phi_i_patchAngs = patchAngles<T>;
+        const std::vector<T> phi_j_patchAngs = patchAngles<T>;
 
         const T gamma_ij = std::atan2(dy, dx);
         const T gamma_ji = wrapAngle(gamma_ij + M_PI);
 
-        T minTheta_i = findBestPatchAngle(phi_i, gamma_ij, phi_i_patcheAngs);       // θi = φi + patch - γ
-        T minTheta_j = findBestPatchAngle(phi_j, gamma_ji, phi_j_patcheAngs);       // θj = φj + patch - (γ + π)
+        // θ_i = φ_i + φ_k - γ_ij
+        // θ_j = φ_j + φ_k - (γ_ji + M_PI)
+        T theta_i = findBestPatchSignedAngle(phi_i, gamma_ij, phi_i_patchAngs);
+        T theta_j = findBestPatchSignedAngle(phi_j, gamma_ji, phi_j_patchAngs);
+
+        const T A = std::exp(-theta_i * theta_i / m_2sigmaAng_sq) *
+                    std::exp(-theta_j * theta_j / m_2sigmaAng_sq);
+
+        // ============== FORCE CALCULATION ==============
+        const T dgammadx = -dy / r2;   // ∂γ_ij/∂x_j
+        const T dgammady = dx / r2;    // ∂γ_ij/∂y_j
+
+        // Derivatives of A w.r.t. gamma_ij
+        const T dA_dtheta_i = A * (-2.0 * theta_i / m_2sigmaAng_sq);
+        const T dA_dtheta_j = A * (-2.0 * theta_j / m_2sigmaAng_sq);
         
-        const T angularFactor = std::exp(-minTheta_i * minTheta_i / m_2sigmaAng_sq) *
-                        std::exp(-minTheta_j * minTheta_j / m_2sigmaAng_sq);
+        // ∂A/∂x_j = ∂A/∂θ_i * ∂θ_i/∂γ_ij * ∂γ_ij/∂x_j 
+        //         + ∂A/∂θ_j * ∂θ_j/∂γ_ji * ∂γ_ji/∂γ_ij * ∂γ_ij/∂x_j
+        const T dA_dx = dA_dtheta_i * (-1.0) * dgammadx 
+                        + dA_dtheta_j * (-1.0) * 1.0 * dgammadx;
+        const T dA_dy = dA_dtheta_i * (-1.0) * dgammady 
+                        + dA_dtheta_j * (-1.0) * 1.0 * dgammady;
 
-        const T dAdphi = - 2.0 * minTheta_j * angularFactor / m_2sigmaAng_sq;
+        const T fx = -(dVdx * A + LJpot * dA_dx);
+        const T fy = -(dVdy * A + LJpot * dA_dy);
 
-        const T fx = fx_lj * angularFactor - dAdphi * dy / r2 * LJpot;          // -∂U/∂xj = - A * ∂U/∂x - ∂A/∂x * U = fx_lj - ∂A/∂θ * ∂θ/∂γ * ∂γ/dx * Ulj
+        // ============== TORQUE CALCULATION ==============
+        const T torquej = -LJpot * dA_dtheta_j;  // -∂U/∂φ_j = -LJpot * ∂A/∂θ_j
 
-        const T fy = fy_lj * angularFactor + dAdphi * dx / r2 * LJpot;
-
-        const T torquei = - dAdphi * LJpot;                                     // -∂U/∂φj = -∂A/∂φj * Ulj
-
-        return {{fx, fy, torquei}};
+        return {{fx, fy, torquej}};
     }
 
 private:
