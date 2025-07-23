@@ -24,8 +24,6 @@ logFile="log.txt"
 exec > >(tee "$logFile") 2>&1
 echo "Logging to: $logFile"
 
-simulationType=${simulationType:-"oriented"}
-
 run_simulation() {
     local runIndex="$1"
     local particlesInit="$2"
@@ -51,19 +49,19 @@ run_simulation() {
         --collisionFr "$collisionFr"
     )
 
-    if [ "$simulationType" == "OrientedLJ" ]; then
+if [ "$potentiaType" == "OrientedLJ" ]; then
         args+=(--LJangularScale "$LJangularScale"
                --LJPhiOrder "$LJPhiOrder"
                --LJalpha "$LJalpha"
                --momentI "$momentI")
-    fi
-    if [ "$simulationType" == "GeometricLJ" ]; then
-        args+=(--patchNum "$patchNum"
-               --patchRadius "$patchRadius")
-    fi
-    if [ "$simulationType" == "PatchyLJ" ]; then
-        args+=(--sigmaAngularScale "$sigmaAngularScale")
-            #    --patchAngles "${patchAngles[*]}")
+    elif [ "$potentiaType" == "GeometricLJ" ]; then
+        args+=(--patchNum "$patchNum")
+    elif [ "$potentiaType" == "PatchyLJ" ]; then
+        args+=(--sigmaAngularScale "$sigmaAngularScale" 
+               --patchAngles "${patchAngles[@]}")
+    else
+        printf "Error: Make sure to specify a valid potentiaType in config file. (Got: '%s')\n" "$potentiaType"
+        exit 1
     fi
 
     "$MD_EXE" "${args[@]}" || { 
