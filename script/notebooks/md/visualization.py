@@ -979,7 +979,11 @@ def plot_trajectory_temperature(positions, target_temperature, step_window=10000
     plt.tight_layout()
     plt.show()
 
-def plot_snapshot_temperature(positions, handedness, target_temperature, line_length=0.45, area=20, radius=True, color_palette='hsv', dpi=120):
+import numpy as np
+import matplotlib.pyplot as plt
+
+def plot_snapshot_temperature(positions, handedness, target_temperature, patchAngs=None,
+                               line_length=0.45, area=20, radius=True, color_palette='hsv', dpi=120):
     positions_data = positions['data']
     handedness_data = handedness['data']
     shot = target_temperature_index(positions, target_temperature)
@@ -988,37 +992,50 @@ def plot_snapshot_temperature(positions, handedness, target_temperature, line_le
     
     x = positions_data[shot, :, 0]
     y = positions_data[shot, :, 1]
+    phi = positions_data[shot, :, 2]  # orientation of each particle
     h = handedness_data[shot, :]
 
+    # Define colors based on handedness
+    colors = ['lightcoral' if val == 1 else 'lightsteelblue' for val in h]
+    
+    # Plot main particles
+    ax.scatter(
+        x, y, 
+        s=110,
+        edgecolors='black',
+        facecolor=colors,
+        alpha=0.8
+    )
+
     if radius:
-        phi = positions_data[shot, :, 2]
+        # Plot orientation lines
         x_end = x + line_length * np.cos(phi)
         y_end = y + line_length * np.sin(phi)
-
-        # Create color array based on handedness
-        colors = ['lightcoral' if val == 1 else 'lightsteelblue' for val in h]
-        
-        ax.scatter(
-            x, y, 
-            s=110,
-            edgecolors='black',
-            facecolor=colors,
-            alpha=0.8
-        )
-
         for i in range(len(x)):
             ax.plot([x[i], x_end[i]], [y[i], y_end[i]], color='black', linewidth=0.8, alpha=0.8)
-    else:  
+    
+    elif patchAngs is not None:
+        # Plot patches as tiny points
+        for i in range(len(x)):
+            if np.isnan(phi[i]):
+                continue
+            for ang in patchAngs[i]:  # support multiple patch angles per particle
+                patch_angle = phi[i] + ang  # global angle
+                patch_x = x[i] + line_length * np.cos(patch_angle)
+                patch_y = y[i] + line_length * np.sin(patch_angle)
+                ax.scatter(patch_x, patch_y, s=5, color='blue', alpha=0.9, zorder=5)
+    
+    else:
+        # Fallback: color by orientation
         scatter = ax.scatter(
             x, y,
-            c=phi,  # Orientation
+            c=phi,
             s=60,
             alpha=0.8,
             vmin=-np.pi,
             vmax=np.pi,
             cmap=color_palette
         )
-            
         cbar = plt.colorbar(scatter, ax=ax)
         cbar.set_label('φ in radian')
 
@@ -1033,7 +1050,7 @@ def plot_snapshot_temperature(positions, handedness, target_temperature, line_le
     ax.set_axisbelow(True)
     plt.tight_layout()
     plt.show()
-    
+
 ############## histogram of φ and Δφ at specific Temperature ##############
 
 def plot_hist_phi_temperature(positions, target_t, step_window, bins_num=100, dpi=120):
