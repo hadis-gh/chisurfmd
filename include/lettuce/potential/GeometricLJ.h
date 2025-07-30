@@ -45,7 +45,7 @@ public:
             total_potential += m_factor_patchy_lj * lennardJones(r_patch, m_sigma, m_epsilon);
         }
 
-        return total_potential;
+        return total_potential;     //Normalize based on numbers of patches!
     }
 
 private:
