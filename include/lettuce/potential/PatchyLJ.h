@@ -32,6 +32,20 @@ T findBestPatchSignedAngle(const T& phi, const T& gamma, const std::vector<T>& p
     return bestSigned;
 }
 
+template<typename T>
+T findPatchSignedAngle(const T& phi, const T& gamma, const T& patchAngle) {
+    T minAbs = M_PI;
+    T signedAng = 0;
+
+    T deltaTheta = wrapAngle(patchAngle - gamma);
+    T absDelta = std::abs(deltaTheta);
+    if (absDelta < minAbs) {
+        minAbs = absDelta;
+        signedAng = deltaTheta;
+    }
+    return signedAng;
+}
+
 template<typename TParticle, typename T = typename TParticle::value_type>
 class PatchyLJPotential {
 public:
