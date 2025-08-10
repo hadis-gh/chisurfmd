@@ -125,51 +125,60 @@ struct SetGeneralizedVelocities<ParticleOriented<T>>
 
 // Force calculations for ParticleOriented
 template<typename T, typename Force>
-Vec<T, 3> calForceTwo(const ParticleOriented<T>& p1, const ParticleOriented<T>& p2, const T& boxPBC, Force&& force) {
+Vec<T, 3> calForceTwo(const ParticleOriented<T>& p1, const ParticleOriented<T>& p2, 
+                      const T& boxPBC, Force&& force) {
     Vec<T, 2> dr = p2.r - p1.r;
-    T deltaPhi = p2.phi - p1.phi;
-
-    for (int i = 0; i < 2; ++i) {   //make extra func
-        if (dr[i] > boxPBC / 2) { dr[i] -= boxPBC; }
-        else if (dr[i] < -boxPBC / 2) { dr[i] += boxPBC; }
+    
+    for (int i = 0; i < 2; ++i) {
+        if (dr[i] > boxPBC / 2) dr[i] -= boxPBC;
+        else if (dr[i] < -boxPBC / 2) dr[i] += boxPBC;
     }
     
-    T r = dr.abs();
-    if (r == 0) return {{0, 0}};
+    const T r = dr.abs();
+    if (r <= std::numeric_limits<T>::epsilon()) return {{0, 0, 0}};
     
-    Vec<T, 3> f = force(p1, p2, dr, r);
-    
-    return f;
+    return force(p1, p2, dr, r);
 }
 
 template<typename T, typename Force>
-Vec<T, 3> calTotalForce(const ParticleOriented<T>& p1, const std::vector<ParticleOriented<T>>& particles, const T& boxPBC, Force&& force) {
-    Vec<T, 3> total_force;
-    for (const auto& p : particles) { //indexing is more efficient
-        if (p1.r != p.r) {
-            total_force += calForceTwo(p, p1, boxPBC, std::forward<Force>(force));
+Vec<T, 3> calTotalForce(const ParticleOriented<T>& p1, 
+                        const std::vector<ParticleOriented<T>>& particles, 
+                        const T& boxPBC, Force&& force) {
+    Vec<T, 3> totalForce {{0, 0, 0}};
+    for (const auto& p : particles) {
+        if (&p1 != &p) {  // Compare addresses to avoid self-interaction
+            totalForce += calForceTwo(p, p1, boxPBC, std::forward<Force>(force));
         }
     }
-    return total_force;
+    return totalForce;
 }
 
 template<typename T, typename Force>
-Vec<T, 3> calAcceleration(const ParticleOriented<T>& p1, const std::vector<ParticleOriented<T>>& particles, const std::vector<Species<T>>& allSpecies, const T& boxPBC, Force&& force) {
-    T mass = allSpecies[p1.species].mass;
-    T MI = allSpecies[p1.species].momentOfInertia;
-
-    Vec<T, 3> total_force = calTotalForce(p1, particles, boxPBC, std::forward<Force>(force));
-    Vec<T, 2> acceleration = {{total_force[0] / mass, total_force[1] / mass}};
-    T angular_acceleration = total_force[2] / MI;
-
-    return {{acceleration[0], acceleration[1], angular_acceleration}};
+Vec<T, 3> calAcceleration(const ParticleOriented<T>& p1, 
+                          const std::vector<ParticleOriented<T>>& particles, 
+                          const std::vector<Species<T>>& allSpecies, 
+                          const T& boxPBC, Force&& force) {
+    const T mass = allSpecies[p1.species].mass;
+    const T MI = allSpecies[p1.species].momentOfInertia;
+    Vec<T, 3> totalForce = calTotalForce(p1, particles, boxPBC, std::forward<Force>(force));
+    
+    return {{
+        totalForce[0] / mass,
+        totalForce[1] / mass,
+        totalForce[2] / MI
+    }};
 }
 
 template<typename T, typename Force>
-std::vector<Vec<T, 3>> calAllAccelerations(const std::vector<ParticleOriented<T>>& particles, const std::vector<Species<T>>& allSpecies, const T& boxPBC, Force&& force) {
-    std::vector<Vec<T, 3>> accelerations(particles.size());
-    for (unsigned int i = 0; i < particles.size(); ++i) {  //add another parameters, only for moving particles
-        accelerations[i] = calAcceleration(particles[i], particles, allSpecies, boxPBC, std::forward<Force>(force));
+std::vector<Vec<T, 3>> calAllAccelerations(const std::vector<ParticleOriented<T>>& particles, 
+                                          const std::vector<Species<T>>& allSpecies, 
+                                          const T& boxPBC, Force&& force) {
+    std::vector<Vec<T, 3>> accelerations;
+    accelerations.reserve(particles.size());
+    
+    for (const auto& p : particles) {
+        accelerations.push_back(
+            calAcceleration(p, particles, allSpecies, boxPBC, std::forward<Force>(force)));
     }
     return accelerations;
 }
@@ -177,9 +186,9 @@ std::vector<Vec<T, 3>> calAllAccelerations(const std::vector<ParticleOriented<T>
 template<typename T>
 void implementPBC(ParticleOriented<T>& p, const T& boxPBC) {
     implementPBC(static_cast<ParticleDot<T>&>(p), boxPBC);
-
-    T phi = p.phi;
-    phi = std::fmod(phi + M_PI, 2 * M_PI); 
-    if (phi < 0) phi += 2 * M_PI;
-    p.phi = phi - M_PI;
+    
+    // Normalize angle to [-π, π)
+    p.phi = std::fmod(p.phi + M_PI, 2 * M_PI);
+    if (p.phi < 0) p.phi += 2 * M_PI;
+    p.phi -= M_PI;
 }
