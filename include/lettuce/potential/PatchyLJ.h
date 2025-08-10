@@ -173,7 +173,7 @@ public:
         const T torque_j = -baseLJ * dA_dtheta_j_total;
         const T torque_i = -baseLJ * dA_dtheta_i_total;
 
-        return {{fx, fy, torque_i, torque_j}};
+        return {{fx, fy, torque_j}};
     }
 
 private:
