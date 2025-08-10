@@ -13,7 +13,7 @@
 
 template<typename T>
 inline T wrapAngle(const T& ang) {
-    return std::fmod(ang + M_PI, static_cast<T>(2.0) * M_PI) - M_PI; 
+    return std::fmod(ang + M_PI, 2.0 * M_PI) - M_PI; 
 }
 
 template<typename T>
@@ -170,9 +170,10 @@ public:
 
         const T fx = -(dVdx * A + baseLJ * dA_dx);
         const T fy = -(dVdy * A + baseLJ * dA_dy);
-        const T torquej = -baseLJ * dA_dtheta_j_total;
+        const T torque_j = -baseLJ * dA_dtheta_j_total;
+        const T torque_i = -baseLJ * dA_dtheta_i_total;
 
-        return {{fx, fy, torquej}};
+        return {{fx, fy, torque_i, torque_j}};
     }
 
 private:
