@@ -146,7 +146,7 @@ Vec<T, 3> calTotalForce(const ParticleOriented<T>& p1,
                         const T& boxPBC, Force&& force) {
     Vec<T, 3> totalForce {{0, 0, 0}};
     for (const auto& p : particles) {
-        if (&p1 != &p) {  // Compare addresses to avoid self-interaction
+        if (&p1 != &p) {
             totalForce += calForceTwo(p, p1, boxPBC, std::forward<Force>(force));
         }
     }
