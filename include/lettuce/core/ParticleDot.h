@@ -3,24 +3,14 @@
 #include <vector>
 #include <cmath>
 #include "lettuce/core/Vec.h"
-
-template<typename T>
-struct Species
-{
-    T mass;
-    T momentOfInertia;
-    T radius;
-
-    Species(T mass, T momentOfInertia, T radius)
-        : mass(mass), momentOfInertia(momentOfInertia), radius(radius)
-    {}
-};
+#include "lettuce/core/Species.h"
 
 template<typename T>
 struct ParticleDot
 {
     using value_type = T;
 
+    // Todo r,v,h,d is not good naming.
     Vec<value_type> r, v;
     int8_t h, d;
     bool fixed;
