@@ -49,4 +49,11 @@ include_directories(
 
 #add_subdirectory(include)
 #add_subdirectory(src)
-add_subdirectory(test)
+
+include(CTest)
+
+if(BUILD_TESTING)
+  add_subdirectory(test/unit)
+else()	
+  add_subdirectory(test)
+endif()

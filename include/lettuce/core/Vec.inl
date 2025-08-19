@@ -1,3 +1,5 @@
+#include <limits>
+
 
 template<typename T , int D> 
 T& Vec<T, D>::operator[](int index) {
@@ -84,15 +86,28 @@ Vec<T, D>& Vec<T, D>::operator /= (const T& number){
 }
 
 
+// template<typename T , int D>
+// template<typename TT>    
+// bool Vec<T, D>::operator==(const Vec<TT, D>& other)const{
+//     for (int i=0; i < D; i++){
+//         if (elements[i] != other[i])
+//             return false;
+//     }
+//     return true;
+// }
+
 template<typename T , int D>
 template<typename TT>    
 bool Vec<T, D>::operator==(const Vec<TT, D>& other)const{
     for (int i=0; i < D; i++){
-        if (elements[i] != other[i])
+        // if (elements[i] != other[i])
+        //     return false;
+        if (std::abs(elements[i] - other[i]) > std::numeric_limits<T>::epsilon())
             return false;
     }
     return true;
 }
+
 template<typename T , int D>
 bool Vec<T, D>::operator>=(const T& number) const{ 
     for (int i=0; i<D; i++){
@@ -125,8 +140,8 @@ bool Vec<T, D>::operator<(const T& number)const{
             return false;
         }
     }
-    return true;
-    }
+    return true; 
+}
 
 template<typename T , int D>
 Vec<T, D> Vec<T, D>::operator- (const T& number)const{
