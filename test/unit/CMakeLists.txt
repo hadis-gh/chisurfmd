@@ -1,3 +1,4 @@
+include(CTest)
 
 add_library(Catch2Main include/catch_amalgamated.cpp )
 target_include_directories(Catch2Main PUBLIC include)

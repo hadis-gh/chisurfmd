@@ -30,8 +30,25 @@ _Last updated: 2025-08-25_
 
 Lib Dependencies:
 - Boost >= 1.74 (currently only boost::program_options is used)
-- ADIOS2 >= v2.10.2
+- ADIOS2 >= v2.10.0
 - Catch >= 3.9.1 (only used for testcases, which are under ~/test/unit)
+lettuce_md_PARTICLE
+
+### Normal Build
+```
+mkdir build && cd build
+cmake -S ../. -B . -DCMAKE_CXX_FLAGS="-O2" -Dlettuce_md_PARTICLE="ParticleDot"
+cmake --build . -t testMD
+./test/testMD -n <NumParticles>
+```
+
+### CTest
+```
+mkdir build_testing && cd build_testing
+cmake -S ../. -B . -DBUILD_TESTING=ON
+cmake --build .
+ctest --verbose --output-on-failure
+```
 
 # Benchmarks
 
@@ -42,6 +59,23 @@ Under Hardware/Compiler:
 - HIP version: 6.0.32831-204d35d16
 - AMD clang version 17.0.0
 - Linux 6.8.0-65-generic #68~22.04.1-Ubuntu 
+
+App-Target Runtimes
+
+_(the default values are used, if the parameters are not specifed.)_
+
+
+| Date  | Target    | ParticleType  | NumParticles  | ForceType | Thermostat    | Total_time    | ExecutionTime | Notes |
+| ----  | ----      | ----          | ----          | ----      | ----          | ----          | ----          | ----  | 
+| ----  | ----      | ----          | ----          | ----      | ----          | ----          | ----          | ----  | 
+| 25.08 | testMD | ParticleDot | 49 | IsotropicLJ | ThermostatID::None | 10 | 1.664s | g++ ohne -O2  |
+| 25.08 | testMD | ParticleDot | 49 | IsotropicLJ | ThermostatID::None | 10 | 0.11s | g++ mit -O2  |
+| ----  | ----      | ----          | ----          | ----      | ----          | ----          | ----          | ----  | 
+| 25.08 | testMD | ParticleDot | 256 | IsotropicLJ | ThermostatID::None | 10 | 43.008s | g++ ohne -O2  |
+| 25.08 | testMD | ParticleDot | 256 | IsotropicLJ | ThermostatID::None | 10 | 2.484s | g++ mit -O2  |
+| ----  | ----      | ----          | ----          | ----      | ----          | ----          | ----          | ----  | 
+
+_(For the reason, O2 is better than O3!??)_
 
 # Useful Parameters and Marcos
 
