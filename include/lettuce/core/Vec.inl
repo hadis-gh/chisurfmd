@@ -85,17 +85,6 @@ Vec<T, D>& Vec<T, D>::operator /= (const T& number){
     return *this;
 }
 
-
-// template<typename T , int D>
-// template<typename TT>    
-// bool Vec<T, D>::operator==(const Vec<TT, D>& other)const{
-//     for (int i=0; i < D; i++){
-//         if (elements[i] != other[i])
-//             return false;
-//     }
-//     return true;
-// }
-
 template<typename T , int D>
 template<typename TT>    
 bool Vec<T, D>::operator==(const Vec<TT, D>& other)const{
