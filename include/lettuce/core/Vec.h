@@ -28,6 +28,7 @@ public:
     Vec<T, D> operator*(const T& number) const;
     Vec<T, D> operator/(const T& number) const;
 
+    // Todo why we need TT, what if TT is a string?
     template<typename TT>
     Vec<T, D>& operator+=(const Vec<TT, D>& other); 
     template<typename TT>    
@@ -47,6 +48,7 @@ public:
     bool operator>(const T& number)const;
     bool operator<(const T& number)const;
 
+    //Todo why we need const for operator- to itself.
     Vec<T, D> operator- (const T& number)const;
     Vec<T, D> operator+ (const T& number)const;
     Vec<T, D> operator+ (const T& number);
