@@ -100,8 +100,8 @@ void testVecCmpOperator() {
     Vec<Real> b({1.0, 0.3});
 
     a[0] = 1.0; a[1] = 0.1 + 0.2;
-    std::cerr << a[0] << ", " << a[1] << std::endl;
-    std::cerr << b[0] << ", " << a[1] << std::endl;
+    // std::cerr << a[0] << ", " << a[1] << std::endl;
+    // std::cerr << b[0] << ", " << a[1] << std::endl;
     assert(a == b);
 
     Vec<Real> a1 = a;
