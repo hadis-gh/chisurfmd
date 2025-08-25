@@ -8,9 +8,8 @@
 #include <iomanip>
 #include <cstdlib>
 
-#include <adios2.h>
-
 #include "lettuce/core/Vec.h"
+#include "lettuce/core/Species.h"
 #include "lettuce/core/Circle.h"
 #include "lettuce/md/Thermostat.h"
 

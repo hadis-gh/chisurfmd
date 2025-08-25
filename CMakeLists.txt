@@ -39,6 +39,8 @@ add_definitions("-DLETTUCE_THERMOSTAT=${lettuce_md_THERMOSTAT}")
 add_definitions("-DLETTUCE_POTENTIAL=${lettuce_POTENTIAL}")
 
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Werror")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ")
+
 include_directories(
 	${CMAKE_CURRENT_SOURCE_DIR}/include
 	${Boost_INCLUDE_DIRS}
@@ -49,4 +51,11 @@ include_directories(
 
 #add_subdirectory(include)
 #add_subdirectory(src)
-add_subdirectory(test)
+
+option(BUILD_TESTING "Build the testing tree." OFF)
+enable_testing()
+if(BUILD_TESTING)
+  add_subdirectory(test/unit)	
+else()
+	add_subdirectory(test)
+endif()

@@ -2,7 +2,7 @@
 a.out
 *.o
 run
-build
+build*
 *.mp4
 *.pdf
 *.png
