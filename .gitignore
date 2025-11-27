@@ -10,3 +10,4 @@ build*
 script/notebooks/visualPA
 *.dat
 *.lock
+output
