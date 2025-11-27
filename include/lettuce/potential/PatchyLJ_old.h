@@ -7,7 +7,9 @@
 #include "lettuce/core/ParticleDot.h"
 #include "lettuce/core/ParticleOriented.h"
 
-std::vector<std::vector<double>> patchMat;
+// template<typename T>
+// const std::vector<T> patchAngles = {0, 2*M_PI/4, 4*M_PI/4, 6*M_PI/4};
+// const std::vector<T> patchAngles = {0, 2*M_PI/6, 2*M_PI/6, 3*M_PI/6, 4*M_PI/6, 5*M_PI/6};
 
 template<typename T>
 inline T wrapAngle(const T& ang) {
@@ -38,26 +40,11 @@ inline T findPatchAngleUnwrapped(const T& phi, const T& gamma, const T& patchAng
 template<typename TParticle, typename T = typename TParticle::value_type>
 class PatchyLJPotential {
 public:
-    PatchyLJPotential(T epsilon, T sigma, T cutoff, T sigmaAngular, int patchNums)
+    PatchyLJPotential(T epsilon, T sigma, T cutoff, T sigmaAngular, std::vector<T> patchAngles)
         : m_epsilon(epsilon), m_sigma(sigma), m_cutoff(cutoff), m_sigmaAngular(sigmaAngular),
           m_sigma6(std::pow(sigma, 6)),
           m_2sigmaAng_sq(2.0 * sigmaAngular * sigmaAngular),
-          m_patchNums(patchNums)
-    {
-        // Generate evenly spaced patch angles
-        m_patchAngles.reserve(m_patchNums);
-        for (int a = 0; a < m_patchNums; a++) {
-            m_patchAngles.push_back(2 * M_PI * a / m_patchNums); 
-        }
-        
-        // Initialize patchMat to all ones if not provided or incorrect size
-        if (patchMat.empty() || patchMat.size() != static_cast<std::size_t>(m_patchNums)) {
-            patchMat.resize(m_patchNums);
-            for (int i = 0; i < m_patchNums; i++) {
-                patchMat[i].resize(m_patchNums, 1.0);
-            }
-        }
-    }
+          m_patchAngles(std::move(patchAngles)) {}
 
     T operator()(const TParticle& p1, const TParticle& p2, const Vec<T, 2>& dr, const T R) const {
         if (R <= 0 || R > m_cutoff) return 0;
@@ -102,7 +89,6 @@ public:
 private:
     T m_epsilon, m_sigma, m_cutoff, m_sigmaAngular;
     T m_sigma6, m_2sigmaAng_sq;
-    int m_patchNums;
     std::vector<T> m_patchAngles;
 };
 
@@ -111,25 +97,11 @@ private:
 template<typename TParticle, typename T = typename TParticle::value_type>
 class PatchyLJForce {
 public:
-    PatchyLJForce(T epsilon, T sigma, T cutoff, T sigmaAngular, int patchNums)
+    PatchyLJForce(T epsilon, T sigma, T cutoff, T sigmaAngular, std::vector<T> patchAngles)
         : m_epsilon(epsilon), m_sigma(sigma), m_cutoff(cutoff), m_sigmaAngular(sigmaAngular),
           m_sigma6(std::pow(sigma, 6)),
           m_2sigmaAng_sq(2.0 * sigmaAngular * sigmaAngular),
-          m_patchNums(patchNums) 
-    {
-        // Generate evenly spaced patch angles
-        m_patchAngles.reserve(m_patchNums);
-        for (int a = 0; a < m_patchNums; a++) {
-            m_patchAngles.push_back(2 * M_PI * a / m_patchNums); 
-        }
-        // Initialize patchMat to all ones if not provided or incorrect size
-        if (patchMat.empty() || patchMat.size() != static_cast<std::size_t>(m_patchNums)) {
-            patchMat.resize(m_patchNums);
-            for (int i = 0; i < m_patchNums; i++) {
-                patchMat[i].resize(m_patchNums, 1.0);
-            }
-        }
-    }
+          m_patchAngles(std::move(patchAngles)) {}
 
     Vec<T, 3> operator()(const TParticle& p1, const TParticle& p2, const Vec<T, 2>& dr, const T R) const {
         if (R <= 0 || R > m_cutoff) return {{0, 0, 0}};
@@ -207,6 +179,5 @@ public:
 private:
     T m_epsilon, m_sigma, m_cutoff, m_sigmaAngular;
     T m_sigma6, m_2sigmaAng_sq;
-    int m_patchNums;
     std::vector<T> m_patchAngles;
 };
