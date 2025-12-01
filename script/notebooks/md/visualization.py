@@ -451,6 +451,14 @@ def plot_energies(kinetic_energy, potential_energy, m_temperatures, show_potenti
     temp_labels = kinetic_energy['temperature label'][:plot_window]
     potential_energy_data = potential_energy['data'][:plot_window]
 
+    # kinetic_energy_sum = np.sum(kinetic_energy_data, axis=2)[:, 0]
+    # if y2.shape[0] > kinetic_energy_sum.shape[0]:
+    #     y2 = y2[:kinetic_energy_sum.shape[0]]  # Truncate y2
+    # else:
+    #     kinetic_energy_sum = kinetic_energy_sum[:y2.shape[0]]  # Truncate the sum
+
+    # ax.plot(y2 + kinetic_energy_sum, label='Total', color=colors[4])
+
     fig, ax = plt.subplots(figsize=(7, 4))
     ax.grid(True, linestyle='--', alpha=0.7, color='gray')
 
