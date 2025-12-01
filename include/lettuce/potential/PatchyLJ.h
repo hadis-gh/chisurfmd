@@ -51,12 +51,12 @@ public:
         }
         
         // Initialize patchMat to all ones if not provided or incorrect size
-        if (patchMat.empty() || patchMat.size() != static_cast<std::size_t>(m_patchNums)) {
-            patchMat.resize(m_patchNums);
-            for (int i = 0; i < m_patchNums; i++) {
-                patchMat[i].resize(m_patchNums, 1.0);
-            }
-        }
+        // if (patchMat.empty() || patchMat.size() != static_cast<std::size_t>(m_patchNums)) {
+        //     patchMat.resize(m_patchNums);
+        //     for (int i = 0; i < m_patchNums; i++) {
+        //         patchMat[i].resize(m_patchNums, 1.0);
+        //     }
+        // }
     }
 
     T operator()(const TParticle& p1, const TParticle& p2, const Vec<T, 2>& dr, const T R) const {
@@ -123,12 +123,12 @@ public:
             m_patchAngles.push_back(2 * M_PI * a / m_patchNums); 
         }
         // Initialize patchMat to all ones if not provided or incorrect size
-        if (patchMat.empty() || patchMat.size() != static_cast<std::size_t>(m_patchNums)) {
-            patchMat.resize(m_patchNums);
-            for (int i = 0; i < m_patchNums; i++) {
-                patchMat[i].resize(m_patchNums, 1.0);
-            }
-        }
+        // if (patchMat.empty() || patchMat.size() != static_cast<std::size_t>(m_patchNums)) {
+        //     patchMat.resize(m_patchNums);
+        //     for (int i = 0; i < m_patchNums; i++) {
+        //         patchMat[i].resize(m_patchNums, 1.0);
+        //     }
+        // }
     }
 
     Vec<T, 3> operator()(const TParticle& p1, const TParticle& p2, const Vec<T, 2>& dr, const T R) const {
