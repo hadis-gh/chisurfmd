@@ -8,7 +8,7 @@
 #include "lettuce/core/ParticleOriented.h"
 
 template<typename T>
-constexpr T lennardJones(const T& r, const T& sigma, const T& epsilon) {
+inline T lennardJones(const T& r, const T& sigma, const T& epsilon) {
     if (r <= 0) return std::numeric_limits<T>::infinity();
     const T sr = sigma / r;
     const T sr6 = sr * sr * sr * sr * sr * sr;
@@ -17,7 +17,7 @@ constexpr T lennardJones(const T& r, const T& sigma, const T& epsilon) {
 }
 
 template<typename T>
-constexpr T lennardJonesDerivative(const T& r, const T& sigma, const T& epsilon) {
+inline T lennardJonesDerivative(const T& r, const T& sigma, const T& epsilon) {
     if (r <= 0) return std::numeric_limits<T>::infinity();
     const T sr = sigma / r;
     const T sr6 = sr * sr * sr * sr * sr * sr;
