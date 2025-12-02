@@ -446,19 +446,23 @@ def plot_neighbors(neighbors_array, m_temperatures, temperature_show=False, temp
 
 def plot_energies(kinetic_energy, potential_energy, m_temperatures, show_potential=True, temperature_show=False, temperature_label=False, plot_window=None):
     if plot_window is None:     
-        plot_window = kinetic_energy['data'].shape[0]
+        plot_window = min(kinetic_energy['data'].shape[0], potential_energy['data'].shape[0])
+    
+    # FIX: Take the minimum available data from both arrays
     kinetic_energy_data = kinetic_energy['data'][:plot_window]
-    temp_labels = kinetic_energy['temperature label'][:plot_window]
     potential_energy_data = potential_energy['data'][:plot_window]
-
-    # kinetic_energy_sum = np.sum(kinetic_energy_data, axis=2)[:, 0]
-    # if y2.shape[0] > kinetic_energy_sum.shape[0]:
-    #     y2 = y2[:kinetic_energy_sum.shape[0]]  # Truncate y2
-    # else:
-    #     kinetic_energy_sum = kinetic_energy_sum[:y2.shape[0]]  # Truncate the sum
-
-    # ax.plot(y2 + kinetic_energy_sum, label='Total', color=colors[4])
-
+    
+    # Ensure both have the same length
+    min_len = min(len(kinetic_energy_data), len(potential_energy_data))
+    kinetic_energy_data = kinetic_energy_data[:min_len]
+    potential_energy_data = potential_energy_data[:min_len]
+    temp_labels = kinetic_energy['temperature label'][:min_len]
+    
+    # Print warning if there's a mismatch
+    if len(kinetic_energy_data) != len(potential_energy_data):
+        print(f"Warning: Data length mismatch. Using min length: {min_len}")
+        print(f"Kinetic: {len(kinetic_energy_data)}, Potential: {len(potential_energy_data)}")
+    
     fig, ax = plt.subplots(figsize=(7, 4))
     ax.grid(True, linestyle='--', alpha=0.7, color='gray')
 
@@ -698,7 +702,7 @@ def map_to_frame(x, y, frame_size, area):
     scale = frame_size / area
     return int(x * scale), int(y * scale)
 
-def animate_position_simple(positions, output_name, line_length=0.4, area=50, color_p=False, frame_skip=1, frame_size=800, fps=20):
+def animate_position_simple(positions, output_name, line_length=0.4, area=50, color_p=False, frame_skip=1, frame_size=800, fps=20, patchNums=3):
     positions_data = positions['data']
     num_steps = positions_data.shape[0]
     num_particles = positions_data.shape[1]
@@ -731,16 +735,18 @@ def animate_position_simple(positions, output_name, line_length=0.4, area=50, co
             cv2.circle(frame, (cx, cy), particle_radius - 1, (255, 255, 255), -1, lineType=cv2.LINE_AA)
 
             if has_phi and not color_p and not np.isnan(phi):
-                # Draw direction line from center to end of radius
-                x_end = x + line_length * np.cos(phi)
-                y_end = y + line_length * np.sin(phi)
+                for i in range(patchNums):
+                    # Draw direction line from center to end of radius
+                    phi += 2 * np.pi /patchNums
+                    x_end = x + line_length * np.cos(phi)
+                    y_end = y + line_length * np.sin(phi)
 
-                # Skip NaN values in phi-based calculations
-                if np.isnan(x_end) or np.isnan(y_end):
-                    continue
+                    # Skip NaN values in phi-based calculations
+                    if np.isnan(x_end) or np.isnan(y_end):
+                        continue
 
-                cx_end, cy_end = map_to_frame(x_end, y_end, frame_size, area)
-                cv2.line(frame, (cx, cy), (cx_end, cy_end), (0, 0, 0), 2, lineType=cv2.LINE_AA)
+                    cx_end, cy_end = map_to_frame(x_end, y_end, frame_size, area)
+                    cv2.line(frame, (cx, cy), (cx_end, cy_end), (0, 0, 0), 2, lineType=cv2.LINE_AA)
 
         # Add text for step count
         text = f"Step {step}/{num_steps}"
@@ -987,10 +993,8 @@ def plot_trajectory_temperature(positions, target_temperature, step_window=10000
     plt.tight_layout()
     plt.show()
 
-import numpy as np
-import matplotlib.pyplot as plt
 
-def plot_snapshot_temperature(positions, handedness, target_temperature, patchAngs=None,
+def plot_snapshot_temperature(positions, handedness, target_temperature, patchNums=None,
                                line_length=0.45, area=20, radius=True, color_palette='hsv', dpi=120):
     positions_data = positions['data']
     handedness_data = handedness['data']
@@ -1004,7 +1008,7 @@ def plot_snapshot_temperature(positions, handedness, target_temperature, patchAn
     h = handedness_data[shot, :]
 
     # Define colors based on handedness
-    colors = ['lightcoral' if val == 1 else 'lightsteelblue' for val in h]
+    colors = ['mistyrose' if val == 1 else 'lightsteelblue' for val in h]
     
     # Plot main particles
     ax.scatter(
@@ -1016,23 +1020,22 @@ def plot_snapshot_temperature(positions, handedness, target_temperature, patchAn
     )
 
     if radius:
-        # Plot orientation lines
-        x_end = x + line_length * np.cos(phi)
-        y_end = y + line_length * np.sin(phi)
-        for i in range(len(x)):
-            ax.plot([x[i], x_end[i]], [y[i], y_end[i]], color='black', linewidth=0.8, alpha=0.8)
-    
-    elif patchAngs is not None:
-        # Plot patches as tiny points
-        for i in range(len(x)):
-            if np.isnan(phi[i]):
-                continue
-            for ang in patchAngs[i]:  # support multiple patch angles per particle
-                patch_angle = phi[i] + ang  # global angle
-                patch_x = x[i] + line_length * np.cos(patch_angle)
-                patch_y = y[i] + line_length * np.sin(patch_angle)
-                ax.scatter(patch_x, patch_y, s=5, color='blue', alpha=0.9, zorder=5)
-    
+        if patchNums is not None:
+            for a in range(patchNums):
+                phi_a = phi + 2*np.pi * a / patchNums
+                x_end = x + line_length * np.cos(phi_a)
+                y_end = y + line_length * np.sin(phi_a)
+
+                for i in range(len(x)):
+                    ax.plot([x[i], x_end[i]], [y[i], y_end[i]], color='black', linewidth=0.8, alpha=0.8)
+    # if radius:
+    #     if patchNums is not None:
+    #         phi = phi% (2*np.pi /patchNums)
+    #         x_end = x + line_length * np.cos(phi)
+    #         y_end = y + line_length * np.sin(phi)
+    #         for i in range(len(x)):
+    #             ax.plot([x[i], x_end[i]], [y[i], y_end[i]], color='black', linewidth=0.8, alpha=0.8)
+                    
     else:
         # Fallback: color by orientation
         scatter = ax.scatter(
@@ -1058,7 +1061,7 @@ def plot_snapshot_temperature(positions, handedness, target_temperature, patchAn
     ax.set_axisbelow(True)
     plt.tight_layout()
     plt.show()
-
+    
 ############## histogram of φ and Δφ at specific Temperature ##############
 
 def plot_hist_phi_temperature(positions, target_t, step_window, bins_num=100, dpi=120):
