@@ -16,7 +16,7 @@ numCoolingRuns=$(echo "scale=0; ($highTemperature - $lowTemperature) / $stepTemp
 numHeatingRuns=$(echo "scale=0; ($highTemperature - $lowTemperature) / $stepTemperature" | bc)
 totalRuns=$((numCoolingRuns + numHeatingRuns))
 
-MD_EXE=${MD_EXE:-"../build/test/testMD"}
+MD_EXE=${MD_EXE:-"/home/hadis/vector/build/test/testMD"}
 outputDir=${outputDir:-"./outputs"}
 mkdir -p "$outputDir"
 
@@ -57,8 +57,8 @@ if [ "$potentiaType" == "OrientedLJ" ]; then
     elif [ "$potentiaType" == "GeometricLJ" ]; then
         args+=(--patchNum "$patchNum")
     elif [ "$potentiaType" == "PatchyLJ" ]; then
-        args+=(--sigmaAngularScale "$sigmaAngularScale" 
-               --patchAngles "${patchAngles[@]}")
+        args+=(--sigmaPatchyScale "$sigmaPatchyScale" 
+               --patchNums "$patchNums")
     else
         printf "Error: Make sure to specify a valid potentiaType in config file. (Got: '%s')\n" "$potentiaType"
         exit 1

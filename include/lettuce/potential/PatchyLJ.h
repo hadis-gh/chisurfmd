@@ -7,128 +7,87 @@
 #include "lettuce/core/ParticleDot.h"
 #include "lettuce/core/ParticleOriented.h"
 
-std::vector<std::vector<double>> patchMat;
-
 template<typename T>
 inline T wrapAngle(const T& ang) {
-    return std::fmod(ang + M_PI, 2.0 * M_PI) - M_PI; 
-}
-
-template<typename T>
-T findBestPatchSignedAngle(const T& phi, const T& gamma, const std::vector<T>& patchAngs) {
-    T minAbs = M_PI;
-    T bestSigned = 0;
-    for (unsigned int k = 0; k < patchAngs.size(); ++k) {
-        T patchAngle = phi + patchAngs[k];
-        T deltaTheta = wrapAngle(patchAngle - gamma);
-        T absDelta = std::abs(deltaTheta);
-        if (absDelta < minAbs) {
-            minAbs = absDelta;
-            bestSigned = deltaTheta;
-        }
-    }
-    return bestSigned;
-}
-
-template<typename T>
-inline T findPatchAngleUnwrapped(const T& phi, const T& gamma, const T& patchAngle) {
-    return phi + patchAngle - gamma;
+    T result = std::fmod(ang + M_PI, 2.0 * M_PI);
+    if (result < 0) result += 2.0 * M_PI;
+    return result - M_PI;
 }
 
 template<typename TParticle, typename T = typename TParticle::value_type>
 class PatchyLJPotential {
 public:
     PatchyLJPotential(T epsilon, T sigma, T cutoff, T sigmaAngular, int patchNums)
-        : m_epsilon(epsilon), m_sigma(sigma), m_cutoff(cutoff), m_sigmaAngular(sigmaAngular),
-          m_sigma6(std::pow(sigma, 6)),
-          m_2sigmaAng_sq(2.0 * sigmaAngular * sigmaAngular),
-          m_patchNums(patchNums)
+        : m_epsilon(epsilon), m_sigma(sigma), m_cutoff(cutoff), 
+          m_sigmaAngular(sigmaAngular), m_patchNums(patchNums)
     {
-        // Generate evenly spaced patch angles
+        m_2sigmaAng_sq = 2.0 * sigmaAngular * sigmaAngular;
         m_patchAngles.reserve(m_patchNums);
         for (int a = 0; a < m_patchNums; a++) {
-            m_patchAngles.push_back(2 * M_PI * a / m_patchNums); 
+            m_patchAngles.push_back(2 * M_PI * a / m_patchNums);
         }
-        
-        // Initialize patchMat to all ones if not provided or incorrect size
-        // if (patchMat.empty() || patchMat.size() != static_cast<std::size_t>(m_patchNums)) {
-        //     patchMat.resize(m_patchNums);
-        //     for (int i = 0; i < m_patchNums; i++) {
-        //         patchMat[i].resize(m_patchNums, 1.0);
-        //     }
-        // }
     }
 
     T operator()(const TParticle& p1, const TParticle& p2, const Vec<T, 2>& dr, const T R) const {
         if (R <= 0 || R > m_cutoff) return 0;
 
-        const T baseLJ = lennardJones(R, m_sigma, m_epsilon);
+        T baseLJ = lennardJones(R, m_sigma, m_epsilon);
 
         if (R < m_sigma) {
             return baseLJ;
         }
 
-        const auto dx = dr[0];
-        const auto dy = dr[1];
-
+        const T dx = dr[0];
+        const T dy = dr[1];
         const T phi_i = p1.phi;
         const T phi_j = p2.phi;
 
-        const auto& patchAngs = m_patchAngles;
-        const std::size_t patchNum_i = patchAngs.size();
-        const std::size_t patchNum_j = patchNum_i;
-
-        const T gamma_ij = std::atan2(dy, dx);
-        const T gamma_ji = wrapAngle(gamma_ij + M_PI);
-
-        if (patchNum_i == 0 || patchNum_j == 0) return 0;
+        T gamma_ij = std::atan2(dy, dx);
+        T gamma_ji = wrapAngle(gamma_ij + M_PI);
 
         T sum_ei = 0;
+        for (int l = 0; l < m_patchNums; ++l) {
+            T patch_ang_i = m_patchAngles[l];
+            T theta_i = wrapAngle(phi_i + patch_ang_i - gamma_ij);
+            sum_ei += std::exp(-theta_i * theta_i / m_2sigmaAng_sq);
+        }
+
+        // Sum over patches for particle j
         T sum_ej = 0;
-        for (std::size_t l = 0; l < patchNum_i; ++l) {
-            const T theta_i = wrapAngle(findPatchAngleUnwrapped(phi_i, gamma_ij, patchAngs[l]));
-            sum_ei += std::exp(-(theta_i * theta_i) / m_2sigmaAng_sq);
-        }
-        for (std::size_t m = 0; m < patchNum_j; ++m) {
-            const T theta_j = wrapAngle(findPatchAngleUnwrapped(phi_j, gamma_ji, patchAngs[m]));
-            sum_ej += std::exp(-(theta_j * theta_j) / m_2sigmaAng_sq);
+        for (int m = 0; m < m_patchNums; ++m) {
+            T patch_ang_j = m_patchAngles[m];
+            T theta_j = wrapAngle(phi_j + patch_ang_j - gamma_ji);
+            sum_ej += std::exp(-theta_j * theta_j / m_2sigmaAng_sq);
         }
 
-        const T A = sum_ei * sum_ej;
+        // Angular modulation factor
+        T A = sum_ei * sum_ej;
 
+        // Total potential: V = V_LJ * A
         return baseLJ * A;
     }
 
 private:
     T m_epsilon, m_sigma, m_cutoff, m_sigmaAngular;
-    T m_sigma6, m_2sigmaAng_sq;
+    T m_2sigmaAng_sq;
     int m_patchNums;
     std::vector<T> m_patchAngles;
 };
 
-
-
 template<typename TParticle, typename T = typename TParticle::value_type>
 class PatchyLJForce {
 public:
+    using value_type = T;
+
     PatchyLJForce(T epsilon, T sigma, T cutoff, T sigmaAngular, int patchNums)
-        : m_epsilon(epsilon), m_sigma(sigma), m_cutoff(cutoff), m_sigmaAngular(sigmaAngular),
-          m_sigma6(std::pow(sigma, 6)),
-          m_2sigmaAng_sq(2.0 * sigmaAngular * sigmaAngular),
-          m_patchNums(patchNums) 
+        : m_epsilon(epsilon), m_sigma(sigma), m_cutoff(cutoff), 
+          m_sigmaAngular(sigmaAngular), m_patchNums(patchNums)
     {
-        // Generate evenly spaced patch angles
+        m_2sigmaAng_sq = 2.0 * sigmaAngular * sigmaAngular;
         m_patchAngles.reserve(m_patchNums);
         for (int a = 0; a < m_patchNums; a++) {
-            m_patchAngles.push_back(2 * M_PI * a / m_patchNums); 
+            m_patchAngles.push_back(2 * M_PI * a / m_patchNums);
         }
-        // Initialize patchMat to all ones if not provided or incorrect size
-        // if (patchMat.empty() || patchMat.size() != static_cast<std::size_t>(m_patchNums)) {
-        //     patchMat.resize(m_patchNums);
-        //     for (int i = 0; i < m_patchNums; i++) {
-        //         patchMat[i].resize(m_patchNums, 1.0);
-        //     }
-        // }
     }
 
     Vec<T, 3> operator()(const TParticle& p1, const TParticle& p2, const Vec<T, 2>& dr, const T R) const {
@@ -138,75 +97,82 @@ public:
         const T dy = dr[1];
         const T r2 = dx * dx + dy * dy;
 
-        const T baseLJ = lennardJones(R, m_sigma, m_epsilon);
-        
-        const T dVdR = lennardJonesDerivative(R, m_sigma, m_epsilon);
+        // Compute base LJ and its derivative
+        T baseLJ = lennardJones(R, m_sigma, m_epsilon);
+        T dVdR = lennardJonesDerivative(R, m_sigma, m_epsilon);
 
-        const T dRdx = dx / R;
-        const T dRdy = dy / R;
-        const T dVdx = dVdR * dRdx;
-        const T dVdy = dVdR * dRdy;
-
-        const T fx_lj = -dVdx;
-        const T fy_lj = -dVdy;
-
+        // For R < sigma, use only LJ (no angular modulation)
         if (R < m_sigma) {
-            return {{fx_lj, fy_lj, 0}};
+            T fx = -dVdR * dx / R;
+            T fy = -dVdR * dy / R;
+            return {{fx, fy, 0}};
         }
 
         const T phi_i = p1.phi;
         const T phi_j = p2.phi;
 
-        const auto& patchAngs = m_patchAngles;
-        const std::size_t patchNum_i = patchAngs.size();
-        const std::size_t patchNum_j = patchNum_i;
+        // Compute the angle from particle i to particle j
+        T gamma_ij = std::atan2(dy, dx);
+        // Angle from particle j to particle i
+        T gamma_ji = wrapAngle(gamma_ij + M_PI);
 
-        const T gamma_ij = std::atan2(dy, dx);
-        const T gamma_ji = wrapAngle(gamma_ij + M_PI);
+        // Compute angular factors and their derivatives
+        T sum_ei = 0, sum_ej = 0;
+        T dsum_ei_dtheta = 0, dsum_ej_dtheta = 0;
 
-        if (patchNum_i == 0 || patchNum_j == 0) {
-            return {{fx_lj, fy_lj, 0}};
+        for (int l = 0; l < m_patchNums; ++l) {
+            T patch_ang_i = m_patchAngles[l];
+            T theta_i = wrapAngle(phi_i + patch_ang_i - gamma_ij);
+            T exp_i = std::exp(-theta_i * theta_i / m_2sigmaAng_sq);
+            sum_ei += exp_i;
+            dsum_ei_dtheta += (-2.0 * theta_i / m_2sigmaAng_sq) * exp_i;
         }
 
-        T sum_ei = 0;
-        T sum_ej = 0;
-        T Si = 0;
-        T Sj = 0;
-
-        for (std::size_t l = 0; l < patchNum_i; ++l) {
-            const T theta_i = wrapAngle(findPatchAngleUnwrapped(phi_i, gamma_ij, patchAngs[l]));
-            const T ei = std::exp(-(theta_i * theta_i) / m_2sigmaAng_sq);
-            sum_ei += ei;
-            Si += (-2.0 * theta_i / m_2sigmaAng_sq) * ei;
-        }
-        for (std::size_t m = 0; m < patchNum_j; ++m) {
-            const T theta_j = wrapAngle(findPatchAngleUnwrapped(phi_j, gamma_ji, patchAngs[m]));
-            const T ej = std::exp(-(theta_j * theta_j) / m_2sigmaAng_sq);
-            sum_ej += ej;
-            Sj += (-2.0 * theta_j / m_2sigmaAng_sq) * ej;
+        for (int m = 0; m < m_patchNums; ++m) {
+            T patch_ang_j = m_patchAngles[m];
+            T theta_j = wrapAngle(phi_j + patch_ang_j - gamma_ji);
+            T exp_j = std::exp(-theta_j * theta_j / m_2sigmaAng_sq);
+            sum_ej += exp_j;
+            dsum_ej_dtheta += (-2.0 * theta_j / m_2sigmaAng_sq) * exp_j;
         }
 
-        const T A = sum_ei * sum_ej;
-        const T dA_dtheta_i_total = sum_ej * Si;
-        const T dA_dtheta_j_total = sum_ei * Sj;
+        // Angular modulation factor and its partial derivatives
+        T A = sum_ei * sum_ej;
+        T dA_dtheta_i = sum_ej * dsum_ei_dtheta;  // ∂A/∂θ_i
+        T dA_dtheta_j = sum_ei * dsum_ej_dtheta;  // ∂A/∂θ_j
 
-        const T dgammadx = -dy / r2;   // ∂γ_ij/∂x_j
-        const T dgammady = dx / r2;    // ∂γ_ij/∂y_j
+        // Derivatives of gamma with respect to coordinates
+        // ∂γ_ij/∂x = -dy/r², ∂γ_ij/∂y = dx/r²
+        T dgamma_dx = -dy / r2;
+        T dgamma_dy = dx / r2;
 
-        const T dA_dx = -(dA_dtheta_i_total + dA_dtheta_j_total) * dgammadx;
-        const T dA_dy = -(dA_dtheta_i_total + dA_dtheta_j_total) * dgammady;
+        // Chain rule for dA/dx and dA/dy
+        // dA/dx = (∂A/∂θ_i)*(dθ_i/dγ)*(dγ/dx) + (∂A/∂θ_j)*(dθ_j/dγ)*(dγ/dx)
+        // Since dθ_i/dγ = -1 and dθ_j/dγ = -1:
+        T dA_dx = -(dA_dtheta_i + dA_dtheta_j) * dgamma_dx;
+        T dA_dy = -(dA_dtheta_i + dA_dtheta_j) * dgamma_dy;
 
-        const T fx = -(dVdx * A + baseLJ * dA_dx);
-        const T fy = -(dVdy * A + baseLJ * dA_dy);
-        const T torque_j = -baseLJ * dA_dtheta_j_total;
-        const T torque_i = -baseLJ * dA_dtheta_i_total;
+        // Spatial derivatives of R
+        T dRdx = dx / R;
+        T dRdy = dy / R;
 
+        // Total force components: F = -∇V = -[ (dV/dR)*(dR/dx)*A + V*(dA/dx) ]
+        T fx = -(dVdR * dRdx * A + baseLJ * dA_dx);
+        T fy = -(dVdR * dRdy * A + baseLJ * dA_dy);
+
+        // Torques: τ = -∂V/∂φ
+        // ∂V/∂φ_i = V_LJ * (∂A/∂θ_i) * (∂θ_i/∂φ_i) = V_LJ * (∂A/∂θ_i) * 1
+        T torque_i = -baseLJ * dA_dtheta_i;  // Torque on particle i
+        T torque_j = -baseLJ * dA_dtheta_j;  // Torque on particle j
+
+        // Return force on particle j and torque on particle j
+        // Note: The force on particle i would be -fx, -fy with torque_i
         return {{fx, fy, torque_j}};
     }
 
 private:
     T m_epsilon, m_sigma, m_cutoff, m_sigmaAngular;
-    T m_sigma6, m_2sigmaAng_sq;
+    T m_2sigmaAng_sq;
     int m_patchNums;
     std::vector<T> m_patchAngles;
 };
