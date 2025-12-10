@@ -153,6 +153,96 @@ def read_attributes(name, attribute_name):
     elif os.path.isdir(name):
         return read_attributes_directory(name, attribute_name)
     
+################# read multiple variables from output file and directory #################
+
+def read_variables_batch(name, variable_names, print_message=True):
+    """
+    Read multiple variables in a single pass through the data
+    """
+    if name.endswith(".bp"):
+        return _read_variables_batch_file(name, variable_names, print_message)
+    elif os.path.isdir(name):
+        return _read_variables_batch_directory(name, variable_names, print_message)
+
+def _read_variables_batch_file(file_name, variable_names, print_message=True):
+    """
+    Read multiple variables from a single file
+    """
+    result = {}
+    
+    with FileReader(file_name) as reader:
+        # Read temperature attribute once
+        temp_label = reader.read_attribute("temperature").flatten()
+        
+        for variable_name in variable_names:
+            if variable_name in reader.available_variables():
+                var_info = reader.available_variables()[variable_name]
+                steps = int(var_info.get("AvailableStepsCount", 1))
+
+                data = reader.read(variable_name, step_selection=[0, steps])
+                if data.ndim == 1:
+                    data = np.reshape(data, (1*steps, data.shape[0]//steps))
+                else:
+                    data = np.reshape(data, (1*steps, data.shape[0]//steps, data.shape[1]))
+
+                result[variable_name] = {
+                    'data': np.array(data),
+                    'temperature label': temp_label
+                }
+            else:
+                raise ValueError(f"Variable {variable_name} not found in {file_name}")
+    
+    if print_message:
+        print(f'Read {len(variable_names)} variables successfully!')
+    
+    return result
+
+def _read_variables_batch_directory(output_dir, variable_names, print_message=True):
+    """
+    Read multiple variables from a directory of files
+    """
+    pattern = re.compile("run_([0-9]+).bp")
+    run_numbers = [int(pattern.match(x)[1]) for x in os.listdir(output_dir) if pattern.match(x)]
+    
+    if not run_numbers:
+        raise ValueError(f"No run files found in {output_dir}")
+    
+    run_numbers.sort()
+    
+    # Initialize result structure
+    result = {var: {'data': [], 'temperature label': []} for var in variable_names}
+    
+    for i, run_num in enumerate(run_numbers):
+        file_path = os.path.join(output_dir, f"run_{run_num}.bp")
+        with FileReader(file_path) as reader:
+            # Read temperature attribute once per file
+            temp_label = reader.read_attribute("temperature").flatten()
+            
+            for variable_name in variable_names:
+                if variable_name in reader.available_variables():
+                    var_info = reader.available_variables()[variable_name]
+                    steps = int(var_info.get("AvailableStepsCount", 1))
+
+                    data = reader.read(variable_name, step_selection=[0, steps])
+                    if data.ndim == 1:
+                        data = np.reshape(data, (1*steps, data.shape[0]//steps))
+                    else:
+                        data = np.reshape(data, (1*steps, data.shape[0]//steps, data.shape[1]))
+
+                    result[variable_name]['data'].extend(data)
+                    result[variable_name]['temperature label'].append(temp_label)
+                else:
+                    raise ValueError(f"Variable {variable_name} not found in {file_path}")
+    
+    # Convert lists to arrays
+    for var in variable_names:
+        result[var]['data'] = np.array(result[var]['data'])
+        result[var]['temperature label'] = np.array(result[var]['temperature label'])
+    
+    if print_message:
+        print(f'Read {len(variable_names)} variables from {len(run_numbers)} files successfully!')
+    
+    return result
 #------------------------------   AGGREGATION   ------------------------------
 
 ################# MD aggregation directory,find file #################
