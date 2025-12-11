@@ -3,9 +3,17 @@
 #include <vector>
 #include <cmath>
 #include <algorithm>
+#include <iostream>
 #include "lettuce/core/Vec.h"
 #include "lettuce/core/ParticleDot.h"
 #include "lettuce/core/ParticleOriented.h"
+
+// Add boost program_options include
+#include <boost/program_options.hpp>
+namespace po = boost::program_options;
+
+// Add IsotropicLJ include for inheritance
+#include "IsotropicLJ.h"
 
 template<typename T>
 inline T wrapAngle(const T& ang) {
@@ -14,6 +22,7 @@ inline T wrapAngle(const T& ang) {
     return result - M_PI;
 }
 
+// ================ Keep existing Force and Potential classes ================
 template<typename TParticle, typename T = typename TParticle::value_type>
 class PatchyLJPotential {
 public:
@@ -175,4 +184,55 @@ private:
     T m_2sigmaAng_sq;
     int m_patchNums;
     std::vector<T> m_patchAngles;
+};
+
+// ================ Add Factory Struct to the same file ================
+
+template<typename Particle, typename SFINAE = void>
+struct PatchyLJ;
+
+template<typename T>
+struct PatchyLJ<ParticleOriented<T>>
+{
+    static void initProgramOptions(po::options_description &desc) {
+        // Include base LJ options
+        IsotropicLJ<ParticleDot<T>>::initProgramOptions(desc);
+        // Add Patchy-specific options
+        desc.add_options()
+            ("sigmaPatchyScale",   po::value<T>()->default_value(.262),              "anisotropic strength of potential")
+            ("patchNums",          po::value<int>()->default_value(1),               "Number of patches for geometric LJ")
+        ;
+    }
+
+    static auto force(const po::variables_map &vm) {
+        return PatchyLJForce<ParticleOriented<T>>(
+            vm["LJepsilon"].as<T>(), 
+            vm["LJsigma"].as<T>(), 
+            vm["LJcutoff"].as<T>(),
+            vm["sigmaPatchyScale"].as<T>(),
+            vm["patchNums"].as<int>()
+        );
+    }
+
+    static auto potential(const po::variables_map &vm) {
+        return PatchyLJPotential<ParticleOriented<T>>(
+            vm["LJepsilon"].as<T>(), 
+            vm["LJsigma"].as<T>(), 
+            vm["LJcutoff"].as<T>(),
+            vm["sigmaPatchyScale"].as<T>(),
+            vm["patchNums"].as<int>()
+        );
+    }
+
+    static auto makePotential(const po::variables_map &vm) {
+        return PatchyLJ<ParticleOriented<T>>(
+            vm["LJepsilon"].as<T>(), 
+            vm["LJsigma"].as<T>(), 
+            vm["LJcutoff"].as<T>(),
+            vm["sigmaPatchyScale"].as<T>(),
+            vm["patchNums"].as<int>()
+        );
+    }
+
+    using ForceType = PatchyLJForce<ParticleOriented<T>>;
 };

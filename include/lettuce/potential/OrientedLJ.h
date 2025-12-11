@@ -2,9 +2,14 @@
 
 #include <vector>
 #include <cmath>
+#include <iostream>
+#include <boost/program_options.hpp>
 #include "lettuce/core/Vec.h"
 #include "lettuce/core/ParticleDot.h"
 #include "lettuce/core/ParticleOriented.h"
+#include "IsotropicLJ.h"
+
+namespace po = boost::program_options;
 
 template<typename TParticle, typename T = typename TParticle::value_type>
 class OrientedLJPotential {
@@ -81,4 +86,56 @@ private:
     T m_epsilon, m_sigma, m_cutoff, m_sigma6, m_sigma12;
     int m_phiOrder;
     T m_angularScale, m_alpha;
+};
+
+// ================================== Factory Struct for OrientedLJ ==================================
+
+template<typename Particle, typename SFINAE = void>
+struct OrientedLJ;
+
+template<typename T>
+struct OrientedLJ<ParticleOriented<T>> 
+{
+    static void initProgramOptions(po::options_description &desc) {
+        IsotropicLJ<ParticleDot<T>>::initProgramOptions(desc); // Reuse base options
+        desc.add_options()
+            ("LJPhiOrder",      po::value<unsigned int>()   ->default_value(2),     "rotational order for orientation-dependent interactions")
+            ("LJangularScale",  po::value<T>()              ->default_value(1.0),   "scaling factor for the orientation-dependent interaction")
+            ("LJalpha",         po::value<T>()              ->default_value(M_PI),  "phase shift factor for the orientation-dependent interaction")
+        ;
+    }
+
+    static auto force(const po::variables_map &vm) {
+        try {
+            return OrientedLJForce<ParticleOriented<T>>(
+                vm["LJepsilon"].as<T>(), 
+                vm["LJsigma"].as<T>(), 
+                vm["LJcutoff"].as<T>(), 
+                vm["LJPhiOrder"].as<unsigned int>(),
+                vm["LJangularScale"].as<T>(),
+                vm["LJalpha"].as<T>()
+            );
+        } catch (const boost::bad_any_cast& e) {
+            std::cerr << "Error initializing LennardJonesOrientedForce: " << e.what() << std::endl;
+            throw;
+        }
+    }
+
+    static auto potential(const po::variables_map &vm) {
+        try {
+            return OrientedLJPotential<ParticleOriented<T>>(
+                vm["LJepsilon"].as<T>(), 
+                vm["LJsigma"].as<T>(), 
+                vm["LJcutoff"].as<T>(), 
+                vm["LJPhiOrder"].as<unsigned int>(),
+                vm["LJangularScale"].as<T>(),
+                vm["LJalpha"].as<T>()
+            );
+        } catch (const boost::bad_any_cast& e) {
+            std::cerr << "Error initializing LennardJonesOrientedPotential: " << e.what() << std::endl;
+            throw;
+        }
+    }
+
+    using ForceType = OrientedLJForce<ParticleOriented<T>>;
 };

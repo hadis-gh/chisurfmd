@@ -2,10 +2,14 @@
 
 #include <vector>
 #include <cmath>
+#include <iostream>
+#include <boost/program_options.hpp>
 #include "lettuce/core/Vec.h"
 #include "lettuce/core/Circle.h"
 #include "lettuce/core/ParticleDot.h"
 #include "lettuce/core/ParticleOriented.h"
+
+namespace po = boost::program_options;
 
 template<typename T>
 inline T lennardJones(const T& r, const T& sigma, const T& epsilon) {
@@ -56,10 +60,12 @@ public:
         : m_epsilon(epsilon), m_sigma(sigma), m_cutoff(cutoff)
         , m_sigma6(sigma * sigma * sigma * sigma * sigma * sigma)
         , m_sigma12(m_sigma6 * m_sigma6) {}
+    
     Vec<T, 2> operator()(const TParticle &p1, const TParticle &p2, const Vec<T, 2>& dr, const T r) const {
-        if (r > m_cutoff) return 0;
+        if (r > m_cutoff) return {{0, 0}};
 
-        return -lennardJonesDerivative(r, m_sigma, m_epsilon) * dr/r;
+        T force_magnitude = -lennardJonesDerivative(r, m_sigma, m_epsilon);
+        return {{force_magnitude * dr[0] / r, force_magnitude * dr[1] / r}};
     }
 
 private:
@@ -68,4 +74,49 @@ private:
     T m_cutoff;
     T m_sigma6;
     T m_sigma12;
+};
+
+// ================================== Factory Struct for IsotropicLJ ==================================
+
+template<typename Particle, typename SFINAE = void>
+struct IsotropicLJ;
+
+template<typename T>
+struct IsotropicLJ<ParticleDot<T>> 
+{
+    static void initProgramOptions(po::options_description &desc) {
+        desc.add_options()
+            ("LJepsilon", po::value<T>()->default_value(1.),     "epsilon in Lennard-Jones force and potential")
+            ("LJsigma",   po::value<T>()->default_value(1.),     "sigma in Lennard-Jones force and potential")
+            ("LJcutoff",  po::value<T>()->default_value(10.),    "cutoff distance for Lennard-Jones interactions")
+        ;
+    }
+
+    static auto force(const po::variables_map &vm) {
+        try {
+            return IsotropicLJForce<ParticleDot<T>>(
+                vm["LJepsilon"].as<T>(), 
+                vm["LJsigma"].as<T>(), 
+                vm["LJcutoff"].as<T>()
+            );
+        } catch (const boost::bad_any_cast& e) {
+            std::cerr << "Error initializing LennardJonesForce: " << e.what() << std::endl;
+            throw;
+        }
+    }
+
+    static auto potential(const po::variables_map &vm) {
+        try {
+            return IsotropicLJPotential<ParticleDot<T>>(
+                vm["LJepsilon"].as<T>(), 
+                vm["LJsigma"].as<T>(), 
+                vm["LJcutoff"].as<T>()
+            );
+        } catch (const boost::bad_any_cast& e) {
+            std::cerr << "Error initializing LennardJonesPotential: " << e.what() << std::endl;
+            throw;
+        }
+    }
+
+    using ForceType = IsotropicLJForce<ParticleDot<T>>;
 };

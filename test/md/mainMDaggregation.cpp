@@ -25,7 +25,6 @@
 #include "lettuce/potential/OrientedLJ.h"
 #include "lettuce/potential/GeometricLJ.h"
 #include "lettuce/potential/PatchyLJ.h"
-#include "lettuce/potential/PotentialFactory.h"
 
 enum class ThermostatID {
     None = 0, VelocityScaling = 1, Berendsen = 2, NoseHoover = 3, Andersen = 4
