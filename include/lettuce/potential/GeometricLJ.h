@@ -3,9 +3,14 @@
 #include <vector>
 #include <cmath>
 #include <limits>
+#include <iostream>
+#include <boost/program_options.hpp>
 #include "lettuce/core/Vec.h"
 #include "lettuce/core/ParticleDot.h"
 #include "lettuce/core/ParticleOriented.h"
+#include "IsotropicLJ.h"
+
+namespace po = boost::program_options;
 
 template<typename TParticle, typename T = typename TParticle::value_type>
 class GeometricLJPotential {
@@ -119,4 +124,46 @@ private:
     T m_cutoff_sq;
     int m_num_patches;
     T m_factor_patchy_lj;
+};
+
+// ================================== Factory Struct for GeometricLJ ==================================
+
+template<typename Particle, typename SFINAE = void>
+struct GeometricLJ;
+
+template<typename T>
+struct GeometricLJ<ParticleOriented<T>>
+{
+    static void initProgramOptions(po::options_description &desc) {
+        IsotropicLJ<ParticleDot<T>>::initProgramOptions(desc);
+        desc.add_options()
+            ("factorPatchyLJ",      po::value<T>()->default_value(0.5),     "Strength of chiral interaction")
+            ("patchNum",            po::value<int>()->default_value(1),     "Number of patches for geometric LJ")
+            ("patchRadius",         po::value<T>()->default_value(0.5),     "Exclusion radius for geometric LJ")
+        ;
+    }
+
+    static auto force(const po::variables_map &vm) {
+        return GeometricLJForce<ParticleOriented<T>>(
+            vm["LJepsilon"].as<T>(), 
+            vm["LJsigma"].as<T>(), 
+            vm["LJcutoff"].as<T>(),
+            vm["patchRadius"].as<T>(),
+            vm["patchNum"].as<int>(),
+            vm["factorPatchyLJ"].as<T>()
+        );
+    }
+
+    static auto potential(const po::variables_map &vm) {
+        return GeometricLJPotential<ParticleOriented<T>>(
+            vm["LJepsilon"].as<T>(), 
+            vm["LJsigma"].as<T>(), 
+            vm["LJcutoff"].as<T>(),
+            vm["patchRadius"].as<T>(),
+            vm["patchNum"].as<int>(),
+            vm["factorPatchyLJ"].as<T>()
+        );
+    }
+
+    using ForceType = GeometricLJForce<ParticleOriented<T>>;
 };
