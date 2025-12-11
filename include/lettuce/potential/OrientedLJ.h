@@ -97,7 +97,7 @@ template<typename T>
 struct OrientedLJ<ParticleOriented<T>> 
 {
     static void initProgramOptions(po::options_description &desc) {
-        IsotropicLJ<ParticleDot<T>>::initProgramOptions(desc); // Reuse base options
+        IsotropicLJ<ParticleDot<T>>::initProgramOptions(desc);
         desc.add_options()
             ("LJPhiOrder",      po::value<unsigned int>()   ->default_value(2),     "rotational order for orientation-dependent interactions")
             ("LJangularScale",  po::value<T>()              ->default_value(1.0),   "scaling factor for the orientation-dependent interaction")
