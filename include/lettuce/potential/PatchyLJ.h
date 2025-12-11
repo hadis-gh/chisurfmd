@@ -7,13 +7,10 @@
 #include "lettuce/core/Vec.h"
 #include "lettuce/core/ParticleDot.h"
 #include "lettuce/core/ParticleOriented.h"
-
-// Add boost program_options include
 #include <boost/program_options.hpp>
-namespace po = boost::program_options;
-
-// Add IsotropicLJ include for inheritance
 #include "IsotropicLJ.h"
+
+namespace po = boost::program_options;
 
 template<typename T>
 inline T wrapAngle(const T& ang) {
@@ -22,7 +19,6 @@ inline T wrapAngle(const T& ang) {
     return result - M_PI;
 }
 
-// ================ Keep existing Force and Potential classes ================
 template<typename TParticle, typename T = typename TParticle::value_type>
 class PatchyLJPotential {
 public:
@@ -106,11 +102,9 @@ public:
         const T dy = dr[1];
         const T r2 = dx * dx + dy * dy;
 
-        // Compute base LJ and its derivative
         T baseLJ = lennardJones(R, m_sigma, m_epsilon);
         T dVdR = lennardJonesDerivative(R, m_sigma, m_epsilon);
 
-        // For R < sigma, use only LJ (no angular modulation)
         if (R < m_sigma) {
             T fx = -dVdR * dx / R;
             T fy = -dVdR * dy / R;
@@ -186,7 +180,7 @@ private:
     std::vector<T> m_patchAngles;
 };
 
-// ================ Add Factory Struct to the same file ================
+// ================  Factory Struct for PatchyLJ ================
 
 template<typename Particle, typename SFINAE = void>
 struct PatchyLJ;
@@ -195,9 +189,8 @@ template<typename T>
 struct PatchyLJ<ParticleOriented<T>>
 {
     static void initProgramOptions(po::options_description &desc) {
-        // Include base LJ options
         IsotropicLJ<ParticleDot<T>>::initProgramOptions(desc);
-        // Add Patchy-specific options
+
         desc.add_options()
             ("sigmaPatchyScale",   po::value<T>()->default_value(.262),              "anisotropic strength of potential")
             ("patchNums",          po::value<int>()->default_value(1),               "Number of patches for geometric LJ")

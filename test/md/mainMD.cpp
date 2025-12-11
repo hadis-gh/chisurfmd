@@ -20,11 +20,7 @@
 #include "lettuce/core/FileIO.h"
 #include "lettuce/md/Integration.h"
 #include "lettuce/md/Thermostat.h"
-#include "lettuce/potential/IsotropicLJ.h"
-#include "lettuce/potential/OrientedLJ.h"
-#include "lettuce/potential/GeometricLJ.h"
-#include "lettuce/potential/PatchyLJ.h"
-#include "lettuce/potential/FieldCoupled.h"
+#include "lettuce/potential/PotentialsU.h"
 
 enum class ThermostatID {
     None = 0, VelocityScaling = 1, Berendsen = 2, NoseHoover = 3, Andersen = 4
