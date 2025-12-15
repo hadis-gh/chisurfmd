@@ -316,11 +316,11 @@ std::vector<TParticle> initialParticles(const unsigned int& particlesNum,
         p.species = speciesNum;
         
         std::uniform_int_distribution<int8_t> dis(0, 1);
-        if (particlesType == "RLUU") {
+        if (particlesType == "OP") {
             p.h = dis(gen) * 2 - 1;
-        } else if (particlesType == "RRUD") {
+        } else if (particlesType == "SA") {
             p.d = dis(gen) * 2 - 1;
-        } else if (particlesType == "RRUU" || particlesType == "RLUD") {
+        } else if (particlesType == "SP" || particlesType == "OA") {
             p.h = 1;
             p.d = 1;
         } else {

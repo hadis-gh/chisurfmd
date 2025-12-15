@@ -92,7 +92,7 @@ int main(int argc, char* argv[]) {
         ("thermoInterval",        po::value<Real>()->default_value(.1),                       "interval after which to apply thermostat")
         ("temperature,T",         po::value<Real>()->default_value(.3),                       "temperature")
         ("particlesInit",         po::value<std::string>()->default_value("RANDOM"),          "particle initialization")
-        ("particlesType",         po::value<std::string>()->default_value("RRUU"),            "particles type handedness & orientation")
+        ("particlesType",         po::value<std::string>()->default_value("SP"),            "particles type handedness & orientation")
         ("mass",                  po::value<Real>()->default_value(1.0),                      "mass of particles")       
         ("momentI",               po::value<Real>()->default_value(1.0),                      "moment of inersia")
         ("exclusionRadius",       po::value<Real>()->default_value(.5),                       "exclusion radius")
