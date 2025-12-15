@@ -23,8 +23,8 @@ template<typename T>
 inline T findClosestPatch(const T& phi, const T& gamma, const int& patchNums, const std::vector<T>& patchAngles) {
     T min_theta = std::numeric_limits<T>::max();
     T best_theta = 0;
-    for (int l = 0; l < patchNums; ++l) {
-        T patchAng = patchAngles[l];
+    for (int i = 0; i < patchNums; ++i) {
+        T patchAng = patchAngles[i];
         T theta = wrapAngle(phi + patchAng - gamma);
         T abs_theta = std::abs(theta);
         if (abs_theta < min_theta) {
