@@ -611,7 +611,7 @@ def plot_configuration(positions, handedness=None, step_target=-1, radius=0.4, c
     if positions_data.shape[2] == 3:
         phi = positions_data[step_target, :, 2]
 
-    T = positions["temperature label"][0][0]
+    T = positions["temperature label"][0]
     
     fig, ax = plt.subplots(figsize=(6, 4), dpi=150)
 
