@@ -19,14 +19,16 @@ inline T wrapAngle(const T& ang) {
     return result - M_PI;
 }
 
+// ================  Potential for PatchyLJ ================
+
 template<typename TParticle, typename T = typename TParticle::value_type>
 class PatchyLJPotential {
 public:
-    PatchyLJPotential(T epsilon, T sigma, T cutoff, T sigmaAngular, int patchNums)
-        : m_epsilon(epsilon), m_sigma(sigma), m_cutoff(cutoff), 
-          m_sigmaAngular(sigmaAngular), m_patchNums(patchNums)
+    PatchyLJPotential(T epsilonLJ, T sigmaLJ, T cutoffLJ, T sigmaPatch, int patchNums)
+        : m_epsilonLJ(epsilonLJ), m_sigmaLJ(sigmaLJ), m_cutoffLJ(cutoffLJ), 
+          m_sigmaPatch(sigmaPatch), m_patchNums(patchNums)
     {
-        m_2sigmaAng_sq = 2.0 * sigmaAngular * sigmaAngular;
+        m_twosigmaPatchSq = 2.0 * sigmaPatch * sigmaPatch;
         m_patchAngles.reserve(m_patchNums);
         for (int a = 0; a < m_patchNums; a++) {
             m_patchAngles.push_back(2 * M_PI * a / m_patchNums);
@@ -34,11 +36,11 @@ public:
     }
 
     T operator()(const TParticle& p1, const TParticle& p2, const Vec<T, 2>& dr, const T R) const {
-        if (R <= 0 || R > m_cutoff) return 0;
+        if (R <= 0 || R > m_cutoffLJ) return 0;
 
-        T baseLJ = lennardJones(R, m_sigma, m_epsilon);
+        T baseLJ = lennardJones(R, m_sigmaLJ, m_epsilonLJ);
 
-        if (R < m_sigma) {
+        if (R < m_sigmaLJ) {
             return baseLJ;
         }
 
@@ -52,9 +54,9 @@ public:
 
         T sum_ei = 0;
         for (int l = 0; l < m_patchNums; ++l) {
-            T patch_ang_i = m_patchAngles[l];
-            T theta_i = wrapAngle(phi_i + patch_ang_i - gamma_ij);
-            sum_ei += std::exp(-theta_i * theta_i / m_2sigmaAng_sq);
+            T patchAng_i = m_patchAngles[l];
+            T theta_i = wrapAngle(phi_i + patchAng_i - gamma_ij);
+            sum_ei += std::exp(-theta_i * theta_i / m_twosigmaPatchSq);
         }
 
         // Sum over patches for particle j
@@ -62,7 +64,7 @@ public:
         for (int m = 0; m < m_patchNums; ++m) {
             T patch_ang_j = m_patchAngles[m];
             T theta_j = wrapAngle(phi_j + patch_ang_j - gamma_ji);
-            sum_ej += std::exp(-theta_j * theta_j / m_2sigmaAng_sq);
+            sum_ej += std::exp(-theta_j * theta_j / m_twosigmaPatchSq);
         }
 
         // Angular modulation factor
@@ -73,22 +75,24 @@ public:
     }
 
 private:
-    T m_epsilon, m_sigma, m_cutoff, m_sigmaAngular;
-    T m_2sigmaAng_sq;
+    T m_epsilonLJ, m_sigmaLJ, m_cutoffLJ, m_sigmaPatch;
+    T m_twosigmaPatchSq;
     int m_patchNums;
     std::vector<T> m_patchAngles;
 };
+
+// ================  Force for PatchyLJ ================
 
 template<typename TParticle, typename T = typename TParticle::value_type>
 class PatchyLJForce {
 public:
     using value_type = T;
 
-    PatchyLJForce(T epsilon, T sigma, T cutoff, T sigmaAngular, int patchNums)
-        : m_epsilon(epsilon), m_sigma(sigma), m_cutoff(cutoff), 
-          m_sigmaAngular(sigmaAngular), m_patchNums(patchNums)
+    PatchyLJForce(T epsilonLJ, T sigmaLJ, T cutoffLJ, T sigmaPatch, int patchNums)
+        : m_epsilonLJ(epsilonLJ), m_sigmaLJ(sigmaLJ), m_cutoffLJ(cutoffLJ), 
+          m_sigmaPatch(sigmaPatch), m_patchNums(patchNums)
     {
-        m_2sigmaAng_sq = 2.0 * sigmaAngular * sigmaAngular;
+        m_twosigmaPatchSq = 2.0 * sigmaPatch * sigmaPatch;
         m_patchAngles.reserve(m_patchNums);
         for (int a = 0; a < m_patchNums; a++) {
             m_patchAngles.push_back(2 * M_PI * a / m_patchNums);
@@ -96,16 +100,16 @@ public:
     }
 
     Vec<T, 3> operator()(const TParticle& p1, const TParticle& p2, const Vec<T, 2>& dr, const T R) const {
-        if (R <= 0 || R > m_cutoff) return {{0, 0, 0}};
+        if (R <= 0 || R > m_cutoffLJ) return {{0, 0, 0}};
 
         const T dx = dr[0];
         const T dy = dr[1];
         const T r2 = dx * dx + dy * dy;
 
-        T baseLJ = lennardJones(R, m_sigma, m_epsilon);
-        T dVdR = lennardJonesDerivative(R, m_sigma, m_epsilon);
+        T baseLJ = lennardJones(R, m_sigmaLJ, m_epsilonLJ);
+        T dVdR = lennardJonesDerivative(R, m_sigmaLJ, m_epsilonLJ);
 
-        if (R < m_sigma) {
+        if (R < m_sigmaLJ) {
             T fx = -dVdR * dx / R;
             T fy = -dVdR * dy / R;
             return {{fx, fy, 0}};
@@ -124,19 +128,19 @@ public:
         T dsum_ei_dtheta = 0, dsum_ej_dtheta = 0;
 
         for (int l = 0; l < m_patchNums; ++l) {
-            T patch_ang_i = m_patchAngles[l];
-            T theta_i = wrapAngle(phi_i + patch_ang_i - gamma_ij);
-            T exp_i = std::exp(-theta_i * theta_i / m_2sigmaAng_sq);
+            T patchAng_i = m_patchAngles[l];
+            T theta_i = wrapAngle(phi_i + patchAng_i - gamma_ij);
+            T exp_i = std::exp(-theta_i * theta_i / m_twosigmaPatchSq);
             sum_ei += exp_i;
-            dsum_ei_dtheta += (-2.0 * theta_i / m_2sigmaAng_sq) * exp_i;
+            dsum_ei_dtheta += (-2.0 * theta_i / m_twosigmaPatchSq) * exp_i;
         }
 
         for (int m = 0; m < m_patchNums; ++m) {
             T patch_ang_j = m_patchAngles[m];
             T theta_j = wrapAngle(phi_j + patch_ang_j - gamma_ji);
-            T exp_j = std::exp(-theta_j * theta_j / m_2sigmaAng_sq);
+            T exp_j = std::exp(-theta_j * theta_j / m_twosigmaPatchSq);
             sum_ej += exp_j;
-            dsum_ej_dtheta += (-2.0 * theta_j / m_2sigmaAng_sq) * exp_j;
+            dsum_ej_dtheta += (-2.0 * theta_j / m_twosigmaPatchSq) * exp_j;
         }
 
         // Angular modulation factor and its partial derivatives
@@ -174,8 +178,8 @@ public:
     }
 
 private:
-    T m_epsilon, m_sigma, m_cutoff, m_sigmaAngular;
-    T m_2sigmaAng_sq;
+    T m_epsilonLJ, m_sigmaLJ, m_cutoffLJ, m_sigmaPatch;
+    T m_twosigmaPatchSq;
     int m_patchNums;
     std::vector<T> m_patchAngles;
 };
@@ -192,7 +196,7 @@ struct PatchyLJ<ParticleOriented<T>>
         IsotropicLJ<ParticleDot<T>>::initProgramOptions(desc);
 
         desc.add_options()
-            ("sigmaPatchyScale",   po::value<T>()->default_value(.262),              "anisotropic strength of potential")
+            ("sigmaPatch",   po::value<T>()->default_value(.262),              "anisotropic strength of potential")
             ("patchNums",          po::value<int>()->default_value(1),               "Number of patches for geometric LJ")
         ;
     }
@@ -202,7 +206,7 @@ struct PatchyLJ<ParticleOriented<T>>
             vm["LJepsilon"].as<T>(), 
             vm["LJsigma"].as<T>(), 
             vm["LJcutoff"].as<T>(),
-            vm["sigmaPatchyScale"].as<T>(),
+            vm["sigmaPatch"].as<T>(),
             vm["patchNums"].as<int>()
         );
     }
@@ -212,7 +216,7 @@ struct PatchyLJ<ParticleOriented<T>>
             vm["LJepsilon"].as<T>(), 
             vm["LJsigma"].as<T>(), 
             vm["LJcutoff"].as<T>(),
-            vm["sigmaPatchyScale"].as<T>(),
+            vm["sigmaPatch"].as<T>(),
             vm["patchNums"].as<int>()
         );
     }
@@ -222,7 +226,7 @@ struct PatchyLJ<ParticleOriented<T>>
             vm["LJepsilon"].as<T>(), 
             vm["LJsigma"].as<T>(), 
             vm["LJcutoff"].as<T>(),
-            vm["sigmaPatchyScale"].as<T>(),
+            vm["sigmaPatch"].as<T>(),
             vm["patchNums"].as<int>()
         );
     }
