@@ -30,6 +30,7 @@ set(lettuce_POTENTIAL_IDs
 	"GeometricLJ"
 	"TabularDFT"
 	"PatchyLJ"
+	"ChiralPatchyLJ"
 	)
 set(lettuce_POTENTIAL "IsotropicLJ" CACHE STRING "Potential")
 set_property(CACHE lettuce_POTENTIAL PROPERTY STRINGS ${lettuce_POTENTIAL_IDs})
