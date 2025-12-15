@@ -59,6 +59,14 @@ if [ "$potentiaType" == "OrientedLJ" ]; then
     elif [ "$potentiaType" == "PatchyLJ" ]; then
         args+=(--sigmaPatchyScale "$sigmaPatchyScale" 
                --patchNums "$patchNums")
+    elif [ "$potentiaType" == "ChiralPatchyLJ" ]; then
+        args+=(--sigmaPatchyScale "$sigmaPatchyScale" 
+               --patchNums "$patchNums"
+               --epsilonSame "$epsilonSame"
+               --epsilonOpp "$epsilonOpp"
+               --sigmaSame "$sigmaSame"
+               --sigmaOpp "$sigmaOpp"
+               --chiralOffset "$chiralOffset")               
     else
         printf "Error: Make sure to specify a valid potentiaType in config file. (Got: '%s')\n" "$potentiaType"
         exit 1
