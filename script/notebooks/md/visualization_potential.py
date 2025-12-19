@@ -63,7 +63,7 @@ def angular_pot(phi_i, phi_j, r_ij, sigma_patch, n_patch, mode='all'):
             theta_ji = wrap_angle(phi_j + patch_j - gamma_ji)
             sum_exp_j += np.exp(-theta_ji ** 2 / twosigma_patch_sq)
         
-        v_ang = sum_exp_i * sum_exp_j
+        v_ang = sum_exp_i * sum_exp_j / n_patch**2
         
     return v_ang
 
