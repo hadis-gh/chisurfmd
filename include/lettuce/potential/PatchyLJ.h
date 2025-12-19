@@ -229,9 +229,9 @@ struct PatchyLJ<ParticleOriented<T>>
         IsotropicLJ<ParticleDot<T>>::initProgramOptions(desc);
 
         desc.add_options()
-            ("sigmaPatch",   po::value<T>()->default_value(.262),                   "anisotropic strength of potential")
-            ("patchNums",    po::value<int>()->default_value(1),                    "Number of patches for geometric LJ")
-            ("patchMode",    po::value<std::string>()->default_value("closest"),    "Patch interaction mode: 'all' or 'closest'")
+        ("patchNums",    po::value<int>()->default_value(1),                    "Number of patches for geometric LJ")
+        ("sigmaPatch",   po::value<T>()->default_value(.262),                   "anisotropic strength of potential")
+        ("patchMode",    po::value<std::string>()->default_value("closest"),    "Patch interaction mode: 'all' or 'closest'")
         ;
     }
 
