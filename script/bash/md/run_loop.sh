@@ -57,10 +57,11 @@ if [ "$potentiaType" == "OrientedLJ" ]; then
     elif [ "$potentiaType" == "GeometricLJ" ]; then
         args+=(--patchNum "$patchNum")
     elif [ "$potentiaType" == "PatchyLJ" ]; then
-        args+=(--sigmaPatchyScale "$sigmaPatchyScale" 
-               --patchNums "$patchNums")
+        args+=(--patchNums "$patchNums"
+               --sigmaPatch "$sigmaPatch" 
+               --patchMode "$patchMode")
     elif [ "$potentiaType" == "ChiralPatchyLJ" ]; then
-        args+=(--sigmaPatchyScale "$sigmaPatchyScale" 
+        args+=(--sigmaPatch "$sigmaPatch" 
                --patchNums "$patchNums"
                --epsilonSame "$epsilonSame"
                --epsilonOpp "$epsilonOpp"
