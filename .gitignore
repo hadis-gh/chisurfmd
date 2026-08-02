@@ -1,3 +1,8 @@
+__pycache__/
+*.pyc
+*.egg-info/
+.venv/
+.ipynb_checkpoints/
 .vscode
 a.out
 *.o
@@ -6,8 +11,7 @@ build*
 *.mp4
 *.pdf
 *.png
-*.pyc
-script/notebooks/visualPA
 *.dat
 *.lock
-output
+
+!chisurfmd_logo.png
