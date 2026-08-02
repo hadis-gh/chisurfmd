@@ -10,17 +10,17 @@
 
 #include <adios2.h>
 
-#include "lettuce/core/Vec.h"
-#include "lettuce/core/Circle.h"
-#include "lettuce/core/CircleDistribution.h"
-#include "lettuce/core/ParticleDot.h"
-#include "lettuce/core/ParticleOriented.h"
-#include "lettuce/core/Utilities.h"
-#include "lettuce/core/Energy.h"
-#include "lettuce/core/FileIO.h"
-#include "lettuce/md/Integration.h"
-#include "lettuce/md/Thermostat.h"
-#include "lettuce/potential/PotentialsU.h"
+#include "core/Vec.h"
+#include "core/Circle.h"
+#include "core/CircleDistribution.h"
+#include "core/ParticleDot.h"
+#include "core/ParticleOriented.h"
+#include "core/Utilities.h"
+#include "core/Energy.h"
+#include "core/FileIO.h"
+#include "md/Integration.h"
+#include "md/Thermostat.h"
+#include "potential/PotentialsU.h"
 
 enum class ThermostatID {
     None = 0, VelocityScaling = 1, Berendsen = 2, NoseHoover = 3, Andersen = 4
@@ -31,7 +31,7 @@ enum class ThermostatID {
 #endif
 
 #ifndef LETTUCE_PARTICLE
-#define LETTUCE_PARTICLE ParticleDot
+#define LETTUCE_PARTICLE ParticleOriented
 #endif
 
 #ifndef LETTUCE_POTENTIAL
@@ -69,11 +69,12 @@ void printOptions(const po::variables_map& vm) {
             } else if (value.type() == typeid(int)) {
                 std::cout << option.second.as<int>();
             } else if (value.type() == typeid(std::vector<Real>)) {
+                const auto& vec = option.second.as<std::vector<Real>>();
                 std::cout << "[";
-                for (int i=0; i < option.second.as<std::vector<Real>>().size() -1; i++) {
-                    std::cout << option.second.as<std::vector<Real>>()[i] << ", ";
+                for (int i = 0; i < (int)vec.size() - 1; i++) {
+                    std::cout << vec[i] << ", ";
                 }
-                std::cout << option.second.as<std::vector<Real>>().back() << "]";
+                std::cout << vec.back() << "]";
             }
             std::cout << std::endl;
         }
@@ -92,7 +93,7 @@ int main(int argc, char* argv[]) {
         ("thermoInterval",        po::value<Real>()->default_value(.1),                       "interval after which to apply thermostat")
         ("temperature,T",         po::value<Real>()->default_value(.3),                       "temperature")
         ("particlesInit",         po::value<std::string>()->default_value("RANDOM"),          "particle initialization")
-        ("particlesType",         po::value<std::string>()->default_value("SP"),            "particles type handedness & orientation")
+        ("particlesType",         po::value<std::string>()->default_value("EP"),            "particles type handedness & orientation")
         ("mass",                  po::value<Real>()->default_value(1.0),                      "mass of particles")       
         ("momentI",               po::value<Real>()->default_value(1.0),                      "moment of inersia")
         ("exclusionRadius",       po::value<Real>()->default_value(.5),                       "exclusion radius")
@@ -140,20 +141,13 @@ int main(int argc, char* argv[]) {
 
     int speciesInd = 0;
     Species<Real> species1 {mass, momentI, radius};
-    Species<Real> species2 {2.0f * mass, momentI, 0.5f * radius};
+    Species<Real> species2 {2.0 * mass, momentI, 0.5 * radius};
     std::vector<Species<Real>> allSpecies {species1, species2};
 
     auto particlesInit = vm["particlesInit"].as<std::string>(); 
     auto particlesType = vm["particlesType"].as<std::string>(); 
 
-    auto gen = [&]() {
-        if (vm.count("seed") > 0) {
-            return std::mt19937(vm["seed"].as<unsigned int>());
-        } else {
-            std::random_device rd;
-            return std::mt19937(rd());
-        }
-    }();
+    std::mt19937 gen(vm["seed"].as<unsigned int>());
     auto particles = initialParticles<ParticleT>(particlesNum, allSpecies, speciesInd, areaL, gen, particlesInit, particlesType);
     particlesNum = particles.size();
 
@@ -163,10 +157,9 @@ int main(int argc, char* argv[]) {
     std::string method = vm["integration"].as<std::string>();
     auto integrationMethod = VelocityVerletStep<ParticleT, Potential::ForceType>;
 
-    if (method=="VelocityVerlet") {integrationMethod = VelocityVerletStep<ParticleT, Potential::ForceType>;} 
-    else if (method=="Euler")     {integrationMethod = EulerStep<ParticleT, Potential::ForceType>;} 
-    else if (method=="SEuler")    {integrationMethod = EulerSymplecticStep<ParticleT, Potential::ForceType>;} 
-    else {std::cout << method << " integration wrong!"; return 1;}
+    if      (method == "Euler")  integrationMethod = EulerStep<ParticleT, Potential::ForceType>;
+    else if (method == "SEuler") integrationMethod = EulerSymplecticStep<ParticleT, Potential::ForceType>;
+    else if (method != "VelocityVerlet") { std::cout << method << " integration wrong!"; return 1; }
 
     const std::vector<Real> neighborDistances = vm["neighborDistances"].as<std::vector<Real>>();
     const Real neighborCutoff = neighborDistances[0];
@@ -253,7 +246,7 @@ int main(int argc, char* argv[]) {
 
 // ================================== Integration Loop ==================================
 
-    applyFixRadius(particles, fixRadius, areaL); //later change to split list of fixed and moving particles
+    applyFixRadius(particles, fixRadius, areaL);
     
     while (step < nsteps) {
         engine.BeginStep();
@@ -270,22 +263,15 @@ int main(int argc, char* argv[]) {
             capVelocity(particles, maxVelocity);
         }
         if (step == writeStateStep) {
-            handednessVec.clear();
-            alignmentVec.clear();
-            positionsVec.clear();
-            velocitiesVec.clear();
-            for (auto &p : particles) {
-                auto handedness = p.h;
-                auto alignment = p.d;
-                auto pos = getGeneralizedPositions(p);
-                auto vel = getGeneralizedVelocities(p);
-
-                handednessVec.push_back(handedness);
-                alignmentVec.push_back(alignment);
-
+            for (size_t j = 0; j < particles.size(); ++j) {
+                const auto& p = particles[j];
+                handednessVec[j] = p.handedness;
+                alignmentVec[j]  = p.alignment;
+                const auto pos = getGeneralizedPositions(p);
+                const auto vel = getGeneralizedVelocities(p);
                 for (int i = 0; i < D; ++i) {
-                    positionsVec.push_back(pos[i]);
-                    velocitiesVec.push_back(vel[i]);
+                    positionsVec[j * D + i]  = pos[i];
+                    velocitiesVec[j * D + i] = vel[i];
                 }
             }
 

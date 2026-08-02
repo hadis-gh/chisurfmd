@@ -5,22 +5,23 @@
 #include <random>
 #include <iomanip>
 #include <sstream>
+#include <typeinfo>
 
 #include <boost/program_options.hpp>
 
 #include <adios2.h>
 
-#include "lettuce/core/Vec.h"
-#include "lettuce/core/Circle.h"
-#include "lettuce/core/CircleDistribution.h"
-#include "lettuce/core/ParticleDot.h"
-#include "lettuce/core/ParticleOriented.h"
-#include "lettuce/core/Utilities.h"
-#include "lettuce/core/Energy.h"
-#include "lettuce/core/FileIO.h"
-#include "lettuce/md/Integration.h"
-#include "lettuce/md/Thermostat.h"
-#include "lettuce/potential/PotentialsU.h"
+#include "core/Vec.h"
+#include "core/Circle.h"
+#include "core/CircleDistribution.h"
+#include "core/ParticleDot.h"
+#include "core/ParticleOriented.h"
+#include "core/Utilities.h"
+#include "core/Energy.h"
+#include "core/FileIO.h"
+#include "md/Integration.h"
+#include "md/Thermostat.h"
+#include "potential/PotentialsU.h"
 
 enum class ThermostatID {
     None = 0, VelocityScaling = 1, Berendsen = 2, NoseHoover = 3, Andersen = 4
@@ -72,33 +73,37 @@ void printOptions(const po::variables_map& vm) {
     }
 }
 
+template<typename P>
+void assignPhiIfOriented(P& particle, std::mt19937& gen) {
+    if constexpr (degreesOfFreedom<P>() > 2) {
+        std::uniform_real_distribution<Real> phiDist(0.0, 2.0 * M_PI);
+        particle.phi = phiDist(gen);
+    }
+}
+
 int main(int argc, char* argv[]) {
     po::variables_map vm;
     po::options_description desc("Allowed Options");
     desc.add_options()
         ("help,h", "print help")
-        ("time,t",                po::value<Real>()->default_value(10.0),                     "max simulation time")
-        ("dt",                    po::value<Real>()->default_value(.01),                      "integration step size")
-        ("steps,s",               po::value<unsigned int>()->default_value(100),              "number of Monte Carlo steps")
-        ("writeStateInterval",    po::value<Real>()->default_value(.05),                      "measurement State interval")
-        ("writeEnergyInterval",   po::value<Real>()->default_value(.005),                     "measurement Energy interval")
-        ("thermoInterval",        po::value<Real>()->default_value(.1),                       "interval after which to apply thermostat")
+        ("time,t",                po::value<Real>()->default_value(30.0),                     "max simulation time")
+        ("dt",                    po::value<Real>()->default_value(.00005),                    "integration step size")
+        ("writeStateInterval",    po::value<Real>()->default_value(.01),                      "measurement State interval")
+        ("writeEnergyInterval",   po::value<Real>()->default_value(.1),                       "measurement Energy interval")
+        ("thermoInterval",        po::value<Real>()->default_value(.05),                      "interval after which to apply thermostat")
         ("temperature,T",         po::value<Real>()->default_value(.3),                       "temperature")
-        ("particlesInit",         po::value<std::string>()->default_value("RANDOM"),          "particle initialization")
+        ("particlesInit",         po::value<std::string>()->default_value("TWO"),             "particle initialization")
         ("particlesType",         po::value<std::string>()->default_value("RRUU"),            "particles type handedness & orientation")
-        ("latticeType",           po::value<std::string>()->default_value("square"),          "lattice type to select basis vectors")
-        ("latticeSize",           po::value<Real>()->default_value(0.25),                     "lattice nearest neighbor distance")
         ("mass",                  po::value<Real>()->default_value(1.0),                      "mass of particles")       
         ("momentI",               po::value<Real>()->default_value(1.0),                      "moment of inersia")
-        ("exclusionRadius",       po::value<Real>()->default_value(.5),                       "exclusion radius")
+        ("exclusionRadius",       po::value<Real>()->default_value(.8),                       "exclusion radius")
         ("seed",                  po::value<unsigned int>(),                                  "random seed")
-        ("boxL",                  po::value<Real>()->default_value(20.0),                     "simulation box size")
-        ("areaL",                 po::value<Real>()->default_value(10.0),                     "local relaxation box size")
-        ("fixRadius",             po::value<Real>()->default_value(5.0),                      "cut-off range for the dynamics neighbors")
+        ("areaL",                 po::value<Real>()->default_value(50.0),                     "simulation size")
         ("particlesDensity",      po::value<Real>(),                                          "packing density of particles")
         ("neighborDistances",     po::value<std::vector<Real>>()->multitoken()->default_value(std::vector<Real>{1.2, 1.5, 2.0}, "1.2 1.5 2.0"),
                                                                                               "Distances for counting neighbors {x-y, omega}")
-        ("particlesNum,n",        po::value<unsigned int>()->default_value(100),              "number of initial particles")
+        ("particlesNum,n",        po::value<unsigned int>()->default_value(2),                "number of initial particles")
+        ("particlesNumMax",       po::value<unsigned int>()->default_value(49),               "number of final particles")
         ("saveFile",              po::value<std::string>()->default_value("outputs/run_0.bp"),"file path to save simulation output")
         ("relaxationTime",        po::value<Real>()->default_value(40.),                      "relaxation time for Berendsen thermostat")
         ("collisionFr",           po::value<Real>()->default_value(1.0 / 60.0),               "collision frequency for Andersen thermostat")
@@ -118,23 +123,18 @@ int main(int argc, char* argv[]) {
     printOptions(vm);
 
 // ================================== simulation parameters ==================================
-    
+
     const Real mass = vm["mass"].as<Real>();
     const Real momentI = vm["momentI"].as<Real>();
     const Real radius = vm["exclusionRadius"].as<Real>();
     unsigned int particlesNum = vm["particlesNum"].as<unsigned int>();
-    Real areaL;
-
-    if (vm.count("particlesDensity") > 0) {
+    unsigned int particlesNumMax = vm["particlesNumMax"].as<unsigned int>();
+        if (vm.count("particlesDensity") > 0) {
         const Real density = vm["particlesDensity"].as<Real>();
-        areaL = std::sqrt(particlesNum * M_PI * radius * radius / density);
-    } else {
-        areaL = vm["areaL"].as<Real>();
+        const Real areaL = sqrt(particlesNum * M_PI * radius * radius / (density));
     }
+    Real areaL = vm["areaL"].as<Real>();
     const Real boxPBC = vm["areaL"].as<Real>();
-
-    const Real boxL = vm["boxL"].as<Real>();
-    const Real fixRadius = vm["fixRadius"].as<Real>();
 
     int speciesInd = 0;
     Species<Real> species1 {mass, momentI, radius};
@@ -152,8 +152,6 @@ int main(int argc, char* argv[]) {
             return std::mt19937(rd());
         }
     }();
-    auto particles = initialParticles<ParticleT>(particlesNum, allSpecies, speciesInd, boxL, gen, particlesInit, particlesType);
-    particlesNum = particles.size();
 
     auto force = Potential::force(vm);
     auto potential = Potential::potential(vm);
@@ -174,6 +172,9 @@ int main(int argc, char* argv[]) {
 
     const Real relaxationTime = vm["relaxationTime"].as<Real>();
     const Real collisionFrequency = vm["collisionFr"].as<Real>();
+
+    const Real collisionFrDeposit = vm["collisionFr"].as<Real>();
+    
     const Real temperature = vm["temperature"].as<Real>();
 
     auto thermostat = [&]() {
@@ -189,12 +190,6 @@ int main(int argc, char* argv[]) {
             return AndersenThermostat<ParticleT>(vm["thermoInterval"].as<Real>(), collisionFrequency, temperature, gen);
     }();
 
-// ================================== Monte carlo parameters ==================================
-    const std::string latticeType = vm["latticeType"].as<std::string>();
-    const Real latticeSize = vm["latticeSize"].as<Real>();
-
-    const unsigned int nstepsMC = vm["steps"].as<unsigned int>();
-
 // ================================== output files ==================================
 
     std::string adiosOutput = vm["saveFile"].as<std::string>();
@@ -206,25 +201,33 @@ int main(int argc, char* argv[]) {
 
     adios2::Variable<Real> varT = io.DefineVariable<Real>("time");
     adios2::Variable<int8_t> varHandedness = io.DefineVariable<int8_t>("handedness", {particlesNum}, {0}, {particlesNum});
-    adios2::Variable<int8_t> varOrientation = io.DefineVariable<int8_t>("orientation", {particlesNum}, {0}, {particlesNum});
-    adios2::Variable<Real> varPositions = io.DefineVariable<Real>("positions", {particlesNum, D}, {0, 0}, {particlesNum, D});
-    adios2::Variable<Real> varVelocities = io.DefineVariable<Real>("velocities", {particlesNum, D}, {0, 0}, {particlesNum, D});
+    adios2::Variable<int8_t> varAlignment = io.DefineVariable<int8_t>("alignment", {particlesNum}, {0}, {particlesNum});
+    adios2::Variable<Real> varPositions = io.DefineVariable<Real>("positions", {particlesNumMax, D}, {0, 0}, {particlesNumMax, D});
+    adios2::Variable<Real> varVelocities = io.DefineVariable<Real>("velocities", {particlesNumMax, D}, {0, 0}, {particlesNumMax, D});
     adios2::Variable<Real> varKineticEnergy = io.DefineVariable<Real>("kinetic energy", {1, 3}, {0, 0}, {1, 3});
     adios2::Variable<Real> varPotentialEnergy = io.DefineVariable<Real>("potential energy");
     adios2::Variable<Real> varNeighborCount = io.DefineVariable<Real>("number of neighbors", {1, neighborDistances.size()}, {0, 0}, {1, neighborDistances.size()});
     adios2::Variable<Real> varComVelocity = io.DefineVariable<Real>("center of mass velocity", {1, D}, {0, 0}, {1, D});
     adios2::Variable<Real> varComAngVelocity = io.DefineVariable<Real>("center of mass angular velocity");
     adios2::Variable<Real> varRealTemperature = io.DefineVariable<Real>("real temperature", {1, 3}, {0, 0}, {1, 3});
-    adios2::Variable<Real> varRotationalOrder = io.DefineVariable<Real>("rotational order");
+    adios2::Variable<Real> varOrientationOrder = io.DefineVariable<Real>("orientation order");
 
     io.DefineAttribute<std::string>("particlesType", particlesType);
-    io.DefineAttribute<Real>("particlesNum", particlesNum);
     io.DefineAttribute<Real>("temperature", temperature);
     io.DefineAttribute<Real>("radius", radius);
     io.DefineAttribute<Real>("mass", mass);
     io.DefineAttribute<Real>("momentI", momentI);
     io.DefineAttribute<Real>("areaL", areaL);
+    io.DefineAttribute<Real>("particlesNum", particlesNum);
+    io.DefineAttribute<Real>("particlesNumMax", particlesNumMax);
     io.DefineAttribute<Real>("neighborCutoff", neighborCutoff);
+
+    const int8_t INVALID_VALUE = std::numeric_limits<int8_t>::min();
+
+    std::vector<int8_t> handednessVec(particlesNumMax, INVALID_VALUE);
+    std::vector<int8_t> alignmentVec(particlesNumMax, INVALID_VALUE);
+    std::vector<Real> positionsVec(particlesNumMax * D, INVALID_VALUE);
+    std::vector<Real> velocitiesVec(particlesNumMax * D, INVALID_VALUE);
     
     adios2::Engine engine = io.Open(adiosOutput, adios2::Mode::Write);
 
@@ -237,7 +240,7 @@ int main(int argc, char* argv[]) {
     const size_t writeEnergyIntervalSteps = std::ceil(vm["writeEnergyInterval"].as<Real>() / dt);
     const size_t thermoIntervalSteps = std::ceil(vm["thermoInterval"].as<Real>() / dt);
 
-    const size_t nstepsMD = std::ceil(Time / dt);
+    const size_t nsteps = std::ceil(Time / dt);
 
     size_t step = 0;
     size_t writeStateStep = writeStateIntervalSteps;
@@ -245,96 +248,106 @@ int main(int argc, char* argv[]) {
     size_t thermoStep = thermoIntervalSteps;
 
     if constexpr (LETTUCE_THERMOSTAT == ThermostatID::None) {
-        thermoStep = 2 * nstepsMD;
+        thermoStep = 2 * nsteps;
     }
-
-    std::vector<int8_t> handednessVec(particlesNum);
-    std::vector<int8_t> orientationVec(particlesNum);
-    std::vector<Real> positionsVec(particlesNum * D);
-    std::vector<Real> velocitiesVec(particlesNum * D);
-
+        
     clock_t startTime = clock();
 
-// ================================== Integration Loop ==================================
+// ================================== Deposition Loop ==================================
+    
+    auto particles = initialParticles<ParticleT>(particlesNum, allSpecies, speciesInd, areaL, gen, particlesInit, particlesType);
+    
+    auto prevSize = particles.size();
+    std::cout << "\n _______ system initial size: " << particles.size() << " _______ \n" << std::endl;
 
+    moveParticlesToCenter(particles, allSpecies, areaL);
 
-    for (unsigned int stepMC = 0; stepMC < nstepsMC; ++stepMC) {  //another for loop for NumParticles
-        auto particlesMDtarget = particleSelector(particles, gen, boxL, areaL); //fixRadius);
-        shifProposal(particlesMDtarget, gen, latticeSize, latticeType);
-        const auto initialEnergy = calPotentialEnergy(particlesMDtarget, allSpecies, boxL, Potential);
+    for (int a=prevSize;  particles.size()<particlesNumMax; ++a) {
+        auto newPos = depositeDLAinfo3(particles, allSpecies, speciesInd, areaL, gen);
         
-        applyFixRadius(particlesMDtarget, fixRadius, areaL);
-        while (step < nstepsMD) {
+        ParticleT newParticle(speciesInd, newPos);
+
+        assignPhiIfOriented(newParticle, gen);
+
+        particles.push_back(newParticle);
+        std::cout << "\rNew particle added! System size: " << particles.size() << std::flush;
+
+        resetVelocitiesRandom(particles, allSpecies, temperature, gen);
+
+        step = 0;
+        writeStateStep = writeStateIntervalSteps;
+        writeEnergyStep = writeEnergyIntervalSteps;
+        thermoStep = thermoIntervalSteps;
+
+// ================================== Integration Loop ==================================
+        
+        while (step < nsteps) {
             engine.BeginStep();
-
-            const auto nextEventStep = std::min({writeStateStep, writeEnergyStep, thermoStep, nstepsMD});
+    
+            const auto nextEventStep = std::min({writeStateStep, writeEnergyStep, thermoStep, nsteps});
             Real currentTime = step * dt;
-            integrate(particlesMDtarget, allSpecies, dt, (nextEventStep - step) * dt, boxPBC, force, integrationMethod);
-
+            integrate(particles, allSpecies, dt, (nextEventStep - step) * dt, boxPBC, force, integrationMethod);
+            
             step = nextEventStep;
-
+    
             engine.Put(varT, currentTime);
-
+        
             if (enableCapVelocity) {
-                capVelocity(particlesMDtarget, maxVelocity);
+                capVelocity(particles, maxVelocity);
             }
+            
             if (step == writeStateStep) {
-                handednessVec.clear();
-                orientationVec.clear();
-                positionsVec.clear();
-                velocitiesVec.clear();
-                for (auto &p : particles) {
-                    auto handedness = p.h;
-                    auto orientation = p.d;
-                    auto pos = getGeneralizedPositions(p);
-                    auto vel = getGeneralizedVelocities(p);
-
-                    handednessVec.push_back(handedness);
-                    orientationVec.push_back(orientation);
-                    
-                    for (int i = 0; i < D; ++i) {
-                        positionsVec.push_back(pos[i]);
-                        velocitiesVec.push_back(vel[i]);
+                handednessVec.resize(particlesNumMax, INVALID_VALUE);
+                alignmentVec.resize(particlesNumMax, INVALID_VALUE);
+                positionsVec.resize(particlesNumMax * D, INVALID_VALUE);
+                velocitiesVec.resize(particlesNumMax * D, INVALID_VALUE);
+    
+                for (size_t i = 0; i < particles.size(); ++i) {
+                    auto pos = getGeneralizedPositions(particles[i]);
+                    auto vel = getGeneralizedVelocities(particles[i]);
+                    for (int j = 0; j < D; ++j) {
+                        positionsVec[i * D + j] = pos[j];
+                        velocitiesVec[i * D + j] = vel[j];
                     }
+                    handednessVec[i] = particles[i].handedness;
+                    alignmentVec[i] = particles[i].alignment;
                 }
-
+    
                 engine.Put(varHandedness, handednessVec.data());
-                engine.Put(varOrientation, orientationVec.data());
+                engine.Put(varAlignment, alignmentVec.data());
                 engine.Put(varPositions, positionsVec.data());
                 engine.Put(varVelocities, velocitiesVec.data());
                 writeStateStep = step + writeStateIntervalSteps;
             }
             if (step == writeEnergyStep) {
-                auto kineticE = calKineticEnergy(particlesMDtarget, allSpecies);
-                auto potentialE = calPotentialEnergy(particlesMDtarget, allSpecies, boxPBC, potential);
+                auto kineticE = calKineticEnergy(particles, allSpecies);
+                auto potentialE = calPotentialEnergy(particles, allSpecies, boxPBC, potential);
+    
+                auto neighborCount = calAveNeighborList(particles, neighborDistances, areaL);
+                auto orientationOrder = calOrientationOrder(particles);
 
-                auto neighborCount = calAveNeighborList(particlesMDtarget, neighborDistances, areaL);
-                auto rotationalOrder = calRotationalOrder(particlesMDtarget);
-
-                auto COMvelocity = calCOMvelocity(particlesMDtarget, allSpecies);
-                auto COMangularVelocity = calAngularMomentum2D(particlesMDtarget, allSpecies, boxPBC);
-                
-                auto realTemperature = calInternalTemperature(particlesMDtarget, allSpecies);
-
+                auto COMvelocity = calCOMvelocity(particles, allSpecies);
+                auto COMangularVelocity = calAngularMomentum2D(particles, allSpecies, boxPBC);
+    
                 engine.Put(varKineticEnergy, kineticE.data());
                 engine.Put(varPotentialEnergy, potentialE);
-
+    
                 engine.Put(varNeighborCount, neighborCount.data());
-                engine.Put(varRotationalOrder, rotationalOrder);
+                engine.Put(varOrientationOrder, orientationOrder);
 
                 engine.Put(varComVelocity, COMvelocity.data());
                 engine.Put(varComAngVelocity, COMangularVelocity);
-
-                engine.Put(varRealTemperature, realTemperature.data());
-
+    
                 writeEnergyStep = step + writeEnergyIntervalSteps;
-        
             }
             if constexpr (LETTUCE_THERMOSTAT != ThermostatID::None) {
                 if (step == thermoStep) {
                     thermostat(particles, allSpecies);
-
-
+    
+                    auto realTemperature = calInternalTemperature(particles, allSpecies);
+    
+                    engine.Put(varRealTemperature, realTemperature.data());
+    
                     thermoStep = step + thermoIntervalSteps;
                     if constexpr (LETTUCE_THERMOSTAT == ThermostatID::VelocityScaling) {
                         removeCOMVelocity(particles, allSpecies);
@@ -342,16 +355,12 @@ int main(int argc, char* argv[]) {
                 }
             }
             engine.EndStep();
-        }
-        engine.Close();
-        auto newParticles = makeNewConfig(particles, particlesMDtarget);
-        const auto finalEnergy = calPotentialEnergy(particlesMDtarget, allSpecies, boxL, Potential);
-        const auto energyDifference = finalEnergy - initialEnergy;
-        bool acceptence = metropolis(energyDifference);
-        if (acceptence==1) {particles = newParticles};
+        }    
     }
-    
-// ================================== run time output ==================================
+
+    engine.Close();
+
+    // ================================== run time output ==================================
 
     clock_t endTime = clock();
 
@@ -359,7 +368,9 @@ int main(int argc, char* argv[]) {
 
     int timeMin = static_cast<int>(timeTaken) / 60;
     double timeSec = std::fmod(timeTaken, 60);
-
+    
+    std::cout << "\nDone!" << std::endl;
     std::cout << "\nTime taken: " << timeMin << "m " << std::fixed << std::setprecision(2) << timeSec << "s\n";
+
     return 0;
 }
