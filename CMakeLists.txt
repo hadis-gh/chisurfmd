@@ -2,7 +2,7 @@
 # 1: PROJECT SETUP
 # ==============================================================================
 cmake_minimum_required(VERSION 3.20)
-project(lettuce LANGUAGES CXX)
+project(chisurfmd LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 20)
 
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
@@ -23,26 +23,26 @@ find_package(Adios2 REQUIRED)
 # 3: USER CONFIGURATION (ccmake GUI Options)
 # ==============================================================================
 # 1. Particle Type Configuration
-set(lettuce_md_PARTICLE_IDs "ParticleDot" "ParticleOriented")
-set(lettuce_md_PARTICLE "ParticleOriented" CACHE STRING "Particle type")
-set_property(CACHE lettuce_md_PARTICLE PROPERTY STRINGS ${lettuce_md_PARTICLE_IDs})
+set(chisurfmd_PARTICLE_IDs "ParticleDot" "ParticleOriented")
+set(chisurfmd_PARTICLE "ParticleOriented" CACHE STRING "Particle type")
+set_property(CACHE chisurfmd_PARTICLE PROPERTY STRINGS ${chisurfmd_PARTICLE_IDs})
 
 # 2. Thermostat Configuration
-set(lettuce_md_THERMOSTAT_IDs "ThermostatID::VelocityScaling" "ThermostatID::Berendsen" "ThermostatID::Andersen" "ThermostatID::None")
-set(lettuce_md_THERMOSTAT "ThermostatID::None" CACHE STRING "Thermostat")
-set_property(CACHE lettuce_md_THERMOSTAT PROPERTY STRINGS ${lettuce_md_THERMOSTAT_IDs})
+set(chisurfmd_THERMOSTAT_IDs "ThermostatID::VelocityScaling" "ThermostatID::Berendsen" "ThermostatID::Andersen" "ThermostatID::None")
+set(chisurfmd_THERMOSTAT "ThermostatID::None" CACHE STRING "Thermostat")
+set_property(CACHE chisurfmd_THERMOSTAT PROPERTY STRINGS ${chisurfmd_THERMOSTAT_IDs})
 
 # 3. Potential Configuration
-set(lettuce_POTENTIAL_IDs "IsotropicLJ" "OrientedLJ" "GeometricLJ" "TabularDFT" "PatchyLJ" "ChiralPatchyLJ" "ChiMorse")
-set(lettuce_POTENTIAL "OrientedLJ" CACHE STRING "Potential")
-set_property(CACHE lettuce_POTENTIAL PROPERTY STRINGS ${lettuce_POTENTIAL_IDs})
+set(chisurfmd_POTENTIAL_IDs "IsotropicLJ" "OrientedLJ" "GeometricLJ" "TabularDFT" "PatchyLJ" "ChiralPatchyLJ" "ChiMorse")
+set(chisurfmd_POTENTIAL "OrientedLJ" CACHE STRING "Potential")
+set_property(CACHE chisurfmd_POTENTIAL PROPERTY STRINGS ${chisurfmd_POTENTIAL_IDs})
 
 # ==============================================================================
 # 4: COMPILER SETTINGS & MACROS
 # ==============================================================================
-add_definitions("-DLETTUCE_PARTICLE=${lettuce_md_PARTICLE}")
-add_definitions("-DLETTUCE_THERMOSTAT=${lettuce_md_THERMOSTAT}")
-add_definitions("-DLETTUCE_POTENTIAL=${lettuce_POTENTIAL}")
+add_definitions("-DCHISURFMD_PARTICLE=${chisurfmd_PARTICLE}")
+add_definitions("-DCHISURFMD_THERMOSTAT=${chisurfmd_THERMOSTAT}")
+add_definitions("-DCHISURFMD_POTENTIAL=${chisurfmd_POTENTIAL}")
 
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Werror")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2")
