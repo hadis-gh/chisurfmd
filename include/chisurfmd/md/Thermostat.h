@@ -3,9 +3,9 @@
 #include <vector>
 #include <cmath>
 #include <string>
-#include "lettuce/core/Vec.h"
-#include "lettuce/core/Circle.h"
-#include "lettuce/constants.h"
+#include "chisurfmd/core/Vec.h"
+#include "chisurfmd/core/Circle.h"
+#include "chisurfmd/constants.h"
 
 template<typename TParticle, typename T = typename TParticle::value_type>
 class AndersenThermostat {

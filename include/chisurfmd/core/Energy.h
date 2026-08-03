@@ -4,8 +4,8 @@
 #include <cmath>
 #include <iomanip>
 
-#include "lettuce/core/Vec.h"
-#include "lettuce/constants.h"
+#include "chisurfmd/core/Vec.h"
+#include "chisurfmd/constants.h"
 
 // template<typename TParticle, typename T = typename TParticle::value_type>
 // T calInternalTemperature(const std::vector<TParticle>& particles, const std::vector<Species<T>>& allSpecies) {
@@ -97,8 +97,8 @@ T calPotentialEnergy(const std::vector<TParticle>& particles, const std::vector<
     for (auto &p1 : particles) {
         double pot = 0.;
         for (auto &p : particles) {
-            if (p1.r != p.r) {
-                Vec<T> dr = p.r - p1.r;
+            if (p1.position != p.position) {
+                Vec<T> dr = p.position - p1.position;
 
                 for (int i = 0; i < 2; ++i) {
                     if (dr[i] > boxPBC / 2) { dr[i] -= boxPBC; }

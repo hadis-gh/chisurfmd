@@ -3,8 +3,8 @@
 #include <random>
 #include <vector>
 #include <cmath>
-#include "lettuce/core/Vec.h"
-#include "lettuce/core/Species.h"
+#include "chisurfmd/core/Vec.h"
+#include "chisurfmd/core/Species.h"
 
 template<typename T>
 struct ParticleDot
@@ -12,23 +12,23 @@ struct ParticleDot
     using value_type = T;
 
     // Todo r,v,h,d is not good naming.
-    Vec<value_type> r, v;
-    int8_t h, d;
+    Vec<value_type> position, velocity;
+    int8_t handedness, alignment;
     bool fixed;
 
     unsigned int species;
 
     ParticleDot()
-        : species(0), r({0, 0}), v({0, 0}), h(1), d(1), fixed(false) {}
+        : species(0), position({0, 0}), velocity({0, 0}), handedness(1), alignment(1), fixed(false) {}
 
     ParticleDot(unsigned int speciesIndex)
-        : species(speciesIndex), r({0, 0}), v({0, 0}), h(1), d(1), fixed(false) {}
+        : species(speciesIndex), position({0, 0}), velocity({0, 0}), handedness(1), alignment(1), fixed(false) {}
 
     ParticleDot(unsigned int speciesIndex, Vec<value_type> position)
-        : species(speciesIndex), r(position), v({0, 0}), h(1), d(1), fixed(false) {}
+        : species(speciesIndex), position(position), velocity({0, 0}), handedness(1), alignment(1), fixed(false) {}
 
     ParticleDot(unsigned int speciesIndex, Vec<value_type> position, Vec<value_type> velocity)
-        : species(speciesIndex), r(position), v(velocity), h(1), d(1), fixed(false) {}
+        : species(speciesIndex), position(position), velocity(velocity), handedness(1), alignment(1), fixed(false) {}
 };
 
 template<typename Particle, typename SFINAE=void>
@@ -46,8 +46,8 @@ struct CreateRandomParticle<ParticleDot<T>>
     {
         std::uniform_real_distribution<T> randomPos(0, 1);
         ParticleDot<T> p;
-        p.r[0] = randomPos(gen);
-        p.r[1] = randomPos(gen);
+        p.position[0] = randomPos(gen);
+        p.position[1] = randomPos(gen);
         return p;
     }
 };
@@ -66,11 +66,11 @@ struct CreateTwoParticle<ParticleDot<T>> {
         ParticleDot<T> p1, p2;
         
         T eqDis = 1.123;
-        p1.r[0] = areaL / 2;
-        p1.r[1] = areaL / 2;
+        p1.position[0] = areaL / 2;
+        p1.position[1] = areaL / 2;
         
-        p2.r[0] = areaL / 2 + eqDis;
-        p2.r[1] = areaL / 2 + eqDis;
+        p2.position[0] = areaL / 2 + eqDis;
+        p2.position[1] = areaL / 2 + eqDis;
         
         return std::vector<ParticleDot<T>>{p1, p2};
     }
@@ -107,7 +107,7 @@ struct GetGeneralizedPositions<ParticleDot<T>>
 {
     static const Vec<T,2>& getGeneralizedPositions(const ParticleDot<T>& p)
     {
-        return p.r;
+        return p.position;
     }
 };
 
@@ -125,7 +125,7 @@ struct SetGeneralizedPositions<ParticleDot<T>>
 {
     static void setGeneralizedPositions(ParticleDot<T>& p, const Vec<T, 2>& new_positions)
     {
-        p.r = new_positions;
+        p.position = new_positions;
     }
 };
 
@@ -144,7 +144,7 @@ struct GetGeneralizedVelocities<ParticleDot<T>>
 {
     static const Vec<T, 2>& getGeneralizedVelocities(const ParticleDot<T>& p)
     {
-        return p.v;
+        return p.velocity;
     }
 };
 
@@ -163,14 +163,14 @@ struct SetGeneralizedVelocities<ParticleDot<T>>
 {
     static void setGeneralizedVelocities(ParticleDot<T>& p, const Vec<T, 2>& new_velocities)
     {
-        p.v = new_velocities;
+        p.velocity = new_velocities;
     }
 };
 
 //Force calculations
 template<typename T, typename Force>
 Vec<T, 2> calForceTwo(const ParticleDot<T>& p1, const ParticleDot<T>& p2, const T& boxPBC, Force&& force) {
-    Vec<T, 2> dr = p2.r - p1.r;
+    Vec<T, 2> dr = p2.position - p1.position;
     
     for (int i = 0; i < 2; ++i) {
         if (dr[i] > boxPBC / 2) dr[i] -= boxPBC;
@@ -219,7 +219,7 @@ std::vector<Vec<T, 2>> calAllAccelerations(const std::vector<TParticle>& particl
 template<typename T>
 void implementPBC(ParticleDot<T>& p, const T& boxPBC) {    
     for (int i = 0; i < 2; ++i) {
-        p.r[i] = std::fmod(p.r[i], boxPBC);
-        if (p.r[i] < 0) p.r[i] += boxPBC;
+        p.position[i] = std::fmod(p.position[i], boxPBC);
+        if (p.position[i] < 0) p.position[i] += boxPBC;
     }
 }

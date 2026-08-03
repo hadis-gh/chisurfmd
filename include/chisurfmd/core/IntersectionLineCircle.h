@@ -2,8 +2,8 @@
 
 #include <iostream>
 #include <cmath>
-#include "Vec.h"
-#include "Circle.h"
+#include "chisurfmd/core/Vec.h"
+#include "chisurfmd/core/Circle.h"
 
 //old functions - probably not useful anymore
 

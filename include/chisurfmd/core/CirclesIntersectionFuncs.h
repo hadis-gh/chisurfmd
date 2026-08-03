@@ -6,8 +6,8 @@
 #include <utility>
 #include <cmath>
 #include <algorithm>
-#include "Vec.h"
-#include "Circle.h"
+#include "chisurfmd/core/Vec.h"
+#include "chisurfmd/core/Circle.h"
 
 template<typename T>
 std::pair<Circle<T>, T> findStopPoint (const Circle<T> &startCircle, Vec<T> &direction, const Circle<T> &closestCircle){

@@ -2,8 +2,8 @@
 
 #include <vector>
 #include <cmath>
-#include "lettuce/core/Vec.h"
-#include "lettuce/core/ParticleDot.h"
+#include "chisurfmd/core/Vec.h"
+#include "chisurfmd/core/ParticleDot.h"
 
 template<typename T>
 struct ParticleOriented : public ParticleDot<T>
@@ -31,8 +31,8 @@ struct CreateRandomParticle<ParticleOriented<T>>
         ParticleDot<T> baseParticle = CreateRandomParticle<ParticleDot<T>>::createRandomParticle(gen);
 
         ParticleOriented<T> p;
-        p.r[0] = baseParticle.r[0];
-        p.r[1] = baseParticle.r[1];
+        p.position[0] = baseParticle.position[0];
+        p.position[1] = baseParticle.position[1];
 
         std::uniform_real_distribution<T> randomPos(0, 1);
         // p.phi = M_PI / 2;
@@ -50,8 +50,8 @@ struct CreateTwoParticle<ParticleOriented<T>> {
         std::vector<ParticleOriented<T>> orientedParticles;
         for (auto& baseParticle : baseParticles) {
             ParticleOriented<T> p;
-            p.r[0] = baseParticle.r[0];
-            p.r[1] = baseParticle.r[1];
+            p.position[0] = baseParticle.position[0];
+            p.position[1] = baseParticle.position[1];
 
             std::uniform_real_distribution<T> randomPos(0, 1);
             p.phi = randomPos(gen) * 2 * M_PI - M_PI;       ///equilibrium phi
@@ -78,8 +78,8 @@ struct GetGeneralizedPositions<ParticleOriented<T>>
     static Vec<T,3> getGeneralizedPositions(const ParticleOriented<T>& p)
     {
         Vec<T,3> r;
-        r[0] = p.r[0];
-        r[1] = p.r[1];
+        r[0] = p.position[0];
+        r[1] = p.position[1];
         r[2] = p.phi;
         return r;
     }
@@ -91,8 +91,8 @@ struct SetGeneralizedPositions<ParticleOriented<T>>
 {
     static void setGeneralizedPositions(ParticleOriented<T>& p, const Vec<T, 3>& new_positions)
     {
-        p.r[0] = new_positions[0];
-        p.r[1] = new_positions[1];
+        p.position[0] = new_positions[0];
+        p.position[1] = new_positions[1];
         p.phi = new_positions[2];
     }
 };
@@ -104,8 +104,8 @@ struct GetGeneralizedVelocities<ParticleOriented<T>>
     static Vec<T, 3> getGeneralizedVelocities(const ParticleOriented<T>& p)
     {
         Vec<T, 3> v;
-        v[0] = p.v[0];
-        v[1] = p.v[1];
+        v[0] = p.velocity[0];
+        v[1] = p.velocity[1];
         v[2] = p.omega;
         return v;
     }
@@ -117,8 +117,8 @@ struct SetGeneralizedVelocities<ParticleOriented<T>>
 {
     static void setGeneralizedVelocities(ParticleOriented<T>& p, const Vec<T, 3>& new_velocities)
     {
-        p.v[0] = new_velocities[0];
-        p.v[1] = new_velocities[1];
+        p.velocity[0] = new_velocities[0];
+        p.velocity[1] = new_velocities[1];
         p.omega = new_velocities[2];
     }
 };
@@ -127,7 +127,7 @@ struct SetGeneralizedVelocities<ParticleOriented<T>>
 template<typename T, typename Force>
 Vec<T, 3> calForceTwo(const ParticleOriented<T>& p1, const ParticleOriented<T>& p2, 
                       const T& boxPBC, Force&& force) {
-    Vec<T, 2> dr = p2.r - p1.r;
+    Vec<T, 2> dr = p2.position - p1.position;
     
     for (int i = 0; i < 2; ++i) {
         if (dr[i] > boxPBC / 2) dr[i] -= boxPBC;

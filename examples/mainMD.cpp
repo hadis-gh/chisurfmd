@@ -10,17 +10,17 @@
 
 #include <adios2.h>
 
-#include "core/Vec.h"
-#include "core/Circle.h"
-#include "core/CircleDistribution.h"
-#include "core/ParticleDot.h"
-#include "core/ParticleOriented.h"
-#include "core/Utilities.h"
-#include "core/Energy.h"
-#include "core/FileIO.h"
-#include "md/Integration.h"
-#include "md/Thermostat.h"
-#include "potential/PotentialsU.h"
+#include "chisurfmd/core/Vec.h"
+#include "chisurfmd/core/Circle.h"
+#include "chisurfmd/core/CircleDistribution.h"
+#include "chisurfmd/core/ParticleDot.h"
+#include "chisurfmd/core/ParticleOriented.h"
+#include "chisurfmd/core/Utilities.h"
+#include "chisurfmd/core/Energy.h"
+#include "chisurfmd/core/FileIO.h"
+#include "chisurfmd/md/Integration.h"
+#include "chisurfmd/md/Thermostat.h"
+#include "chisurfmd/potential/PotentialsU.h"
 
 enum class ThermostatID {
     None = 0, VelocityScaling = 1, Berendsen = 2, NoseHoover = 3, Andersen = 4

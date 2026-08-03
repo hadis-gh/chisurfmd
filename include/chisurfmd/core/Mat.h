@@ -2,7 +2,7 @@
 
 #include <array>
 #include <iostream>
-#include "Vec.h"
+#include "chisurfmd/core/Vec.h"
 
 template<typename T, int M = 2, int N = 2>
 class Mat {
