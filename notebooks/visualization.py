@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.ticker import AutoMinorLocator
 import data_extraction
 import system_analysis
 import ipywidgets
@@ -24,7 +25,7 @@ def plot_heatmap_lj_mod_potential(phi_order=1, angular_scale=0.1, angular_order=
     
     potential_values = system_analysis.lj_mod_potential(R, Delta_phi, phi_order, angular_scale, angular_order, SIGMA, EPSILON)
     
-    fig, axs = plt.subplots(figsize=(7, 7), dpi=100)
+    fig, axs = plt.subplots(figsize=(7, 7))
       
     c1 = axs.contourf(R, Delta_phi, potential_values, levels=100, cmap="viridis")
     cbar = fig.colorbar(c1, ax=axs, label='Potential Energy')
@@ -78,7 +79,7 @@ def plot_heatmap_LJmod_pair(potential_type='RRUU', gamma=0, phi_order=1, angular
     potential_values = system_analysis.LJmod_pair(R, Phi1, Phi2, phi_order, gamma, potential_type, 
                                       angular_scale, angular_order, SIGMA, EPSILON)
     
-    fig, axs = plt.subplots(figsize=(7, 7), dpi=100)
+    fig, axs = plt.subplots(figsize=(7, 7))
       
     c1 = axs.contourf(Phi1, Phi2, potential_values, levels=100, cmap="viridis")
     # Set shrink to make colorbar shorter
@@ -227,7 +228,7 @@ def plot_chiral_new(gamma=0, coupling_scale=1.0, coupling_power=6, pot=system_an
         pot_kwargs={**pot_kwargs, "field":system_analysis.field,
             "field_kwargs":{**pot_kwargs.get('field_kwargs', {}), 'coupling_scale':coupling_scale, 'coupling_power':coupling_power}})
     
-    fig, axs = plt.subplots(figsize=(7, 7), dpi=100)
+    fig, axs = plt.subplots(figsize=(7, 7))
       
     c1 = axs.contourf(Phi1, Phi2, potential_values, levels=100, cmap="viridis")
     fig.colorbar(c1, ax=axs, label='Potential Energy')
@@ -255,7 +256,7 @@ def plot_angular_psi(coupling_scale=1.0, coupling_power=6, pot=system_analysis.p
     potential_values = pot(R, Phi1, Phi2,
         **pot_kwargs)
     
-    fig, axs = plt.subplots(figsize=(7, 7), dpi=100)
+    fig, axs = plt.subplots(figsize=(7, 7))
       
     c1 = axs.contourf(Phi1, Phi2, potential_values, levels=100, cmap="viridis")
     fig.colorbar(c1, ax=axs, label='Potential Energy')
@@ -278,7 +279,7 @@ def plot_angular_psi(coupling_scale=1.0, coupling_power=6, pot=system_analysis.p
     
 #     potential_values = system_analysis.chiral_new_pair(R, Phi1, Phi2, gamma, potential_type, coupling_scale, coupling_power, SIGMA, EPSILON)
     
-#     fig, axs = plt.subplots(figsize=(7, 7), dpi=100)
+#     fig, axs = plt.subplots(figsize=(7, 7))
       
 #     c1 = axs.contourf(Phi1, Phi2, potential_values, levels=100, cmap="viridis")
 #     fig.colorbar(c1, ax=axs, label='Potential Energy')
@@ -378,215 +379,312 @@ def create_interactive_plots_chiral_new_pair_psi(pot=system_analysis.pair_pot_ps
 
 ############## plot system properties, Energy, Temperature, Neighbors, Order, COM vel ##############
 
-def plot_temperature(m_temperatures, temperature_label=False):
-    temperature_data = m_temperatures['data']
+def _apply_temp_xlabel(ax, n_steps, temp_labels, fontsize):
+    ticks = np.linspace(0, n_steps, 10, dtype=int)
+    tidx  = np.linspace(0, len(temp_labels) - 1, 10, dtype=int)
+    ax.set_xlabel("Temperature", fontsize=fontsize)
+    ax.set_xticks(ticks)
+    ax.set_xticklabels([f"$T={temp_labels[i][0]:.1f}$" for i in tidx],
+                       rotation=45, fontsize=fontsize - 2)
+
+def plot_temperature(
+    m_temperatures, temperature_label=False,
+    colors=None, linewidth=1.5, fontsize=12,
+    figsize=(5, 3), savepath=None,
+):
+    if colors is None:
+        colors = _PUB_COLORS
+    data = m_temperatures['data']
     temp_labels = m_temperatures['temperature label']
-    fig, ax = plt.subplots(figsize=(7, 4))
-    
-    ax.grid(True, linestyle='--', alpha=0.7, color='gray')
 
-    colors = plt.cm.plasma(np.linspace(0, 1, 4))
-    axis_labels = ['x', 'y', r'$\omega$']
+    fig, ax = plt.subplots(figsize=figsize)
 
-    for i, axis_label in enumerate(axis_labels):
-        ax.plot(temperature_data[:, :, i], label=f"T{axis_label}", color=colors[i])
-    
-    if temperature_label: 
-        total_points = temperature_data.shape[0]
-        tick_indices = np.linspace(0, total_points - 1, 10, dtype=int)
-        label_indices = np.linspace(0, len(temp_labels) - 1, 10, dtype=int)
-        ax.set_xlabel("Temperature")
-        ax.set_xticks(tick_indices)
-        ax.set_xticklabels([f"T={temp_labels[i][0]:.1f}" for i in label_indices], rotation=45)
+    axis_labels = ['x', 'y', r'\omega']
+    linestyles = ['-', '--', ':']
+
+    for i, (lbl, ls) in enumerate(zip(axis_labels, linestyles)):
+        ax.plot(data[:, :, i], label=f"$T_{{{lbl}}}$",
+                color=colors[i], linewidth=linewidth)
+
+    if temperature_label:
+        _apply_temp_xlabel(ax, data.shape[0], temp_labels, fontsize)
     else:
-        ax.set_xlabel("Steps")
+        ax.set_xlabel("Steps", fontsize=fontsize)
 
-                
-    ax.set_ylabel("Measured Temperature")
-    ax.set_title("Temperature Evolution")
-    
-    ax.legend(bbox_to_anchor=(1, 1), loc='upper left', frameon=True, fancybox=True, shadow=False)
-    
+    ax.set_ylabel("Measured Temperature", fontsize=fontsize)
+    ax.set_title("Temperature Evolution", fontsize=fontsize + 1)
+    ax.tick_params(axis='both', labelsize=fontsize - 2)
+    ax.xaxis.set_minor_locator(AutoMinorLocator())
+
+    ax.legend(bbox_to_anchor=(1, 1), loc='upper left',
+              frameon=True, fancybox=False, shadow=False,
+              fontsize=fontsize - 2, edgecolor='0.8')
+
+    apply_style(ax, spine=False, grid=True, hide_top_right=False)
     plt.tight_layout()
+
+    if savepath:
+        fig.savefig(savepath, bbox_inches='tight')
+
     plt.show()
-
-def plot_neighbors(neighbors_array, m_temperatures, temperature_show=False, temperature_label=False):
-    neighbors_data = neighbors_array['data']
+    return fig, ax
+#------------------------------------------------------------
+def plot_neighbors(
+    neighbors_array, m_temperatures,
+    temperature_show=False, temperature_label=False,
+    colors=None, linewidth=1.5, fontsize=12,
+    figsize=(5, 3), savepath=None,
+):
+    if colors is None:
+        colors = ["#1F6E58", "#4B9D7B", "#90CDBC"]
+    data = neighbors_array['data']
     temp_labels = neighbors_array['temperature label']
-    fig, ax = plt.subplots(figsize=(7, 4))
 
-    ax.grid(True, linestyle='--', alpha=0.7, color='gray')
+    fig, ax = plt.subplots(figsize=figsize)
 
-    colors = plt.cm.viridis(np.linspace(0, 1, 4))
+    for i in range(data.shape[2]):
+        ax.plot(data[:, :, i], label=f"Shell {i + 1}",
+                color=colors[i % len(colors)],
+                linewidth=linewidth)
 
-    for i in range(neighbors_data.shape[2]):
-        ax.plot(neighbors_data[:, :, i], label=f"Shell {i+1}", color=colors[i], linewidth=2)
-
-
-    if temperature_label: 
-        total_points = neighbors_data.shape[0]
-        tick_indices = np.linspace(0, total_points - 1, 10, dtype=int)
-        label_indices = np.linspace(0, len(temp_labels) - 1, 10, dtype=int)
-        ax.set_xlabel("Temperature")
-        ax.set_xticks(tick_indices)
-        ax.set_xticklabels([f"T={temp_labels[i][0]:.1f}" for i in label_indices], rotation=45)
+    if temperature_label:
+        _apply_temp_xlabel(ax, data.shape[0], temp_labels, fontsize)
     else:
-        ax.set_xlabel("Steps")
+        ax.set_xlabel("Steps", fontsize=fontsize)
 
-    ax.set_ylabel("Number of Neighbors")
-    ax.set_title("Neighbor Analysis")
-    
-    ax.legend(bbox_to_anchor=(1, 1), loc='upper left', frameon=True, fancybox=True, shadow=False)
+    ax.set_ylabel("Number of Neighbors", fontsize=fontsize)
+    ax.set_title("Neighbor Analysis", fontsize=fontsize + 1)
+    ax.tick_params(axis='both', labelsize=fontsize - 2)
+    ax.xaxis.set_minor_locator(AutoMinorLocator())
 
+    ax.legend(bbox_to_anchor=(1, 1), loc='upper left',
+              frameon=True, fancybox=False, shadow=False,
+              fontsize=fontsize - 2, edgecolor='0.8')
+
+    apply_style(ax, spine=False, grid=True, hide_top_right=False)
     plt.tight_layout()
+
+    if savepath:
+        fig.savefig(savepath, bbox_inches='tight')
+
     plt.show()
 
     if temperature_show:
         plot_temperature(m_temperatures)
 
-def plot_energies(kinetic_energy, potential_energy, m_temperatures, show_potential=True, temperature_show=False, temperature_label=False, plot_window=None):
-    if plot_window is None:     
-        plot_window = min(kinetic_energy['data'].shape[0], potential_energy['data'].shape[0])
+    return fig, ax
+# ----------------------------------------------------------------------
+def apply_style(ax, spine=False, grid=True, hide_top_right=True):
+    """Apply common tick/grid/spine styling to an axis."""
+    ax.tick_params(which='both', axis="both", direction="in")
+    if grid:
+        ax.grid(which='major', linestyle=":", alpha=.4, zorder=0)
+        ax.grid(which='minor', linestyle=':', linewidth=0.4, alpha=.2, zorder=0)
+        ax.set_axisbelow(True)
+    if hide_top_right:
+        ax.spines['top'].set_visible(False)
+        ax.spines['right'].set_visible(False)
+    if spine:
+        for side in ['left', 'right', 'top', 'bottom']:
+            ax.spines[side].set_linewidth(0.5)
+            ax.spines[side].set_color('gray')
+
+# ----------------------------------------------------------------------
+_PUB_COLORS = ['#0072B2', '#D55E00', '#009E73', '#CC79A7', '#E69F00']  # Wong colorblind-safe palette
+
+def plot_energies(
+    kinetic_energy, potential_energy, m_temperatures,
+    show_potential=True, temperature_show=False, temperature_label=False,
+    plot_window=None,
+    colors=None,
+    linewidth=1.5,
+    fontsize=12,
+    figsize=(5, 3),
     
-    # FIX: Take the minimum available data from both arrays
-    kinetic_energy_data = kinetic_energy['data'][:plot_window]
-    potential_energy_data = potential_energy['data'][:plot_window]
-    
-    # Ensure both have the same length
-    min_len = min(len(kinetic_energy_data), len(potential_energy_data))
-    kinetic_energy_data = kinetic_energy_data[:min_len]
-    potential_energy_data = potential_energy_data[:min_len]
+    savepath=None,
+):
+    if colors is None:
+        colors = _PUB_COLORS
+
+    min_len = min(
+        kinetic_energy['data'].shape[0],
+        potential_energy['data'].shape[0],
+        plot_window or int(1e9),
+    )
+    ke = kinetic_energy['data'][:min_len]
+    pe = potential_energy['data'][:min_len]
     temp_labels = kinetic_energy['temperature label'][:min_len]
-    
-    # Print warning if there's a mismatch
-    if len(kinetic_energy_data) != len(potential_energy_data):
-        print(f"Warning: Data length mismatch. Using min length: {min_len}")
-        print(f"Kinetic: {len(kinetic_energy_data)}, Potential: {len(potential_energy_data)}")
-    
-    fig, ax = plt.subplots(figsize=(7, 4))
-    ax.grid(True, linestyle='--', alpha=0.7, color='gray')
 
-    colors = plt.cm.plasma(np.linspace(0, 1, kinetic_energy_data.shape[2] + 3))
-    axis_labels = ['x', 'y', r'$\omega$']
+    fig, ax = plt.subplots(figsize=figsize)
 
-    for i, axis_label in enumerate(axis_labels):
-        ax.plot(kinetic_energy_data[:, :, i], label=f"K{axis_label}", color=colors[i])
+    axis_labels = ['x', 'y', r'\omega']
+
+    for i, lbl in enumerate(axis_labels):
+        ax.plot(ke[:, :, i], label=f"$K_{{{lbl}}}$",
+                color=colors[i], linewidth=linewidth)
 
     if show_potential:
-        y2 = potential_energy_data.flatten()
-        ax.plot(y2, label='U', color=colors[3])
-        ax.plot(y2 + np.sum(kinetic_energy_data, axis=2)[:, 0], label='Total', color=colors[4])
+        y2 = pe.flatten()
+        ax.plot(y2, label='$U$',
+                color=colors[3], linewidth=linewidth)
+        ax.plot(y2 + np.sum(ke, axis=2)[:, 0], label='$E_\\mathrm{total}$',
+                color=colors[4], linewidth=linewidth + 0.5)
 
-    if temperature_label: 
-        total_points = kinetic_energy_data.shape[0]
-        tick_indices = np.linspace(0, total_points - 1, 10, dtype=int)
-        label_indices = np.linspace(0, len(temp_labels) - 1, 10, dtype=int)
-        ax.set_xlabel("Temperature")
-        ax.set_xticks(tick_indices)
-        ax.set_xticklabels([f"T={temp_labels[i][0]:.1f}" for i in label_indices], rotation=45)
+    if temperature_label:
+        n = ke.shape[0]
+        ticks = np.linspace(0, n, 10, dtype=int)
+        tidx  = np.linspace(0, len(temp_labels) - 1, 10, dtype=int)
+        ax.set_xlabel("Temperature", fontsize=fontsize)
+        ax.set_xticks(ticks)
+        ax.set_xticklabels([f"$T={temp_labels[i][0]:.1f}$" for i in tidx],
+                           rotation=45, fontsize=fontsize - 2)
     else:
-        ax.set_xlabel("Steps")
+        ax.set_xlabel("Steps", fontsize=fontsize)
 
-    ax.set_ylabel("Energy")
-    ax.set_title("Energy Evolution")
-    
-    ax.legend(bbox_to_anchor=(1, 1), loc='upper left', frameon=True, fancybox=True, shadow=False)
+    ax.set_ylabel(r"Energy", fontsize=fontsize)
+    ax.set_title("Energy Evolution", fontsize=fontsize + 1)
+    ax.tick_params(axis='both', labelsize=fontsize - 2)
+    ax.xaxis.set_minor_locator(AutoMinorLocator())
 
+    ax.legend(bbox_to_anchor=(1, 1), loc='upper left',
+              frameon=True, fancybox=False, shadow=False,
+              fontsize=fontsize - 2, edgecolor='0.8')
+
+    apply_style(ax, spine=False, grid=True, hide_top_right=False)
     plt.tight_layout()
+
+    if savepath:
+        fig.savefig(savepath, bbox_inches='tight')
+
     plt.show()
 
     if temperature_show:
         plot_temperature(m_temperatures)
 
-def plot_com_velocity(com_velocity, m_temperatures, temperature_show=False, temperature_label=False):
-    com_vel_data = com_velocity['data']
+    return fig, ax
+
+def plot_com_velocity(
+    com_velocity, m_temperatures,
+    temperature_show=False, temperature_label=False,
+    colors=None, linewidth=1.5, fontsize=12,
+    figsize=(5, 3), savepath=None,
+):
+    if colors is None:
+        colors = _PUB_COLORS
+    data = com_velocity['data']
     temp_labels = com_velocity['temperature label']
-    fig, ax = plt.subplots(figsize=(7, 4))
 
-    ax.grid(True, linestyle='--', alpha=0.7, color='gray')
+    fig, ax = plt.subplots(figsize=figsize)
 
-    colors = plt.cm.plasma(np.linspace(0, 1, 4))
     axis_labels = ['x', 'y']
+    linestyles = ['-', '--']
 
-    for i, axis_label in enumerate(axis_labels):
-        ax.plot(com_vel_data[:, :, i], label=f"K{axis_label}", color=colors[i])
+    for i, (lbl, ls) in enumerate(zip(axis_labels, linestyles)):
+        ax.plot(data[:, :, i], label=f"$v_{{{lbl}}}$",
+                color=colors[i], linewidth=linewidth)
 
-    if temperature_label: 
-        total_points = com_vel_data.shape[0]
-        tick_indices = np.linspace(0, total_points - 1, 10, dtype=int)
-        label_indices = np.linspace(0, len(temp_labels) - 1, 10, dtype=int)
-        ax.set_xlabel("Temperature")
-        ax.set_xticks(tick_indices)
-        ax.set_xticklabels([f"T={temp_labels[i][0]:.1f}" for i in label_indices], rotation=45)
+    if temperature_label:
+        _apply_temp_xlabel(ax, data.shape[0], temp_labels, fontsize)
     else:
-        ax.set_xlabel("Steps")
+        ax.set_xlabel("Steps", fontsize=fontsize)
 
-    ax.set_ylabel("Velocity")
-    ax.set_title("Center of Mass Velocity Evolution")
-    
-    ax.legend(bbox_to_anchor=(1, 1), loc='upper left', frameon=True, fancybox=True, shadow=False)
+    ax.set_ylabel("CoM Velocity", fontsize=fontsize)
+    ax.set_title("Center of Mass Velocity Evolution", fontsize=fontsize + 1)
+    ax.tick_params(axis='both', labelsize=fontsize - 2)
+    ax.xaxis.set_minor_locator(AutoMinorLocator())
 
+    ax.legend(bbox_to_anchor=(1, 1), loc='upper left',
+              frameon=True, fancybox=False, shadow=False,
+              fontsize=fontsize - 2, edgecolor='0.8')
+
+    apply_style(ax, spine=False, grid=True, hide_top_right=False)
     plt.tight_layout()
+
+    if savepath:
+        fig.savefig(savepath, bbox_inches='tight')
+
     plt.show()
 
     if temperature_show:
         plot_temperature(m_temperatures)
 
-def plot_com_ang_velocity(com_ang_velocity, m_temperatures, temperature_show=False, temperature_label=False):
+    return fig, ax
+
+def plot_com_ang_velocity(
+    com_ang_velocity, m_temperatures,
+    temperature_show=False, temperature_label=False,
+    colors=None, linewidth=1.5, fontsize=12,
+    figsize=(5, 3), savepath=None,
+):
+    if colors is None:
+        colors = _PUB_COLORS
     data = com_ang_velocity['data']
     temp_labels = com_ang_velocity['temperature label']
 
-    fig, ax = plt.subplots(figsize=(6, 4))
-    ax.grid(True, linestyle='--', alpha=0.7, color='gray')
+    fig, ax = plt.subplots(figsize=figsize)
 
-    y2 = data.flatten()
-    ax.plot(y2, color='#b47c39')
+    ax.plot(data.flatten(), color=colors[0], linewidth=linewidth)
 
-    if temperature_label: 
-        total_points = data.shape[0]
-        tick_indices = np.linspace(0, total_points - 1, 10, dtype=int)
-        label_indices = np.linspace(0, len(temp_labels) - 1, 10, dtype=int)
-        ax.set_xlabel("Temperature")
-        ax.set_xticks(tick_indices)
-        ax.set_xticklabels([f"T={temp_labels[i][0]:.1f}" for i in label_indices], rotation=45)
+    if temperature_label:
+        _apply_temp_xlabel(ax, data.shape[0], temp_labels, fontsize)
     else:
-        ax.set_xlabel("Steps")
+        ax.set_xlabel("Steps", fontsize=fontsize)
 
-    ax.set_ylabel("Angular Velocity")
-    ax.set_title("Center of Mass Angular Velocity Evolution")
-    
+    ax.set_ylabel("Angular Velocity", fontsize=fontsize)
+    ax.set_title("Center of Mass Angular Velocity Evolution", fontsize=fontsize + 1)
+    ax.tick_params(axis='both', labelsize=fontsize - 2)
+    ax.xaxis.set_minor_locator(AutoMinorLocator())
+
+    apply_style(ax, spine=False, grid=True, hide_top_right=False)
     plt.tight_layout()
+
+    if savepath:
+        fig.savefig(savepath, bbox_inches='tight')
+
     plt.show()
 
     if temperature_show:
         plot_temperature(m_temperatures)
+
+    return fig, ax
         
-def plot_order_parameter(order, m_temperatures, temperature_show=False, temperature_label=False):
-    order_data = order['data']
+def plot_order_parameter(
+    order, m_temperatures,
+    temperature_show=False, temperature_label=False,
+    colors=None, linewidth=1.5, fontsize=12,
+    figsize=(5, 3), savepath=None,
+):
+    if colors is None:
+        colors = _PUB_COLORS
+    data = order['data']
     temp_labels = order['temperature label']
-    fig, ax = plt.subplots(figsize=(6, 3.8))  
-    
-    ax.grid(True, linestyle='--', alpha=0.7, color='gray')
-    ax.plot(order_data[:, :], color='#5499C7')
 
-    if temperature_label: 
-        total_points = order_data.shape[0]
-        tick_indices = np.linspace(0, total_points - 1, 10, dtype=int)
-        label_indices = np.linspace(0, len(temp_labels) - 1, 10, dtype=int)
-        ax.set_xlabel("Temperature")
-        ax.set_xticks(tick_indices)
-        ax.set_xticklabels([f"T={temp_labels[i][0]:.1f}" for i in label_indices], rotation=45)
+    fig, ax = plt.subplots(figsize=figsize)
+
+    ax.plot(data[:, :], color=colors[0], linewidth=linewidth)
+
+    if temperature_label:
+        _apply_temp_xlabel(ax, data.shape[0], temp_labels, fontsize)
     else:
-        ax.set_xlabel("Steps")
+        ax.set_xlabel("Steps", fontsize=fontsize)
 
-    ax.set_ylabel("Orientation Order")
-    ax.set_title(f"Orientation Order Parameter")
+    ax.set_ylabel("Orientation Order", fontsize=fontsize)
+    ax.set_title("Orientation Order Parameter", fontsize=fontsize + 1)
+    ax.tick_params(axis='both', labelsize=fontsize - 2)
+    ax.xaxis.set_minor_locator(AutoMinorLocator())
 
+    apply_style(ax, spine=False, grid=True, hide_top_right=False)
     plt.tight_layout()
+
+    if savepath:
+        fig.savefig(savepath, bbox_inches='tight')
+
     plt.show()
 
     if temperature_show:
         plot_temperature(m_temperatures)
+
+    return fig, ax
 
 ############## snapshot of system over steps/ single file --one MD simulation or one aggregation ##############
 
@@ -608,14 +706,12 @@ def plot_configuration(positions, handedness=None, step_target=-1, radius=0.4, c
     y = positions_data[step_target, :, 1]
     h = handedness_data[step_target, :] if handedness_data is not None else None
 
-    if positions_data.shape[2] == 3:
-        phi = positions_data[step_target, :, 2]
-
     T = positions["temperature label"][0]
     
-    fig, ax = plt.subplots(figsize=(6, 4), dpi=150)
+    fig, ax = plt.subplots(figsize=(5, 3.5))
 
     if positions_data.shape[2] == 3:
+        phi = positions_data[step_target, :, 2]
         if color_phi:
             scatter = ax.scatter(
                 x, y, 
@@ -658,26 +754,24 @@ def plot_configuration(positions, handedness=None, step_target=-1, radius=0.4, c
                 
             for i in range(positions_data.shape[1]):
                 ax.plot([x[i], x_end[i]], [y[i], y_end[i]], color='black', linewidth=0.8, alpha=0.8)
-
-    ax.set_xlabel('X Position')
-    ax.set_ylabel('Y Position')
-    
+    # else:
+    #     ...
     if set_title:
         ax.set_title(set_title)
     else:
         if step_target == -1:
-            ax.set_title(f"Particle's configuration - Last step")
+            ax.set_title(f"Last step")
         elif step_target == 0:
-            ax.set_title(f"Particle's configuration - First step")
+            ax.set_title(f"First step")
         else:
-            ax.set_title(f"Particle's configuration - {step_target/availble_steps * 100:.0f}%")
+            ax.set_title(f"evolution: {step_target/availble_steps * 100:.0f}%")
 
     ax.set_xlim(x0, x1)
     ax.set_ylim(y0, y1)
 
     ax.set_aspect('equal', adjustable='box')
-    ax.grid(linestyle='--', alpha=0.5)
     ax.set_axisbelow(True)
+    apply_style(ax, spine=False, grid=True, hide_top_right=False)
 
     plt.tight_layout()
     if save_fig:
@@ -830,7 +924,7 @@ def plot_trajectory_steps(positions, step_target, step_window=10000, area=50):
     
     step_max = step_target + step_window
 
-    fig, ax = plt.subplots(1, 2, figsize=(8, 4), dpi=150)
+    fig, ax = plt.subplots(1, 2, figsize=(8, 4))
 
     num_particles = positions_data.shape[1]
 
@@ -871,13 +965,13 @@ def plot_trajectory_steps(positions, step_target, step_window=10000, area=50):
     plt.tight_layout()
     plt.show()
 
-def plot_hist_phi_steps(positions, step_target, step_window=1000, bins_num=100, dpi=120):
+def plot_hist_phi_steps(positions, step_target, step_window=1000, bins_num=100):
     positions_data = positions['data']
     
     step_max = step_target + step_window
     print(f"available steps: {positions_data.shape[0]}, chosen step: {step_target} - {step_max}")
     
-    fig, ax = plt.subplots(subplot_kw={'projection': 'polar'},figsize=(6, 4), dpi=dpi)
+    fig, ax = plt.subplots(subplot_kw={'projection': 'polar'},figsize=(6, 4))
 
     ax.hist(positions_data[step_target:step_max,:,2].flatten(), bins=bins_num, color='#954965', alpha=0.7)
 
@@ -893,7 +987,7 @@ def plot_hist_phi_steps(positions, step_target, step_window=1000, bins_num=100, 
     plt.tight_layout()
     plt.show()
 
-def plot_deltaphi_hist_steps(positions, step_target, min_dis=20, step_window=1000, bins_num= 100, dpi=120):
+def plot_deltaphi_hist_steps(positions, step_target, min_dis=20, step_window=1000, bins_num= 100):
     
     step_max = step_target + step_window
     print(f"available steps: {positions['data'].shape[0]}, chosen step: {step_target} - {step_max}")
@@ -910,7 +1004,7 @@ def plot_deltaphi_hist_steps(positions, step_target, min_dis=20, step_window=100
                     delta_phi = (delta_phi + np.pi) % (2 * np.pi) - np.pi
                     total_delta_phi.append(delta_phi)
 
-    fig, ax = plt.subplots(subplot_kw={'projection': 'polar'},figsize=(6, 4), dpi=dpi)
+    fig, ax = plt.subplots(subplot_kw={'projection': 'polar'},figsize=(6, 4))
     
     bins = np.linspace(-np.pi, np.pi, bins_num + 1)
     hist, bin_edges = np.histogram(total_delta_phi, bins=bins)
@@ -952,7 +1046,7 @@ def plot_trajectory_temperature(positions, target_temperature, step_window=10000
     step_min = target_temperature_index(positions, target_temperature)
     step_max = step_min + step_window
 
-    fig, ax = plt.subplots(1, 2, figsize=(8, 4), dpi=200)
+    fig, ax = plt.subplots(1, 2, figsize=(8, 4))
 
     num_particles = positions_data.shape[1]
 
@@ -995,12 +1089,12 @@ def plot_trajectory_temperature(positions, target_temperature, step_window=10000
 
 
 def plot_snapshot_temperature(positions, handedness, target_temperature, patchNums=None,
-                               line_length=0.45, area=20, radius=True, color_palette='hsv', dpi=120):
+                               line_length=0.45, area=20, radius=True, color_palette='hsv'):
     positions_data = positions['data']
     handedness_data = handedness['data']
     shot = target_temperature_index(positions, target_temperature)
 
-    fig, ax = plt.subplots(figsize=(6, 4), dpi=dpi)
+    fig, ax = plt.subplots(figsize=(6, 4))
     
     x = positions_data[shot, :, 0]
     y = positions_data[shot, :, 1]
@@ -1064,13 +1158,13 @@ def plot_snapshot_temperature(positions, handedness, target_temperature, patchNu
     
 ############## histogram of φ and Δφ at specific Temperature ##############
 
-def plot_hist_phi_temperature(positions, target_t, step_window, bins_num=100, dpi=120):
+def plot_hist_phi_temperature(positions, target_t, step_window, bins_num=100):
     step_target = target_temperature_index(positions, target_t)
-    plot_hist_phi_steps(positions, step_target, step_window, bins_num, dpi)
+    plot_hist_phi_steps(positions, step_target, step_window, bins_num)
 
-def plot_delta_phi_hist_temperature(positions, target_t, min_dis, step_window, bins_num=100, dpi=120):
+def plot_delta_phi_hist_temperature(positions, target_t, min_dis, step_window, bins_num=100):
     step_target = target_temperature_index(positions, target_t)
-    plot_deltaphi_hist_steps(positions, step_target, min_dis, step_window, bins_num, dpi)
+    plot_deltaphi_hist_steps(positions, step_target, min_dis, step_window, bins_num)
 
 #------------------------------   AGGREGATION   ------------------------------
 
