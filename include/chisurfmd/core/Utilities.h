@@ -4,8 +4,8 @@
 #include <cmath>
 #include <boost/program_options.hpp>
 
-#include "lettuce/core/Vec.h"
-#include "lettuce/core/ParticleDot.h"
+#include "chisurfmd/core/Vec.h"
+#include "chisurfmd/core/ParticleDot.h"
 
 namespace po = boost::program_options;
 
@@ -27,7 +27,7 @@ T calAverageNeighbors(const std::vector<TParticle>& particles, const T& distance
     for (const auto& p1 : particles) {
         int eachParticleNeighbors = 0;
         for (const auto& p2 : particles) {
-            if (p1.r != p2.r && (p1.r - p2.r).abs() <= distance) {
+            if (p1.position != p2.position && (p1.position - p2.position).abs() <= distance) {
                 ++eachParticleNeighbors;
             }
         }
@@ -48,9 +48,9 @@ auto calAveNeighborList(const std::vector<TParticle>& particles, const std::vect
             int eachParticleNeighbors = 0;
 
             for (const auto& p2 : particles) {
-                if (p1.r != p2.r) {
+                if (p1.position != p2.position) {
                     // Apply periodic boundary conditions using minimum image convention
-                    auto delta = p1.r - p2.r;
+                    auto delta = p1.position - p2.position;
                     delta[0] -= boxSize * round(delta[0] / boxSize);
                     delta[1] -= boxSize * round(delta[1] / boxSize);
 
@@ -104,7 +104,7 @@ Vec<T> calCOMposition(const std::vector<TParticle>& particles, const std::vector
     T totalMass = 0;
     for (const auto& p : particles) {
         const T mass = allSpecies[p.species].mass;
-        comPos += p.r * mass;
+        comPos += p.position * mass;
         totalMass += mass;
     }
     return comPos / totalMass;
@@ -119,7 +119,7 @@ Vec<T> calCOMpositionPBC(const std::vector<TParticle>& particles,
     
     for (const auto& p : particles) {
         const T mass = allSpecies[p.species].mass;
-        comPos += p.r * mass;
+        comPos += p.position * mass;
         totalMass += mass;
     }
     comPos /= totalMass;
@@ -139,8 +139,8 @@ T calAngularMomentum2D(const std::vector<TParticle>& particles, const std::vecto
     auto comPos = calCOMpositionPBC(particles, allSpecies, boxPBC);
     for (const auto& p : particles) {
         const T mass = allSpecies[p.species].mass;
-        Vec<T> r_com = p.r - comPos;
-        L += mass * (r_com[0] * p.v[1] - r_com[1] * p.v[0]);
+        Vec<T> r_com = p.position - comPos;
+        L += mass * (r_com[0] * p.velocity[1] - r_com[1] * p.velocity[0]);
     }
     return L;
 }
@@ -150,7 +150,7 @@ T calMomentOfInertia2D(const std::vector<TParticle>& particles, const std::vecto
     T I = 0;
     for (const auto& p : particles) {
         const T mass = allSpecies[p.species].mass;
-        Vec<T> r_com = p.r - comPos;
+        Vec<T> r_com = p.position - comPos;
         I += mass * r_com.abs2();
     }
     return I;
@@ -165,7 +165,7 @@ void removeCOMvelocityRotation2D(std::vector<TParticle>& particles, const std::v
     T angularVelocity = angularMomentum / momentOfInertia;
 
     for (auto& p : particles) {
-        Vec<T> r_com = p.r - comPos;
+        Vec<T> r_com = p.position - comPos;
         Vec<T> v_rot = {(-r_com[1] * angularVelocity, r_com[0] * angularVelocity)};
         p.v -= v_rot;
     }
@@ -182,7 +182,7 @@ void removeCOMvelocityRotation2D_wholeCenter(std::vector<TParticle>& particles,
     T angularVelocity = angularMomentum / momentOfInertia;
 
     for (auto& p : particles) {
-        Vec<T> r_com = p.r - comPos;
+        Vec<T> r_com = p.position - comPos;
         Vec<T> v_rot = {(-r_com[1] * angularVelocity, r_com[0] * angularVelocity)};
         p.v -= v_rot;
     }
@@ -210,7 +210,7 @@ std::vector<T> calCOMvelocity(const std::vector<TParticle>& particles, const std
     for (int i = 0; i < 2; ++i) {
         for (const auto& p : particles) {
             T mass = allSpecies[p.species].mass;
-            totalMomentum[i] += mass * p.v[i];
+            totalMomentum[i] += mass * p.velocity[i];
             totalMass += mass;
         }
         totalMomentumVec.push_back(totalMomentum[i] / totalMass);
@@ -238,10 +238,10 @@ void moveParticlesToCenter(std::vector<TParticle>& particles, const std::vector<
     Vec<T> shift = -comPos + L/2;
     
     for (auto &p: particles){
-        p.r += shift;
+        p.position += shift;
         for (size_t i = 0; i < 2; ++i) {
-            p.r[i] = std::fmod(p.r[i], L);
-            if (p.r[i] < 0) p.r[i] += L;
+            p.position[i] = std::fmod(p.position[i], L);
+            if (p.position[i] < 0) p.position[i] += L;
         }
     }     
 }
@@ -253,7 +253,7 @@ void applyFixRadius(std::vector<TParticle>& particles, const T& fixRadius, const
 {
     Vec<T> boxCenter {{areaL / 2, areaL / 2}};
     for (auto& p : particles) {
-        if ((p.r - boxCenter).abs2() > fixRadius * fixRadius) {
+        if ((p.position - boxCenter).abs2() > fixRadius * fixRadius) {
             p.fixed = true;
         }
     }

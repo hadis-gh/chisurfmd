@@ -1,0 +1,8 @@
+#include "chisurfmd/potential/IsotropicLJ.h"
+#include "chisurfmd/potential/OrientedLJ.h"
+#include "chisurfmd/potential/GeometricLJ.h"
+#include "chisurfmd/potential/PatchyLJ.h"
+#include "chisurfmd/potential/FieldCoupled.h"
+#include "chisurfmd/potential/ChiralPatchyLJ.h"
+#include "chisurfmd/potential/TabularDFT.h"
+#include "chisurfmd/potential/ChiMorse.h"

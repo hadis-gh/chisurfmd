@@ -4,10 +4,10 @@
 #include <cmath>
 #include <iostream>
 #include <boost/program_options.hpp>
-#include "lettuce/core/Vec.h"
-#include "lettuce/core/ParticleDot.h"
-#include "lettuce/core/ParticleOriented.h"
-#include "IsotropicLJ.h"
+#include "chisurfmd/core/Vec.h"
+#include "chisurfmd/core/ParticleDot.h"
+#include "chisurfmd/core/ParticleOriented.h"
+#include "chisurfmd/potential/IsotropicLJ.h"
 
 namespace po = boost::program_options;
 

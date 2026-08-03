@@ -12,9 +12,9 @@
 
 #include "Vec.h"
 #include "Circle.h"
-#include "lettuce/core/ParticleDot.h"
-#include "lettuce/core/ParticleOriented.h"
-#include "lettuce/core/CirclesIntersectionFuncs.h"
+#include "chisurfmd/core/ParticleDot.h"
+#include "chisurfmd/core/ParticleOriented.h"
+#include "chisurfmd/core/CirclesIntersectionFuncs.h"
 
 // ================================== Circle-Particle conversion ==================================
 template<typename TParticle, typename T = typename TParticle::value_type>
@@ -23,7 +23,7 @@ std::vector<TParticle> circleToParticle(const std::vector<Circle<T>> &circles) {
     
     for (auto &c: circles){
         TParticle p;
-        p.r = c.c;
+        p.position = c.c;
         particles.push_back(p);
     }
     return particles;
@@ -35,7 +35,7 @@ std::vector<Circle<T>> particleToCircle(const std::vector<TParticle> &particles,
     Circle<T> c;
 
     for (auto &p: particles){
-        c.c = p.r;
+        c.c = p.position;
         c.r = allSpecies[speciesNum].radius;
         circles.push_back(c);
     }
@@ -63,7 +63,7 @@ std::vector<TParticle> distRandomParticles(const int& particlesNum, const T& L, 
     std::vector<TParticle> randomParticles(particlesNum);
     std::vector<Circle<T>> randomCircles = distRandomCircles(particlesNum, L, radius, gen);
     for (int i = 0; i < particlesNum; ++i) {
-        randomParticles[i].r = randomCircles[i].c;
+        randomParticles[i].position = randomCircles[i].c;
     }
     return randomParticles;
 }
@@ -125,13 +125,13 @@ std::vector<TParticle> manualRandomParticles(const int& particlesNum, T L, const
         for (int j = 0; j < topSquareRoot; ++j) {
             if (particles.size() < particlesNum) {
                 auto newParticle = createRandomParticle<TParticle>(gen);
-                newParticle.r[0] = (i + 1) * distance + randomDisplacement(gen);
-                newParticle.r[1] = (j + 1) * distance + randomDisplacement(gen);
+                newParticle.position[0] = (i + 1) * distance + randomDisplacement(gen);
+                newParticle.position[1] = (j + 1) * distance + randomDisplacement(gen);
 
                 bool overlap = false;
                 for (const auto& existingParticle : particles) {
-                    T dx = newParticle.r[0] - existingParticle.r[0];
-                    T dy = newParticle.r[1] - existingParticle.r[1];
+                    T dx = newParticle.position[0] - existingParticle.position[0];
+                    T dy = newParticle.position[1] - existingParticle.position[1];
                     if ((dx * dx + dy * dy) < (4 * radius * radius)) {
                         overlap = true;
                         break;
@@ -237,7 +237,7 @@ std::vector<TParticle> distParticleDLA(const int& shootNum, const T& L, const T&
 
     for (size_t i = 0; i < finalCircles.size(); ++i) {
         finalParticles[i] = createRandomParticle<TParticle>(gen);
-        finalParticles[i].r = finalCircles[i].c;
+        finalParticles[i].position = finalCircles[i].c;
     }
     return finalParticles;
 }
@@ -317,12 +317,12 @@ std::vector<TParticle> initialParticles(const unsigned int& particlesNum,
         
         std::uniform_int_distribution<int8_t> dis(0, 1);
         if (particlesType == "OP") {
-            p.h = dis(gen) * 2 - 1;
-        } else if (particlesType == "SA") {
-            p.d = dis(gen) * 2 - 1;
-        } else if (particlesType == "SP" || particlesType == "OA") {
-            p.h = 1;
-            p.d = 1;
+            p.handedness = dis(gen) * 2 - 1;
+        } else if (particlesType == "EA") {
+            p.alignment = dis(gen) * 2 - 1;
+        } else if (particlesType == "EP" || particlesType == "OA") {
+            p.handedness = 1;
+            p.alignment = 1;
         } else {
             throw std::runtime_error("Wrong Particles Type: " + particlesType);
         }
@@ -460,7 +460,7 @@ std::vector<bool> identifyMainCluster(const std::vector<TParticle>& particles,
 
                 // Check neighbors
                 for (size_t j = 0; j < n; ++j) {
-                    if (!visited[j] && (particles[current].r - particles[j].r).abs() < contactThreshold) {
+                    if (!visited[j] && (particles[current].position - particles[j].position).abs() < contactThreshold) {
                         queue.push(j);
                         visited[j] = true;
                     }
@@ -486,7 +486,7 @@ std::vector<bool> identifyMainCluster(const std::vector<TParticle>& particles,
             queue.pop();
 
             for (size_t j = 0; j < n; ++j) {
-                if (!inCluster[j] && (particles[current].r - particles[j].r).abs() < contactThreshold) {
+                if (!inCluster[j] && (particles[current].position - particles[j].position).abs() < contactThreshold) {
                     inCluster[j] = true;
                     queue.push(j);
                 }

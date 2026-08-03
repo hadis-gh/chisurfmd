@@ -6,7 +6,7 @@
 #include <fstream>
 #include <iomanip>
 
-#include "lettuce/core/Vec.h"
+#include "chisurfmd/core/Vec.h"
 
 template<typename TParticle, typename T = typename TParticle::value_type>
 void writeInitialParticles(const std::vector<TParticle>& particles, const T radius) {
