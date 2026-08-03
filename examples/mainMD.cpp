@@ -26,16 +26,16 @@ enum class ThermostatID {
     None = 0, VelocityScaling = 1, Berendsen = 2, NoseHoover = 3, Andersen = 4
 };
 
-#ifndef LETTUCE_THERMOSTAT
-#define LETTUCE_THERMOSTAT ThermostatID::VelocityScaling
+#ifndef CHISURFMD_THERMOSTAT
+#define CHISURFMD_THERMOSTAT ThermostatID::VelocityScaling
 #endif
 
-#ifndef LETTUCE_PARTICLE
-#define LETTUCE_PARTICLE ParticleOriented
+#ifndef CHISURFMD_PARTICLE
+#define CHISURFMD_PARTICLE ParticleOriented
 #endif
 
-#ifndef LETTUCE_POTENTIAL
-#define LETTUCE_POTENTIAL OrientedLJ
+#ifndef CHISURFMD_POTENTIAL
+#define CHISURFMD_POTENTIAL OrientedLJ
 #endif
 
 #define STRINGIFY(x) #x
@@ -44,14 +44,14 @@ enum class ThermostatID {
 namespace po = boost::program_options;
 using Real = double;
 
-using ParticleT = LETTUCE_PARTICLE<Real>;
-using Potential = LETTUCE_POTENTIAL<ParticleT>;
+using ParticleT = CHISURFMD_PARTICLE<Real>;
+using Potential = CHISURFMD_POTENTIAL<ParticleT>;
 
 void printOptions(const po::variables_map& vm) {
     std::cout << "\nCompile-time options:\n";
-    std::cout << std::left << std::setw(20) << "Thermostat:" << TOSTRING(LETTUCE_THERMOSTAT) << "\n"
-              << std::setw(20) << "Particle type:" << TOSTRING(LETTUCE_PARTICLE) << "\n"
-              << std::setw(20) << "Potential type:" << TOSTRING(LETTUCE_POTENTIAL) << "\n";
+    std::cout << std::left << std::setw(20) << "Thermostat:" << TOSTRING(CHISURFMD_THERMOSTAT) << "\n"
+              << std::setw(20) << "Particle type:" << TOSTRING(CHISURFMD_PARTICLE) << "\n"
+              << std::setw(20) << "Potential type:" << TOSTRING(CHISURFMD_POTENTIAL) << "\n";
 
     if (vm["printOptions"].as<bool>()) {
         std::cout << "\nRuntime options:\n";
@@ -172,15 +172,15 @@ int main(int argc, char* argv[]) {
     const Real temperature = vm["temperature"].as<Real>();
 
     auto thermostat = [&]() {
-        if constexpr (LETTUCE_THERMOSTAT == ThermostatID::None)
+        if constexpr (CHISURFMD_THERMOSTAT == ThermostatID::None)
             return [](auto, auto) { return 1.; };
-        else if constexpr (LETTUCE_THERMOSTAT == ThermostatID::VelocityScaling)
+        else if constexpr (CHISURFMD_THERMOSTAT == ThermostatID::VelocityScaling)
             return VelocityScalingThermostat<ParticleT>(temperature);
-        else if constexpr (LETTUCE_THERMOSTAT == ThermostatID::Berendsen)
+        else if constexpr (CHISURFMD_THERMOSTAT == ThermostatID::Berendsen)
             return BerendsenThermostat<ParticleT>(vm["thermoInterval"].as<Real>(), temperature, relaxationTime);
-        else if constexpr (LETTUCE_THERMOSTAT == ThermostatID::NoseHoover)
+        else if constexpr (CHISURFMD_THERMOSTAT == ThermostatID::NoseHoover)
             return nullptr;
-        else if constexpr (LETTUCE_THERMOSTAT == ThermostatID::Andersen)
+        else if constexpr (CHISURFMD_THERMOSTAT == ThermostatID::Andersen)
             return AndersenThermostat<ParticleT>(vm["thermoInterval"].as<Real>(), collisionFrequency, temperature, gen);
     }();
 
@@ -233,7 +233,7 @@ int main(int argc, char* argv[]) {
     size_t writeEnergyStep = writeEnergyIntervalSteps;
     size_t thermoStep = thermoIntervalSteps;
 
-    if constexpr (LETTUCE_THERMOSTAT == ThermostatID::None) {
+    if constexpr (CHISURFMD_THERMOSTAT == ThermostatID::None) {
         thermoStep = 2 * nsteps;
     }
 
@@ -307,13 +307,13 @@ int main(int argc, char* argv[]) {
             writeEnergyStep = step + writeEnergyIntervalSteps;
     
         }
-        if constexpr (LETTUCE_THERMOSTAT != ThermostatID::None) {
+        if constexpr (CHISURFMD_THERMOSTAT != ThermostatID::None) {
             if (step == thermoStep) {
                 thermostat(particles, allSpecies);
 
 
                 thermoStep = step + thermoIntervalSteps;
-                if constexpr (LETTUCE_THERMOSTAT == ThermostatID::VelocityScaling) {
+                if constexpr (CHISURFMD_THERMOSTAT == ThermostatID::VelocityScaling) {
                     removeCOMVelocity(particles, allSpecies);
                 }
             }
