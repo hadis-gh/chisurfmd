@@ -13,5 +13,6 @@ build*
 *.png
 *.dat
 *.lock
+.bashrc
 
 !chisurfmd_logo.png
