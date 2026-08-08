@@ -93,7 +93,7 @@ int main(int argc, char* argv[]) {
         ("thermoInterval",        po::value<Real>()->default_value(.1),                       "interval after which to apply thermostat")
         ("temperature,T",         po::value<Real>()->default_value(.3),                       "temperature")
         ("particlesInit",         po::value<std::string>()->default_value("RANDOM"),          "particle initialization")
-        ("particlesType",         po::value<std::string>()->default_value("EP"),            "particles type handedness & orientation")
+        ("particlesType",         po::value<std::string>()->default_value("EP"),              "particles type handedness & orientation")
         ("mass",                  po::value<Real>()->default_value(1.0),                      "mass of particles")       
         ("momentI",               po::value<Real>()->default_value(1.0),                      "moment of inersia")
         ("exclusionRadius",       po::value<Real>()->default_value(.5),                       "exclusion radius")
@@ -101,7 +101,7 @@ int main(int argc, char* argv[]) {
         ("areaL",                 po::value<Real>()->default_value(20.0),                     "simulation size")
         ("fixRadius",             po::value<Real>()->default_value(20.0),                     "cut-off range for the dynamics neighbors")
         ("particlesDensity",      po::value<Real>(),                                          "packing density of particles")
-        ("neighborDistances",     po::value<std::vector<Real>>()->multitoken()->default_value(std::vector<Real>{1.2, 1.5, 2.0}, "1.2 1.5 2.0"),
+        ("neighborDistances",     po::value<std::vector<Real>>()->multitoken()->default_value(std::vector<Real>{1.2, 2.0}, "1.2 2.0"),
                                                                                               "Distances for counting neighbors {x-y, omega}")
         ("particlesNum,n",        po::value<unsigned int>()->default_value(49),               "number of initial particles")
         ("saveFile",              po::value<std::string>()->default_value("outputs/run_0.bp"),"file path to save simulation output")

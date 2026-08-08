@@ -87,7 +87,7 @@ int main(int argc, char* argv[]) {
     desc.add_options()
         ("help,h", "print help")
         ("time,t",                po::value<Real>()->default_value(30.0),                     "max simulation time")
-        ("dt",                    po::value<Real>()->default_value(.00005),                    "integration step size")
+        ("dt",                    po::value<Real>()->default_value(.00005),                   "integration step size")
         ("writeStateInterval",    po::value<Real>()->default_value(.01),                      "measurement State interval")
         ("writeEnergyInterval",   po::value<Real>()->default_value(.1),                       "measurement Energy interval")
         ("thermoInterval",        po::value<Real>()->default_value(.05),                      "interval after which to apply thermostat")
@@ -100,7 +100,7 @@ int main(int argc, char* argv[]) {
         ("seed",                  po::value<unsigned int>(),                                  "random seed")
         ("areaL",                 po::value<Real>()->default_value(50.0),                     "simulation size")
         ("particlesDensity",      po::value<Real>(),                                          "packing density of particles")
-        ("neighborDistances",     po::value<std::vector<Real>>()->multitoken()->default_value(std::vector<Real>{1.2, 1.5, 2.0}, "1.2 1.5 2.0"),
+        ("neighborDistances",     po::value<std::vector<Real>>()->multitoken()->default_value(std::vector<Real>{1.2, 2.0}, "1.2 2.0"),
                                                                                               "Distances for counting neighbors {x-y, omega}")
         ("particlesNum,n",        po::value<unsigned int>()->default_value(2),                "number of initial particles")
         ("particlesNumMax",       po::value<unsigned int>()->default_value(49),               "number of final particles")
