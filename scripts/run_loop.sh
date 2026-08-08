@@ -16,8 +16,8 @@ numCoolingRuns=$(echo "scale=0; ($highTemperature - $lowTemperature) / $stepTemp
 numHeatingRuns=$(echo "scale=0; ($highTemperature - $lowTemperature) / $stepTemperature" | bc)
 totalRuns=$((numCoolingRuns + numHeatingRuns))
 
-MD_EXE=${MD_EXE:-"/home/hadis/vector/build/test/testMD"}
-outputDir=${outputDir:-"./outputs"}
+MD_EXE=${MD_EXE}
+outputDir=${outputDir}
 mkdir -p "$outputDir"
 
 logFile="log.txt"
@@ -49,18 +49,18 @@ run_simulation() {
         --collisionFr "$collisionFr"
     )
 
-if [ "$potentiaType" == "OrientedLJ" ]; then
+if [ "$potentialType" == "OrientedLJ" ]; then
         args+=(--LJangularScale "$LJangularScale"
                --LJPhiOrder "$LJPhiOrder"
                --LJalpha "$LJalpha"
                --momentI "$momentI")
-    elif [ "$potentiaType" == "GeometricLJ" ]; then
+    elif [ "$potentialType" == "GeometricLJ" ]; then
         args+=(--patchNum "$patchNum")
-    elif [ "$potentiaType" == "PatchyLJ" ]; then
+    elif [ "$potentialType" == "PatchyLJ" ]; then
         args+=(--patchNums "$patchNums"
                --sigmaPatch "$sigmaPatch" 
                --patchMode "$patchMode")
-    elif [ "$potentiaType" == "ChiralPatchyLJ" ]; then
+    elif [ "$potentialType" == "ChiralPatchyLJ" ]; then
         args+=(--sigmaPatch "$sigmaPatch" 
                --patchNums "$patchNums"
                --epsilonSame "$epsilonSame"
@@ -68,8 +68,10 @@ if [ "$potentiaType" == "OrientedLJ" ]; then
                --sigmaSame "$sigmaSame"
                --sigmaOpp "$sigmaOpp"
                --chiralOffset "$chiralOffset")               
+    elif [ "$potentialType" == "ChiMorse" ]; then
+        args+=(--chiMorseModel "$chiMorseModel")
     else
-        printf "Error: Make sure to specify a valid potentiaType in config file. (Got: '%s')\n" "$potentiaType"
+        printf "Error: Make sure to specify a valid potentialType in config file. (Got: '%s')\n" "$potentialType"
         exit 1
     fi
 
