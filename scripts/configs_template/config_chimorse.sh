@@ -1,5 +1,5 @@
-MD_EXE="/home/hadis/gl_chisurfmd/vector/build/examples/testMD"
-outputDir="/home/hadis/gl_chisurfmd/vector/runs/chimorse_annealing"
+MD_EXE="/home/hadis/chisurfmd/build/examples/testMD"
+outputDir="/home/hadis/chisurfmd/runs/chimorse_annealing"
 
 potentialType="ChiMorse"
 chiMorseModel="/home/hadis/chimorse/examples/models/chimorse_all.json"
