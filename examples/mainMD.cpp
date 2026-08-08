@@ -96,7 +96,7 @@ int main(int argc, char* argv[]) {
         ("particlesType",         po::value<std::string>()->default_value("EP"),              "particles type handedness & orientation")
         ("mass",                  po::value<Real>()->default_value(1.0),                      "mass of particles")       
         ("momentI",               po::value<Real>()->default_value(1.0),                      "moment of inersia")
-        ("exclusionRadius",       po::value<Real>()->default_value(.5),                       "exclusion radius")
+        ("particleRadius",        po::value<Real>()->default_value(.5),                       "particle radius")
         ("seed",                  po::value<unsigned int>()->default_value(1),                "random seed")
         ("areaL",                 po::value<Real>()->default_value(20.0),                     "simulation size")
         ("fixRadius",             po::value<Real>()->default_value(20.0),                     "cut-off range for the dynamics neighbors")
@@ -126,7 +126,7 @@ int main(int argc, char* argv[]) {
     
     const Real mass = vm["mass"].as<Real>();
     const Real momentI = vm["momentI"].as<Real>();
-    const Real radius = vm["exclusionRadius"].as<Real>();
+    const Real radius = vm["particleRadius"].as<Real>();
     unsigned int particlesNum = vm["particlesNum"].as<unsigned int>();
     Real areaL;
 
