@@ -96,7 +96,7 @@ int main(int argc, char* argv[]) {
         ("particlesType",         po::value<std::string>()->default_value("RRUU"),            "particles type handedness & orientation")
         ("mass",                  po::value<Real>()->default_value(1.0),                      "mass of particles")       
         ("momentI",               po::value<Real>()->default_value(1.0),                      "moment of inersia")
-        ("exclusionRadius",       po::value<Real>()->default_value(.8),                       "exclusion radius")
+        ("particleRadius",       po::value<Real>()->default_value(.8),                        "particle radius")
         ("seed",                  po::value<unsigned int>(),                                  "random seed")
         ("areaL",                 po::value<Real>()->default_value(50.0),                     "simulation size")
         ("particlesDensity",      po::value<Real>(),                                          "packing density of particles")
@@ -126,7 +126,7 @@ int main(int argc, char* argv[]) {
 
     const Real mass = vm["mass"].as<Real>();
     const Real momentI = vm["momentI"].as<Real>();
-    const Real radius = vm["exclusionRadius"].as<Real>();
+    const Real radius = vm["particleRadius"].as<Real>();
     unsigned int particlesNum = vm["particlesNum"].as<unsigned int>();
     unsigned int particlesNumMax = vm["particlesNumMax"].as<unsigned int>();
         if (vm.count("particlesDensity") > 0) {
