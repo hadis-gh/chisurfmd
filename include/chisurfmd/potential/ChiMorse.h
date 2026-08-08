@@ -25,21 +25,6 @@ enum class InteractionType {
     OA
 };
 // ------------------------------------------------------------
-namespace chimorse_units {
-    // Reference units used internally by MD:
-    // energy: E* = E / E0
-    // length: r* = r / L0
-    //
-    // Input ChiMorse JSON remains in:
-    // D      : eV
-    // re     : Angstrom
-    // alpha  : Angstrom^-1
-    // cutoff : Angstrom
-
-    constexpr double E0 = 0.3;   // eV
-    constexpr double L0 = 10.0;  // Angstrom
-}
-// ------------------------------------------------------------
 template<typename Particle>
 InteractionType getInteractionType(
     const Particle& p1,
@@ -346,19 +331,13 @@ FourierSurface2D<T> loadSurface(
     for (std::size_t i = 0; i < coeffs.size(); ++i) {
         const auto& b = basisTerms.at(i);
 
-        FourierTerm<T> term;
-
-        term.m = b.at("m").get<int>();
-        term.n = b.at("n").get<int>();
-        term.chiFunction = parseTrig(
-            b.at("chi_function").get<std::string>()
-        );
-        term.psiFunction = parseTrig(
-            b.at("psi_function").get<std::string>()
-        );
-        term.coefficient = coeffs[i] * scale;
-
-        terms.push_back(term);
+        terms.push_back({
+            b.at("m").get<int>(),
+            b.at("n").get<int>(),
+            parseTrig(b.at("chi_function").get<std::string>()),
+            parseTrig(b.at("psi_function").get<std::string>()),
+            coeffs[i] * scale
+        });
     }
 
     return FourierSurface2D<T>(std::move(terms));
@@ -370,7 +349,7 @@ AngularParameter<T> loadParameter(
     const json& parameter,
     T scale = T{1}
 ) {
-    const std::string type =
+    const auto type =
         parameter.at("type").get<std::string>();
 
     if (type == "constant") {
@@ -385,12 +364,16 @@ AngularParameter<T> loadParameter(
         );
     }
 
-    throw std::runtime_error("Unknown parameter type: " + type);
+    throw std::runtime_error(
+        "Unknown parameter type: " + type
+    );
 }
 // ------------------------------------------------------------
 template<typename T>
 ChiMorseModel<T> loadSingleChiMorseModel(
-    const json& modelJson
+    const json& modelJson,
+    T E0,
+    T L0
 ) {
     const auto& basis =
         modelJson.at("basis_terms");
@@ -398,32 +381,23 @@ ChiMorseModel<T> loadSingleChiMorseModel(
     const auto& params =
         modelJson.at("parameters");
 
-    const T E0 =
-        static_cast<T>(chimorse_units::E0);
+    auto D = loadParameter<T>(
+        basis,
+        params.at("D"),
+        T{1} / E0
+    );
 
-    const T L0 =
-        static_cast<T>(chimorse_units::L0);
+    auto re = loadParameter<T>(
+        basis,
+        params.at("re"),
+        T{1} / L0
+    );
 
-    auto D =
-        loadParameter<T>(
-            basis,
-            params.at("D"),
-            T{1} / E0
-        );
-
-    auto re =
-        loadParameter<T>(
-            basis,
-            params.at("re"),
-            T{1} / L0
-        );
-
-    auto alpha =
-        loadParameter<T>(
-            basis,
-            params.at("alpha"),
-            L0
-        );
+    auto alpha = loadParameter<T>(
+        basis,
+        params.at("alpha"),
+        L0
+    );
 
     const T cutoff =
         modelJson.at("cutoff").get<T>() / L0;
@@ -438,14 +412,21 @@ ChiMorseModel<T> loadSingleChiMorseModel(
 // ------------------------------------------------------------
 template<typename T>
 ChiMorseModels<T> loadChiMorseModels(
-    const std::string& filename
+    const std::string& filename,
+    T E0,
+    T L0
 ) {
+    if (E0 <= T{0} || L0 <= T{0}) {
+        throw std::runtime_error(
+            "ChiMorse E0 and L0 must be positive"
+        );
+    }
+
     std::ifstream file(filename);
 
     if (!file) {
         throw std::runtime_error(
-            "Could not open chiMorse JSON file: "
-            + filename
+            "Could not open ChiMorse JSON file: " + filename
         );
     }
 
@@ -458,18 +439,18 @@ ChiMorseModels<T> loadChiMorseModels(
     const auto& factors =
         j.at("handedness_factor");
 
-    return ChiMorseModels<T>{
+    return {
         loadSingleChiMorseModel<T>(
-            interactions.at("EP")
+            interactions.at("EP"), E0, L0
         ),
         loadSingleChiMorseModel<T>(
-            interactions.at("EA")
+            interactions.at("EA"), E0, L0
         ),
         loadSingleChiMorseModel<T>(
-            interactions.at("OP")
+            interactions.at("OP"), E0, L0
         ),
         loadSingleChiMorseModel<T>(
-            interactions.at("OA")
+            interactions.at("OA"), E0, L0
         ),
         factors.at("equal").get<T>(),
         factors.at("opposite").get<T>()
@@ -594,68 +575,72 @@ public:
 private:
     ChiMorseModels<T> m_models;
 };
+// ============================================================
+// Factory struct for ChiSurfMD
+// ============================================================
 
-// ============================================================
-// Factory struct for chiSurfMD
-// ============================================================
-namespace po = boost::program_options;
-// ------------------------------------------------------------
 template<typename Particle, typename SFINAE = void>
 struct ChiMorse;
+
+
 // ------------------------------------------------------------
 template<typename T>
 struct ChiMorse<ParticleOriented<T>>
 {
-    static void initProgramOptions(po::options_description& desc) {
+    static void initProgramOptions(
+        po::options_description& desc
+    ) {
         desc.add_options()
             (
                 "chiMorseModel",
                 po::value<std::string>()->required(),
-                "path to chiMorse JSON model"
+                "path to ChiMorse JSON model"
+            )
+            (
+                "E0",
+                po::value<T>()->default_value(T{0.4}),
+                "reference energy in eV"
+            )
+            (
+                "L0",
+                po::value<T>()->default_value(T{7.0}),
+                "reference length in Angstrom"
             );
     }
 
-    static auto force(const po::variables_map& vm) {
-        try {
-            const auto filename =
-                vm["chiMorseModel"].as<std::string>();
 
-            auto models =
-                loadChiMorseModels<T>(filename);
-
-            return ChiMorseForce<ParticleOriented<T>>(
-                std::move(models)
+    static auto force(
+        const po::variables_map& vm
+    ) {
+        auto models =
+            loadChiMorseModels<T>(
+                vm["chiMorseModel"].as<std::string>(),
+                vm["E0"].as<T>(),
+                vm["L0"].as<T>()
             );
 
-        } catch (const boost::bad_any_cast& e) {
-            std::cerr
-                << "Error initializing ChiMorseForce: "
-                << e.what()
-                << std::endl;
-            throw;
-        }
+        return ChiMorseForce<ParticleOriented<T>>(
+            std::move(models)
+        );
     }
 
-    static auto potential(const po::variables_map& vm) {
-        try {
-            const auto filename =
-                vm["chiMorseModel"].as<std::string>();
 
-            auto models =
-                loadChiMorseModels<T>(filename);
-
-            return ChiMorsePotential<ParticleOriented<T>>(
-                std::move(models)
+    static auto potential(
+        const po::variables_map& vm
+    ) {
+        auto models =
+            loadChiMorseModels<T>(
+                vm["chiMorseModel"].as<std::string>(),
+                vm["E0"].as<T>(),
+                vm["L0"].as<T>()
             );
 
-        } catch (const boost::bad_any_cast& e) {
-            std::cerr
-                << "Error initializing ChiMorsePotential: "
-                << e.what()
-                << std::endl;
-            throw;
-        }
+        return ChiMorsePotential<ParticleOriented<T>>(
+            std::move(models)
+        );
     }
 
-    using ForceType = ChiMorseForce<ParticleOriented<T>>;
+
+    using ForceType =
+        ChiMorseForce<ParticleOriented<T>>;
 };
