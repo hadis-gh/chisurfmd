@@ -25,6 +25,21 @@ enum class InteractionType {
     OA
 };
 // ------------------------------------------------------------
+namespace chimorse_units {
+    // Reference units used internally by MD:
+    // energy: E* = E / E0
+    // length: r* = r / L0
+    //
+    // Input ChiMorse JSON remains in:
+    // D      : eV
+    // re     : Angstrom
+    // alpha  : Angstrom^-1
+    // cutoff : Angstrom
+
+    constexpr double E0 = 0.3;   // eV
+    constexpr double L0 = 10.0;  // Angstrom
+}
+// ------------------------------------------------------------
 template<typename Particle>
 InteractionType getInteractionType(
     const Particle& p1,
@@ -46,7 +61,6 @@ InteractionType getInteractionType(
         ? InteractionType::OP
         : InteractionType::OA;
 }
-// ------------------------------------------------------------
 
 // ============================================================
 // Fourier evaluator
@@ -314,7 +328,8 @@ struct ChiMorseModels {
 template<typename T>
 FourierSurface2D<T> loadSurface(
     const json& basisTerms,
-    const json& parameter
+    const json& parameter,
+    T scale = T{1}
 ) {
     const auto coeffs =
         parameter.at("coefficients").template get<std::vector<T>>();
@@ -341,7 +356,7 @@ FourierSurface2D<T> loadSurface(
         term.psiFunction = parseTrig(
             b.at("psi_function").get<std::string>()
         );
-        term.coefficient = coeffs[i];
+        term.coefficient = coeffs[i] * scale;
 
         terms.push_back(term);
     }
@@ -352,20 +367,21 @@ FourierSurface2D<T> loadSurface(
 template<typename T>
 AngularParameter<T> loadParameter(
     const json& basisTerms,
-    const json& parameter
+    const json& parameter,
+    T scale = T{1}
 ) {
     const std::string type =
         parameter.at("type").get<std::string>();
 
     if (type == "constant") {
         return AngularParameter<T>::constant(
-            parameter.at("value").get<T>()
+            parameter.at("value").get<T>() * scale
         );
     }
 
     if (type == "fourier") {
         return AngularParameter<T>::fourier(
-            loadSurface<T>(basisTerms, parameter)
+            loadSurface<T>(basisTerms, parameter, scale)
         );
     }
 
@@ -382,26 +398,35 @@ ChiMorseModel<T> loadSingleChiMorseModel(
     const auto& params =
         modelJson.at("parameters");
 
+    const T E0 =
+        static_cast<T>(chimorse_units::E0);
+
+    const T L0 =
+        static_cast<T>(chimorse_units::L0);
+
     auto D =
         loadParameter<T>(
             basis,
-            params.at("D")
+            params.at("D"),
+            T{1} / E0
         );
 
     auto re =
         loadParameter<T>(
             basis,
-            params.at("re")
+            params.at("re"),
+            T{1} / L0
         );
 
     auto alpha =
         loadParameter<T>(
             basis,
-            params.at("alpha")
+            params.at("alpha"),
+            L0
         );
 
     const T cutoff =
-        modelJson.at("cutoff").get<T>();
+        modelJson.at("cutoff").get<T>() / L0;
 
     return ChiMorseModel<T>(
         std::move(D),
