@@ -17,7 +17,7 @@ numHeatingRuns=$(echo "scale=0; ($highTemperature - $lowTemperature) / $stepTemp
 totalRuns=$((numCoolingRuns + numHeatingRuns))
 
 MD_EXE=${MD_EXE}
-outputDir=${outputDir}
+outputDir=${outputDir:-"outputs"}
 mkdir -p "$outputDir"
 
 logFile="log.txt"
@@ -41,7 +41,7 @@ run_simulation() {
         --particlesNum "$particleNum"
         --seed "$seed"
         --areaL "$areaL"
-        --exclusionRadius "$exclusionRadius"
+        --particleRadius "$particleRadius"
         --thermoInterval "$thermoInterval"
         --writeStateInterval "$writeStateInterval"
         --writeEnergyInterval "$writeEnergyInterval"
@@ -69,7 +69,9 @@ if [ "$potentialType" == "OrientedLJ" ]; then
                --sigmaOpp "$sigmaOpp"
                --chiralOffset "$chiralOffset")               
     elif [ "$potentialType" == "ChiMorse" ]; then
-        args+=(--chiMorseModel "$chiMorseModel")
+        args+=(--chiMorseModel "$chiMorseModel"
+               --E0 "$E0"
+               --L0 "$L0")
     else
         printf "Error: Make sure to specify a valid potentialType in config file. (Got: '%s')\n" "$potentialType"
         exit 1
