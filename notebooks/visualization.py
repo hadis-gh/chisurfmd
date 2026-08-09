@@ -1026,13 +1026,13 @@ def plot_deltaphi_hist_steps(positions, step_target, min_dis=20, step_window=100
 
 ############## snapshot of configuration at specific Temperature ##############
 
-def target_temperature_index (variable_name, target_temperature):
+def target_temperature_index (variable_name, target_temperature, cooling):
     data = variable_name['data']
     temperature_labels = variable_name['temperature label'].flatten()
     print(f"available temperatures are from {min(temperature_labels)} to {max(temperature_labels)}.")
           
     try:
-        index = np.where(temperature_labels == target_temperature)[0][0]
+        index = np.where(temperature_labels == target_temperature)[0][0 if cooling else 1]
     except IndexError:
         print(f"🞩🞩🞩 Target temperature {target_temperature} not found in temperature_labels. Please choose a valid temperature! 🞩🞩🞩")
         return 0
@@ -1040,10 +1040,10 @@ def target_temperature_index (variable_name, target_temperature):
     total_snapshots = data.shape[0]
     return int(total_snapshots / len(temperature_labels) * index)
 
-def plot_trajectory_temperature(positions, target_temperature, step_window=10000):
+def plot_trajectory_temperature(positions, target_temperature, cooling=True, step_window=10000):
     positions_data = positions['data']
 
-    step_min = target_temperature_index(positions, target_temperature)
+    step_min = target_temperature_index(positions, target_temperature, cooling)
     step_max = step_min + step_window
 
     fig, ax = plt.subplots(1, 2, figsize=(8, 4))
@@ -1088,11 +1088,14 @@ def plot_trajectory_temperature(positions, target_temperature, step_window=10000
     plt.show()
 
 
-def plot_snapshot_temperature(positions, handedness, target_temperature, patchNums=None,
-                               line_length=0.45, area=20, radius=True, color_palette='hsv'):
+def plot_snapshot_temperature(positions, handedness, 
+                              target_temperature, cooling=True,
+                              patchNums=None, line_length=0.45, 
+                              area=20, radius=True, 
+                              color_palette='hsv'):
     positions_data = positions['data']
     handedness_data = handedness['data']
-    shot = target_temperature_index(positions, target_temperature)
+    shot = target_temperature_index(positions, target_temperature, cooling)
 
     fig, ax = plt.subplots(figsize=(6, 4))
     
@@ -1158,12 +1161,12 @@ def plot_snapshot_temperature(positions, handedness, target_temperature, patchNu
     
 ############## histogram of φ and Δφ at specific Temperature ##############
 
-def plot_hist_phi_temperature(positions, target_t, step_window, bins_num=100):
-    step_target = target_temperature_index(positions, target_t)
+def plot_hist_phi_temperature(positions, target_t, step_window, cooling=True, bins_num=100):
+    step_target = target_temperature_index(positions, target_t, cooling)
     plot_hist_phi_steps(positions, step_target, step_window, bins_num)
 
-def plot_delta_phi_hist_temperature(positions, target_t, min_dis, step_window, bins_num=100):
-    step_target = target_temperature_index(positions, target_t)
+def plot_delta_phi_hist_temperature(positions, target_t, min_dis, step_window, cooling=True, bins_num=100):
+    step_target = target_temperature_index(positions, target_t, cooling)
     plot_deltaphi_hist_steps(positions, step_target, min_dis, step_window, bins_num)
 
 #------------------------------   AGGREGATION   ------------------------------
