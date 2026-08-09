@@ -155,14 +155,14 @@ def read_attributes(name, attribute_name):
     
 ################# read multiple variables from output file and directory #################
 
-def read_variables_batch(name, variable_names, print_message=True):
+def read_variables_batch(name, variable_names, print_message=True, while_running=False):
     """
     Read multiple variables in a single pass through the data
     """
     if name.endswith(".bp"):
         return _read_variables_batch_file(name, variable_names, print_message)
     elif os.path.isdir(name):
-        return _read_variables_batch_directory(name, variable_names, print_message)
+        return _read_variables_batch_directory(name, variable_names, print_message, while_running)
 
 def _read_variables_batch_file(file_name, variable_names, print_message=True):
     """
@@ -197,17 +197,24 @@ def _read_variables_batch_file(file_name, variable_names, print_message=True):
     
     return result
 
-def _read_variables_batch_directory(output_dir, variable_names, print_message=True):
+def _read_variables_batch_directory(output_dir, variable_names, print_message=True, while_running=False):
     """
     Read multiple variables from a directory of files
     """
     pattern = re.compile("run_([0-9]+).bp")
-    run_numbers = [int(pattern.match(x)[1]) for x in os.listdir(output_dir) if pattern.match(x)]
-    
+    run_numbers = [
+        int(pattern.match(x)[1])
+        for x in os.listdir(output_dir)
+        if pattern.match(x)
+    ]
+
     if not run_numbers:
         raise ValueError(f"No run files found in {output_dir}")
-    
+
     run_numbers.sort()
+
+    if while_running:
+        run_numbers = run_numbers[:-1]
     
     # Initialize result structure
     result = {var: {'data': [], 'temperature label': []} for var in variable_names}
