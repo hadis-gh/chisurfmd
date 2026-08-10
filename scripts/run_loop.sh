@@ -93,7 +93,7 @@ run_simulation() {
 
     elif [ "$potentialType" == "Tabular" ]; then
         args+=(
-            --dftbReferenceDir "$dftbReferenceDir"
+            --dataReferenceDir "$dataReferenceDir"
             --E0 "$E0"
             --L0 "$L0"
         )
