@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 
-# Exit on error and unset variable
 set -eu
 
 start_time=$(date +%s)
@@ -14,9 +13,8 @@ source "$config"
 
 numCoolingRuns=$(echo "scale=0; ($highTemperature - $lowTemperature) / $stepTemperature" | bc)
 numHeatingRuns=$(echo "scale=0; ($highTemperature - $lowTemperature) / $stepTemperature" | bc)
-totalRuns=$((numCoolingRuns + numHeatingRuns))
+totalRuns=$((1 + numCoolingRuns + numHeatingRuns))
 
-MD_EXE=${MD_EXE}
 outputDir=${outputDir:-"outputs"}
 mkdir -p "$outputDir"
 
@@ -24,19 +22,25 @@ logFile="log.txt"
 exec > >(tee "$logFile") 2>&1
 echo "Logging to: $logFile"
 
+
+# ---------------------- General run function ----------------------
+
 run_simulation() {
     local runIndex="$1"
     local particlesInit="$2"
     local temperature="$3"
+    local duration="$4"
     local saveFile="${outputDir}/run_${runIndex}.bp"
 
-    printf "Starting simulation #%s | Temperature: %s\n" "$runIndex" "$temperature"
+    printf "Starting simulation %s/%s | Temperature: %s\n" \
+        "$((runIndex + 1))" "$totalRuns" "$temperature"
 
     local args=(
         --particlesInit "$particlesInit"
         --particlesType "$particlesType"
         --temperature "$temperature"
-        --time "$timeCooling" --dt "$dt"
+        --time "$duration"
+        --dt "$dt"
         --saveFile "$saveFile"
         --particlesNum "$particleNum"
         --seed "$seed"
@@ -49,69 +53,104 @@ run_simulation() {
         --collisionFr "$collisionFr"
     )
 
-if [ "$potentialType" == "OrientedLJ" ]; then
-        args+=(--LJangularScale "$LJangularScale"
-               --LJPhiOrder "$LJPhiOrder"
-               --LJalpha "$LJalpha"
-               --momentI "$momentI")
+    # ----------------------- Potential options -----------------------
+
+    if [ "$potentialType" == "OrientedLJ" ]; then
+        args+=(
+            --LJangularScale "$LJangularScale"
+            --LJPhiOrder "$LJPhiOrder"
+            --LJalpha "$LJalpha"
+            --momentI "$momentI"
+        )
+
     elif [ "$potentialType" == "GeometricLJ" ]; then
         args+=(--patchNum "$patchNum")
+
     elif [ "$potentialType" == "PatchyLJ" ]; then
-        args+=(--patchNums "$patchNums"
-               --sigmaPatch "$sigmaPatch" 
-               --patchMode "$patchMode")
+        args+=(
+            --patchNums "$patchNums"
+            --sigmaPatch "$sigmaPatch"
+            --patchMode "$patchMode"
+        )
+
     elif [ "$potentialType" == "ChiralPatchyLJ" ]; then
-        args+=(--sigmaPatch "$sigmaPatch" 
-               --patchNums "$patchNums"
-               --epsilonSame "$epsilonSame"
-               --epsilonOpp "$epsilonOpp"
-               --sigmaSame "$sigmaSame"
-               --sigmaOpp "$sigmaOpp"
-               --chiralOffset "$chiralOffset")               
+        args+=(
+            --sigmaPatch "$sigmaPatch"
+            --patchNums "$patchNums"
+            --epsilonSame "$epsilonSame"
+            --epsilonOpp "$epsilonOpp"
+            --sigmaSame "$sigmaSame"
+            --sigmaOpp "$sigmaOpp"
+            --chiralOffset "$chiralOffset"
+        )
+
     elif [ "$potentialType" == "ChiMorse" ]; then
-        args+=(--chiMorseModel "$chiMorseModel"
-               --E0 "$E0"
-               --L0 "$L0")
+        args+=(
+            --chiMorseModel "$chiMorseModel"
+            --E0 "$E0"
+            --L0 "$L0"
+        )
+
+    elif [ "$potentialType" == "Tabular" ]; then
+        args+=(
+            --dftbReferenceDir "$dftbReferenceDir"
+            --E0 "$E0"
+            --L0 "$L0"
+        )
+
     else
-        printf "Error: Make sure to specify a valid potentialType in config file. (Got: '%s')\n" "$potentialType"
+        printf "Error: invalid potentialType '%s'.\n" "$potentialType"
         exit 1
     fi
 
-    "$MD_EXE" "${args[@]}" || { 
-        printf "Error: Simulation #%s failed.\n" "$runIndex"; 
-        exit 1; 
+    "$MD_EXE" "${args[@]}" || {
+        printf "Error: Simulation #%s failed.\n" "$runIndex"
+        exit 1
     }
 
-    printf "\nSimulation %s of %s completed successfully.\n\n" "$runIndex" "$totalRuns"
+    printf "\nSimulation %s/%s completed successfully.\n\n" \
+        "$((runIndex + 1))" "$totalRuns"
+
     echo "------------------------------------------------------------"
 }
+
 
 echo "======================================================="
 echo "    Temperature Loop Molecular Dynamics Simulation     "
 echo "======================================================="
 
-initialRunIndex=0
-run_simulation "$initialRunIndex" "RANDOM" "$highTemperature"
 
-# Cooling process: 
+# ------------------ Initial high-temperature run -----------------
+
+run_simulation 0 "RANDOM" "$highTemperature" "$timeCooling"
+
+
+# ------------------------- Cooling -------------------------------
+
 for ((i = 1; i <= numCoolingRuns; i++)); do
     temperature=$(echo "$highTemperature - $i * $stepTemperature" | bc)
     prevOutput="${outputDir}/run_$((i - 1)).bp"
 
-    run_simulation "$i" "$prevOutput" "$temperature"
+    run_simulation "$i" "$prevOutput" "$temperature" "$timeCooling"
 done
 
-# Heating process:
+
+# ------------------------- Heating -------------------------------
+
 for ((i = 1; i <= numHeatingRuns; i++)); do
     runIndex=$((numCoolingRuns + i))
     temperature=$(echo "$lowTemperature + $i * $stepTemperature" | bc)
     prevOutput="${outputDir}/run_$((runIndex - 1)).bp"
-    run_simulation "$runIndex" "$prevOutput" "$temperature"
+
+    run_simulation "$runIndex" "$prevOutput" "$temperature" "$timeHeating"
 done
 
-echo "All simulations completed. Total runs: ${totalRuns}"
 
-# Record time
+echo "All simulations completed. Total runs: $totalRuns"
+
+
+# ---------------------- Execution time ---------------------------
+
 end_time=$(date +%s)
 elapsed_time=$((end_time - start_time))
 
@@ -119,4 +158,5 @@ hours=$((elapsed_time / 3600))
 minutes=$(((elapsed_time % 3600) / 60))
 seconds=$((elapsed_time % 60))
 
-printf "Total execution time: %02d:%02d:%02d (hh:mm:ss)\n" "$hours" "$minutes" "$seconds"
+printf "Total execution time: %02d:%02d:%02d (hh:mm:ss)\n" \
+    "$hours" "$minutes" "$seconds"
