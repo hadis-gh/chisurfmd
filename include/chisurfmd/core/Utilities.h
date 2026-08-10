@@ -71,29 +71,25 @@ auto calAveNeighborList(const std::vector<TParticle>& particles, const std::vect
 
 template<typename TParticle, typename T = typename TParticle::value_type>
 T calOrientationOrder(const std::vector<TParticle>& particles) {
-    T orientationOrder;
-    size_t count = 0;
 
-
-    for (size_t i = 0; i < particles.size(); ++i) {
-        for (size_t j = i + 1; j < particles.size(); ++j) {
-            auto pr1 = getGeneralizedPositions(particles[i]);
-            auto pr2 = getGeneralizedPositions(particles[j]);
-
-            if (pr1.size() > 2) {
-                T deltaPhi = pr1[2] - pr2[2];
-                deltaPhi = std::fmod(deltaPhi + 2*M_PI, 2*M_PI);
-                if (deltaPhi > M_PI) deltaPhi -= 2*M_PI;
-
-                orientationOrder += std::cos(2.0 * deltaPhi * M_PI / M_PI);
-                count++;
-            } else {
-                orientationOrder = 0;
-                count = 1;
-            }
-        }
+    if constexpr (degreesOfFreedom<TParticle>() <= 2) {
+        return T{0};
     }
-    return orientationOrder/count;
+
+    T cosSum = 0;
+    T sinSum = 0;
+
+    for (const auto& p : particles) {
+        cosSum += std::cos(2.0 * p.phi);
+        sinSum += std::sin(2.0 * p.phi);
+    }
+
+    const T N = static_cast<T>(particles.size());
+
+    cosSum /= N;
+    sinSum /= N;
+
+    return std::sqrt(cosSum * cosSum + sinSum * sinSum);
 }
 
 // ================================== Center of Mass ==================================
