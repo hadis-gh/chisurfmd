@@ -1091,7 +1091,7 @@ def plot_trajectory_temperature(positions, target_temperature, cooling=True, ste
 def plot_snapshot_temperature(positions, handedness, 
                               target_temperature, cooling=True,
                               patchNums=None, line_length=0.45, 
-                              area=20, radius=True, 
+                              area=20, radius=True, particle_size=110, 
                               color_palette='hsv'):
     positions_data = positions['data']
     handedness_data = handedness['data']
@@ -1110,7 +1110,7 @@ def plot_snapshot_temperature(positions, handedness,
     # Plot main particles
     ax.scatter(
         x, y, 
-        s=110,
+        s=particle_size,
         edgecolors='black',
         facecolor=colors,
         alpha=0.8
