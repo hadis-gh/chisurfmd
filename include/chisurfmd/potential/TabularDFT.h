@@ -585,9 +585,19 @@ struct TabularDFT<ParticleOriented<T>> {
     ) {
         desc.add_options()
             (
-                "dftb.referenceDir",
+                "dataReferenceDir",
                 po::value<std::string>()->required(),
                 "directory containing E_all_EP/EA/OP/OA.dat"
+            )
+            (
+                "E0",
+                po::value<T>()->default_value(T{0.4}),
+                "reference energy in eV"
+            )
+            (
+                "L0",
+                po::value<T>()->default_value(T{7.0}),
+                "reference length in Angstrom"
             );
     }
 
@@ -596,7 +606,7 @@ struct TabularDFT<ParticleOriented<T>> {
         const po::variables_map& vm
     ) {
         return TabularDFTForce<ParticleOriented<T>>(
-            vm["dftb.referenceDir"].as<std::string>()
+            vm["dataReferenceDir"].as<std::string>()
         );
     }
 
@@ -605,7 +615,7 @@ struct TabularDFT<ParticleOriented<T>> {
         const po::variables_map& vm
     ) {
         return TabularDFTPotential<T>(
-            vm["dftb.referenceDir"].as<std::string>()
+            vm["dataReferenceDir"].as<std::string>()
         );
     }
 
