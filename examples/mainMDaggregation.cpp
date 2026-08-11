@@ -97,7 +97,7 @@ int main(int argc, char* argv[]) {
         ("alignment",             po::value<std::string>()->default_value("polar"),           "initial alignment: polar or apolar")   
         ("mass",                  po::value<Real>()->default_value(1.0),                      "mass of particles")       
         ("momentI",               po::value<Real>()->default_value(1.0),                      "moment of inersia")
-        ("particleRadius",       po::value<Real>()->default_value(.8),                        "particle radius")
+        ("particleRadius",        po::value<Real>()->default_value(.8),                        "particle radius")
         ("seed",                  po::value<unsigned int>(),                                  "random seed")
         ("areaL",                 po::value<Real>()->default_value(50.0),                     "simulation size")
         ("particlesDensity",      po::value<Real>(),                                          "packing density of particles")
@@ -260,6 +260,9 @@ int main(int argc, char* argv[]) {
 // ================================== Deposition Loop ==================================
     
     auto particles = initialParticles<ParticleT>(particlesNum, allSpecies, speciesInd, areaL, gen, particlesInit);
+    if (!particlesInit.ends_with(".bp")) {
+        assignParticleState(particles, chirality, alignment, gen);
+    }
     
     auto prevSize = particles.size();
     std::cout << "\n _______ system initial size: " << particles.size() << " _______ \n" << std::endl;

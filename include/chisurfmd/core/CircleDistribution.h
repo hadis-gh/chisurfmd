@@ -267,31 +267,45 @@ std::vector<TParticle> initialParticles(const unsigned int& particlesNum,
         adios2::ADIOS adios;
         adios2::IO io = adios.DeclareIO("ReadConfig");
 
-        adios2::Engine engine = io.Open(configuration, adios2::Mode::ReadRandomAccess);
+        adios2::Engine engine = 
+            io.Open(configuration, adios2::Mode::ReadRandomAccess);
 
-        adios2::Variable<T> varPositions = io.InquireVariable<T>("positions");
-        adios2::Variable<T> varVelocities = io.InquireVariable<T>("velocities");
-        if (!varPositions || !varVelocities) {
-            throw std::runtime_error("Missing required variables in file: " + configuration);
+        // ---------- variables ----------
+        auto varPositions = io.InquireVariable<T>("positions");
+        auto varVelocities = io.InquireVariable<T>("velocities");
+        auto varHandedness = io.InquireVariable<int8_t>("handedness");
+        auto varAlignment = io.InquireVariable<int8_t>("alignment");
+
+        if (!varPositions || !varVelocities || !varHandedness || !varAlignment) {
+            throw std::runtime_error("Missing particle-state variables in file: " + configuration);
         }
-
+        // ---------- last saved state ----------
         size_t totalSteps = varPositions.Steps();
         size_t lastStep = totalSteps - 1;
-        // std::cout << "Reading step " << lastStep + 1 << " (final step) of " << totalSteps << " steps." << std::endl;
-        
+
         varPositions.SetStepSelection({lastStep, 1});
         varVelocities.SetStepSelection({lastStep, 1});
+        varHandedness.SetStepSelection({lastStep, 1});
+        varAlignment.SetStepSelection({lastStep, 1});
 
-        std::vector<size_t> shape = varPositions.Shape();
+        // ---------- allocate storage ----------
+        const std::vector<size_t> shape = varPositions.Shape();
         const size_t num_particles = shape[0];
         const size_t dimensions = shape[1];
 
         std::vector<T> positions(num_particles * dimensions);
         std::vector<T> velocities(num_particles * dimensions);
+        std::vector<int8_t> handedness(num_particles * dimensions);
+        std::vector<int8_t> alignment(num_particles * dimensions);
 
         engine.Get(varPositions, positions.data(), adios2::Mode::Sync);
         engine.Get(varVelocities, velocities.data(), adios2::Mode::Sync);
+        engine.Get(varHandedness, handedness.data(), adios2::Mode::Sync);
+        engine.Get(varAlignment, alignment.data(), adios2::Mode::Sync);
         engine.Close();
+
+        // ---------- reconstruct particles ----------
+        constexpr int D = degreesOfFreedom<TParticle>();
 
         for (size_t i = 0; i < num_particles; ++i) {
             TParticle p;
@@ -303,11 +317,17 @@ std::vector<TParticle> initialParticles(const unsigned int& particlesNum,
                 qDot[a] = velocities[i * dimensions + a];
             }
 
-            if (q[0] <= L && q[0] >= 0. && q[1] <= L && q[1] >= 0.) {
-                setGeneralizedPositions(p, q);
-                setGeneralizedVelocities(p, qDot);
-                particles.push_back(p);
+            // Ignore padded/invalid particles
+            if (q[0] < 0 || q[0] > L || q[1] < 0 || q[1] > L) {
+                continue;
             }
+            setGeneralizedPositions(p, q);
+            setGeneralizedVelocities(p, qDot);
+
+            p.handedness = handedness[i];
+            p.alignment  = alignment[i];
+
+            particles.push_back(p);
         }
     }
 
