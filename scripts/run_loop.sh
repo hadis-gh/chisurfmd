@@ -46,6 +46,7 @@ run_simulation() {
         --seed "$seed"
         --areaL "$areaL"
         --particleRadius "$particleRadius"
+        --fixRadius "$fixRadius"
         --thermoInterval "$thermoInterval"
         --writeStateInterval "$writeStateInterval"
         --writeEnergyInterval "$writeEnergyInterval"
