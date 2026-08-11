@@ -8,6 +8,7 @@
 #include <stdexcept>
 #include <unordered_set>
 #include <queue>
+#include <algorithm>
 #include <adios2.h>
 
 #include "Vec.h"
@@ -249,8 +250,7 @@ std::vector<TParticle> initialParticles(const unsigned int& particlesNum,
                                         const std::vector<Species<T>>& allSpecies, 
                                         const int& speciesNum, 
                                         const T& L, std::mt19937& gen, 
-                                        const std::string& configuration,
-                                        const std::string& particlesType) {
+                                        const std::string& configuration) {
     std::vector<TParticle> particles;
 
     if (configuration == "RANDOM") {
@@ -314,18 +314,6 @@ std::vector<TParticle> initialParticles(const unsigned int& particlesNum,
     // Set species for all particles
     for (auto& p : particles) {
         p.species = speciesNum;
-        
-        std::uniform_int_distribution<int8_t> dis(0, 1);
-        if (particlesType == "OP") {
-            p.handedness = dis(gen) * 2 - 1;
-        } else if (particlesType == "EA") {
-            p.alignment = dis(gen) * 2 - 1;
-        } else if (particlesType == "EP" || particlesType == "OA") {
-            p.handedness = 1;
-            p.alignment = 1;
-        } else {
-            throw std::runtime_error("Wrong Particles Type: " + particlesType);
-        }
     }
 
     return particles;
@@ -350,6 +338,51 @@ std::vector<ParticleOriented<T>> initialParticlesOriented(const unsigned int& pa
     }
     
     return particlesOriented;
+}
+
+// =============================== Assign initial particle state  ===============================
+
+template<typename Particle>
+void assignParticleState(std::vector<Particle>& particles,
+                        const std::string& chirality,
+                        const std::string& alignment,
+                        std::mt19937& gen) {
+    const size_t N = particles.size();
+
+    std::vector<int8_t> handedness(N, +1);
+    std::vector<int8_t> directions(N, +1);
+
+    // ---------- handedness ----------
+    if (chirality == "racemic") {
+        for (size_t i = N / 2; i < N; ++i)
+            handedness[i] = -1;
+
+        std::shuffle(handedness.begin(), handedness.end(), gen);
+    }
+    else if (chirality != "homochiral") {
+        throw std::runtime_error(
+            "chirality must be 'homochiral' or 'racemic'"
+        );
+    }
+
+    // ---------- alignment ----------
+    if (alignment == "apolar") {
+        for (size_t i = N / 2; i < N; ++i)
+            directions[i] = -1;
+
+        std::shuffle(directions.begin(), directions.end(), gen);
+    }
+    else if (alignment != "polar") {
+        throw std::runtime_error(
+            "alignment must be 'polar' or 'apolar'"
+        );
+    }
+
+    // ---------- assign ----------
+    for (size_t i = 0; i < N; ++i) {
+        particles[i].handedness = handedness[i];
+        particles[i].alignment  = directions[i];
+    }
 }
 
 // ================================== Deposite Particles RANDOM ==================================
