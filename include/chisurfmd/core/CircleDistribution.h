@@ -340,7 +340,71 @@ std::vector<ParticleOriented<T>> initialParticlesOriented(const unsigned int& pa
     return particlesOriented;
 }
 
-// =============================== Assign initial particle state  ===============================
+// ========================== Assign state to single-new particle ==========================
+
+template<typename Particle>
+void assignNewParticleState(Particle& particle,
+                            const std::vector<Particle>& particles,
+                            const std::string& chirality,
+                            const std::string& alignment,
+                            std::mt19937& gen) {
+    std::bernoulli_distribution coin(0.5);
+
+    // ---------- handedness ----------
+    if (chirality == "homochiral") {
+        particle.handedness = +1;
+    }
+    else if (chirality == "racemic") {
+
+        size_t positive = 0;
+        size_t negative = 0;
+
+        for (const auto& p : particles) {
+            if (p.handedness == +1) ++positive;
+            else if (p.handedness == -1) ++negative;
+        }
+
+        if (positive < negative)
+            particle.handedness = +1;
+        else if (negative < positive)
+            particle.handedness = -1;
+        else
+            particle.handedness = coin(gen) ? +1 : -1;
+    }
+    else {
+        throw std::runtime_error(
+            "chirality must be 'homochiral' or 'racemic'"
+        );
+    }
+
+    // ---------- alignment ----------
+    if (alignment == "polar") {
+        particle.alignment = +1;
+    }
+    else if (alignment == "apolar") {
+
+        size_t positive = 0;
+        size_t negative = 0;
+
+        for (const auto& p : particles) {
+            if (p.alignment == +1) ++positive;
+            else if (p.alignment == -1) ++negative;
+        }
+
+        if (positive < negative)
+            particle.alignment = +1;
+        else if (negative < positive)
+            particle.alignment = -1;
+        else
+            particle.alignment = coin(gen) ? +1 : -1;
+    }
+    else {
+        throw std::runtime_error(
+            "alignment must be 'polar' or 'apolar'"
+        );
+    }
+}
+// ===============================  Assign state to existed particles  ===============================
 
 template<typename Particle>
 void assignParticleState(std::vector<Particle>& particles,

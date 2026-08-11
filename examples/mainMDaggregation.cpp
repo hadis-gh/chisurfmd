@@ -272,7 +272,7 @@ int main(int argc, char* argv[]) {
         ParticleT newParticle(speciesInd, newPos);
 
         assignPhiIfOriented(newParticle, gen);
-        assignParticleState(newParticle, chirality, alignment, gen);
+        assignNewParticleState(newParticle, particles, chirality, alignment, gen);
 
         particles.push_back(newParticle);
         std::cout << "\rNew particle added! System size: " << particles.size() << std::flush;
