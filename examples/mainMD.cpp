@@ -153,8 +153,11 @@ int main(int argc, char* argv[]) {
     auto alignment = vm["alignment"].as<std::string>();
 
     auto particles = initialParticles<ParticleT>(particlesNum, allSpecies, speciesInd, areaL, gen, particlesInit);
-    assignParticleState(particles, chirality, alignment, gen);
-
+    
+    if (!particlesInit.ends_with(".bp")) {
+        assignParticleState(particles, chirality, alignment, gen);
+    }
+    
     particlesNum = particles.size();
 
     auto force = Potential::force(vm);
