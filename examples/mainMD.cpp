@@ -93,7 +93,8 @@ int main(int argc, char* argv[]) {
         ("thermoInterval",        po::value<Real>()->default_value(.1),                       "interval after which to apply thermostat")
         ("temperature,T",         po::value<Real>()->default_value(.3),                       "temperature")
         ("particlesInit",         po::value<std::string>()->default_value("RANDOM"),          "particle initialization")
-        ("particlesType",         po::value<std::string>()->default_value("EP"),              "particles type handedness & orientation")
+        ("chirality",             po::value<std::string>()->default_value("homochiral"),      "initial chirality: homochiral or racemic")
+        ("alignment",             po::value<std::string>()->default_value("polar"),           "initial alignment: polar or apolar")        
         ("mass",                  po::value<Real>()->default_value(1.0),                      "mass of particles")       
         ("momentI",               po::value<Real>()->default_value(1.0),                      "moment of inersia")
         ("particleRadius",        po::value<Real>()->default_value(.5),                       "particle radius")
@@ -144,11 +145,16 @@ int main(int argc, char* argv[]) {
     Species<Real> species2 {2.0 * mass, momentI, 0.5 * radius};
     std::vector<Species<Real>> allSpecies {species1, species2};
 
-    auto particlesInit = vm["particlesInit"].as<std::string>(); 
-    auto particlesType = vm["particlesType"].as<std::string>(); 
-
     std::mt19937 gen(vm["seed"].as<unsigned int>());
-    auto particles = initialParticles<ParticleT>(particlesNum, allSpecies, speciesInd, areaL, gen, particlesInit, particlesType);
+
+    auto particlesInit = vm["particlesInit"].as<std::string>(); 
+
+    auto chirality = vm["chirality"].as<std::string>();
+    auto alignment = vm["alignment"].as<std::string>();
+
+    auto particles = initialParticles<ParticleT>(particlesNum, allSpecies, speciesInd, areaL, gen, particlesInit);
+    assignParticleState(particles, chirality, alignment, gen);
+
     particlesNum = particles.size();
 
     auto force = Potential::force(vm);
@@ -206,7 +212,8 @@ int main(int argc, char* argv[]) {
     adios2::Variable<Real> varRealTemperature = io.DefineVariable<Real>("real temperature", {1, 3}, {0, 0}, {1, 3});
     adios2::Variable<Real> varOrientationOrder = io.DefineVariable<Real>("orientation order");
 
-    io.DefineAttribute<std::string>("particlesType", particlesType);
+    io.DefineAttribute<std::string>("chirality", chirality);
+    io.DefineAttribute<std::string>("alignment", alignment);
     io.DefineAttribute<Real>("particlesNum", particlesNum);
     io.DefineAttribute<Real>("temperature", temperature);
     io.DefineAttribute<Real>("radius", radius);

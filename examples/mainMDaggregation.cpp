@@ -93,7 +93,8 @@ int main(int argc, char* argv[]) {
         ("thermoInterval",        po::value<Real>()->default_value(.05),                      "interval after which to apply thermostat")
         ("temperature,T",         po::value<Real>()->default_value(.3),                       "temperature")
         ("particlesInit",         po::value<std::string>()->default_value("TWO"),             "particle initialization")
-        ("particlesType",         po::value<std::string>()->default_value("RRUU"),            "particles type handedness & orientation")
+        ("chirality",             po::value<std::string>()->default_value("homochiral"),      "initial chirality: homochiral or racemic")
+        ("alignment",             po::value<std::string>()->default_value("polar"),           "initial alignment: polar or apolar")   
         ("mass",                  po::value<Real>()->default_value(1.0),                      "mass of particles")       
         ("momentI",               po::value<Real>()->default_value(1.0),                      "moment of inersia")
         ("particleRadius",       po::value<Real>()->default_value(.8),                        "particle radius")
@@ -142,7 +143,9 @@ int main(int argc, char* argv[]) {
     std::vector<Species<Real>> allSpecies {species1, species2};
 
     auto particlesInit = vm["particlesInit"].as<std::string>(); 
-    auto particlesType = vm["particlesType"].as<std::string>(); 
+    
+    auto chirality = vm["chirality"].as<std::string>();
+    auto alignment = vm["alignment"].as<std::string>();
 
     auto gen = [&]() {
         if (vm.count("seed") > 0) {
@@ -212,7 +215,8 @@ int main(int argc, char* argv[]) {
     adios2::Variable<Real> varRealTemperature = io.DefineVariable<Real>("real temperature", {1, 3}, {0, 0}, {1, 3});
     adios2::Variable<Real> varOrientationOrder = io.DefineVariable<Real>("orientation order");
 
-    io.DefineAttribute<std::string>("particlesType", particlesType);
+    io.DefineAttribute<std::string>("chirality", chirality);
+    io.DefineAttribute<std::string>("alignment", alignment);
     io.DefineAttribute<Real>("temperature", temperature);
     io.DefineAttribute<Real>("radius", radius);
     io.DefineAttribute<Real>("mass", mass);
@@ -255,7 +259,7 @@ int main(int argc, char* argv[]) {
 
 // ================================== Deposition Loop ==================================
     
-    auto particles = initialParticles<ParticleT>(particlesNum, allSpecies, speciesInd, areaL, gen, particlesInit, particlesType);
+    auto particles = initialParticles<ParticleT>(particlesNum, allSpecies, speciesInd, areaL, gen, particlesInit);
     
     auto prevSize = particles.size();
     std::cout << "\n _______ system initial size: " << particles.size() << " _______ \n" << std::endl;
@@ -268,6 +272,7 @@ int main(int argc, char* argv[]) {
         ParticleT newParticle(speciesInd, newPos);
 
         assignPhiIfOriented(newParticle, gen);
+        assignParticleState(newParticle, chirality, alignment, gen);
 
         particles.push_back(newParticle);
         std::cout << "\rNew particle added! System size: " << particles.size() << std::flush;
