@@ -182,6 +182,10 @@ public:
         return out;
     }
 
+    const std::vector<FourierTerm<T>>& terms() const {
+        return m_terms;
+    }
+
 private:
     std::vector<FourierTerm<T>> m_terms;
 };
@@ -210,9 +214,12 @@ public:
         if (m_isConstant) {
             return FourierValue<T>{m_constant, T{0}, T{0}};
         }
-
         return m_surface.evaluate(chi, psi);
     }
+
+    bool isConstant() const { return m_isConstant; }
+    T constantValue() const { return m_constant; }
+    const FourierSurface2D<T>& surface() const { return m_surface; }
 
 private:
     bool m_isConstant = true;
@@ -277,45 +284,121 @@ public:
           m_alpha(std::move(alpha)),
           m_cutoff(cutoff) {}
 
-    T cutoff() const {
-        return m_cutoff;
-    }
+    T cutoff() const { return m_cutoff; }
 
     ChiMorseValue<T> evaluate(T r, T chi, T psi) const {
         if (r <= T{0} || r > m_cutoff) {
-            return ChiMorseValue<T>{T{0}, T{0}, T{0}, T{0}};
+            return {T{0}, T{0}, T{0}, T{0}};
         }
 
-        const auto D = m_D.evaluate(chi, psi);
-        const auto re = m_re.evaluate(chi, psi);
-        const auto alpha = m_alpha.evaluate(chi, psi);
+        FourierValue<T> D, re, alpha;
+        evaluateAngular<true>(chi, psi, D, re, alpha);
 
         const auto morse = evaluateMorse(
-            r,
-            D.value,
-            re.value,
-            alpha.value
+            r, D.value, re.value, alpha.value
         );
 
-        ChiMorseValue<T> out;
-
-        out.energy = morse.energy;
-        out.dUdr = morse.dUdr;
-
-        out.dUdChi =
+        return {
+            morse.energy,
+            morse.dUdr,
             morse.dUdD * D.dChi
-            + morse.dUdRe * re.dChi
-            + morse.dUdAlpha * alpha.dChi;
-
-        out.dUdPsi =
+                + morse.dUdRe * re.dChi
+                + morse.dUdAlpha * alpha.dChi,
             morse.dUdD * D.dPsi
-            + morse.dUdRe * re.dPsi
-            + morse.dUdAlpha * alpha.dPsi;
+                + morse.dUdRe * re.dPsi
+                + morse.dUdAlpha * alpha.dPsi
+        };
+    }
 
-        return out;
+    // Energy-only path: avoids all angular derivatives.
+    T energy(T r, T chi, T psi) const {
+        if (r <= T{0} || r > m_cutoff) return T{0};
+
+        FourierValue<T> D, re, alpha;
+        evaluateAngular<false>(chi, psi, D, re, alpha);
+
+        const T q = r - re.value;
+        const T z = std::exp(-alpha.value * q);
+        return D.value * (z * z - T{2} * z);
     }
 
 private:
+    template<bool Derivatives>
+    void evaluateAngular(
+        T chi, T psi,
+        FourierValue<T>& D,
+        FourierValue<T>& re,
+        FourierValue<T>& alpha
+    ) const {
+        const auto init = [](const AngularParameter<T>& p) {
+            return p.isConstant()
+                ? FourierValue<T>{p.constantValue(), T{0}, T{0}}
+                : FourierValue<T>{T{0}, T{0}, T{0}};
+        };
+
+        D = init(m_D);
+        re = init(m_re);
+        alpha = init(m_alpha);
+
+        const FourierSurface2D<T>* basis = nullptr;
+        if (!m_D.isConstant()) basis = &m_D.surface();
+        else if (!m_re.isConstant()) basis = &m_re.surface();
+        else if (!m_alpha.isConstant()) basis = &m_alpha.surface();
+        else return;
+
+        const auto& terms = basis->terms();
+
+        for (std::size_t i = 0; i < terms.size(); ++i) {
+            const auto& b = terms[i];
+            const T m = static_cast<T>(b.m);
+            const T n = static_cast<T>(b.n);
+            const T mc = m * chi;
+            const T np = n * psi;
+
+            T chiVal, psiVal, dChiVal = T{0}, dPsiVal = T{0};
+
+            if constexpr (Derivatives) {
+                if (b.chiFunction == TrigType::Cos) {
+                    chiVal = std::cos(mc);
+                    dChiVal = -m * std::sin(mc);
+                } else {
+                    chiVal = std::sin(mc);
+                    dChiVal = m * std::cos(mc);
+                }
+
+                if (b.psiFunction == TrigType::Cos) {
+                    psiVal = std::cos(np);
+                    dPsiVal = -n * std::sin(np);
+                } else {
+                    psiVal = std::sin(np);
+                    dPsiVal = n * std::cos(np);
+                }
+            } else {
+                chiVal = (b.chiFunction == TrigType::Cos)
+                    ? std::cos(mc) : std::sin(mc);
+                psiVal = (b.psiFunction == TrigType::Cos)
+                    ? std::cos(np) : std::sin(np);
+            }
+
+            const auto add = [&](const AngularParameter<T>& p,
+                                 FourierValue<T>& out) {
+                if (p.isConstant()) return;
+
+                const T c = p.surface().terms()[i].coefficient;
+                out.value += c * chiVal * psiVal;
+
+                if constexpr (Derivatives) {
+                    out.dChi += c * dChiVal * psiVal;
+                    out.dPsi += c * chiVal * dPsiVal;
+                }
+            };
+
+            add(m_D, D);
+            add(m_re, re);
+            add(m_alpha, alpha);
+        }
+    }
+
     AngularParameter<T> m_D;
     AngularParameter<T> m_re;
     AngularParameter<T> m_alpha;
@@ -561,11 +644,7 @@ public:
         const T psi =
             c1.phi + h * c2.phi;
 
-        return model.evaluate(
-            r,
-            chi,
-            psi
-        ).energy;
+        return model.energy(r, chi, psi);
     }
 
 private:
