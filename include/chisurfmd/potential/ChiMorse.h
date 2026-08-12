@@ -46,6 +46,60 @@ InteractionType getInteractionType(
         ? InteractionType::OP
         : InteractionType::OA;
 }
+// ------------------------------------------------------------
+// Canonical pair ordering
+// 
+//   EA    : +alignment particle first
+//   OP/OA : +handedness particle first
+//   EP    : already exchange-symmetric in the fitted basis
+//
+// This assumes that any global handedness/alignment transformation
+// needed to construct the four reference tables has already been
+// absorbed into their angle convention.
+// ------------------------------------------------------------
+template<typename Particle>
+struct CanonicalPair {
+    const Particle* first;
+    const Particle* second;
+    InteractionType type;
+    bool swapped;
+};
+// ------------------------------------------------------------
+template<typename Particle>
+CanonicalPair<Particle> canonicalizePair(
+    const Particle& p1,
+    const Particle& p2
+) {
+    const auto type = getInteractionType(p1, p2);
+
+    bool swap = false;
+
+    switch (type) {
+        case InteractionType::EP:
+            break;
+
+        case InteractionType::EA:
+            // Same handedness, opposite alignment: +1 first.
+            swap = p1.alignment < p2.alignment;
+            break;
+
+        case InteractionType::OP:
+        case InteractionType::OA:
+            // Opposite handedness: +1 first.
+            swap = p1.handedness < p2.handedness;
+            break;
+    }
+
+    if (swap) {
+        return CanonicalPair<Particle>{
+            &p2, &p1, type, true
+        };
+    }
+
+    return CanonicalPair<Particle>{
+        &p1, &p2, type, false
+    };
+}
 
 // ============================================================
 // Fourier evaluator
@@ -485,24 +539,27 @@ public:
         const Vec<T, 2>&,
         const T r
     ) const {
-        const auto type =
-            getInteractionType(p1, p2);
+        const auto pair =
+            canonicalizePair(p1, p2);
 
         const auto& model =
-            m_models.get(type);
+            m_models.get(pair.type);
 
         if (r <= T{0} || r > model.cutoff()) {
             return T{0};
         }
 
         const T h =
-            m_models.getHandednessFactor(type);
+            m_models.getHandednessFactor(pair.type);
+
+        const auto& c1 = *pair.first;
+        const auto& c2 = *pair.second;
 
         const T chi =
-            p2.phi - h * p1.phi;
+            c2.phi - h * c1.phi;
 
         const T psi =
-            p1.phi + h * p2.phi;
+            c1.phi + h * c2.phi;
 
         return model.evaluate(
             r,
@@ -534,24 +591,27 @@ public:
         const Vec<T, 2>& dr,
         const T r
     ) const {
-        const auto type =
-            getInteractionType(p1, p2);
+        const auto pair =
+            canonicalizePair(p1, p2);
 
         const auto& model =
-            m_models.get(type);
+            m_models.get(pair.type);
 
         if (r <= T{0} || r > model.cutoff()) {
             return {{T{0}, T{0}, T{0}}};
         }
 
         const T h =
-            m_models.getHandednessFactor(type);
+            m_models.getHandednessFactor(pair.type);
+
+        const auto& c1 = *pair.first;
+        const auto& c2 = *pair.second;
 
         const T chi =
-            p2.phi - h * p1.phi;
+            c2.phi - h * c1.phi;
 
         const T psi =
-            p1.phi + h * p2.phi;
+            c1.phi + h * c2.phi;
 
         const auto value =
             model.evaluate(r, chi, psi);
@@ -559,15 +619,27 @@ public:
         const T radialForce =
             -value.dUdr;
 
+        // dr always points from the actual p1 to the actual p2,
+        // so these are the Cartesian force components on p2.
         const T fx =
             radialForce * dr[0] / r;
 
         const T fy =
             radialForce * dr[1] / r;
 
-        const T torqueOn2 =
+        // Torques of the canonical first and second particles.
+        const T torqueOnCanonical1 =
+            h * value.dUdChi
+            - value.dUdPsi;
+
+        const T torqueOnCanonical2 =
             -value.dUdChi
             -h * value.dUdPsi;
+
+        // The force functor must return the torque on the actual p2.
+        const T torqueOn2 = pair.swapped
+            ? torqueOnCanonical1
+            : torqueOnCanonical2;
 
         return {{fx, fy, torqueOn2}};
     }
