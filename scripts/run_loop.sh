@@ -44,7 +44,7 @@ run_simulation() {
         --particlesNum "$particleNum"
         --chirality "$chirality"
         --alignment "$alignment"
-        --seed "$seed"
+        --seed "$((seed + runIndex))"
         --areaL "$areaL"
         --particleRadius "$particleRadius"
         --fixRadius "$fixRadius"
