@@ -37,12 +37,13 @@ run_simulation() {
 
     local args=(
         --particlesInit "$particlesInit"
-        --particlesType "$particlesType"
         --temperature "$temperature"
         --time "$duration"
         --dt "$dt"
         --saveFile "$saveFile"
         --particlesNum "$particleNum"
+        --chirality "$chirality"
+        --alignment "$alignment"
         --seed "$seed"
         --areaL "$areaL"
         --particleRadius "$particleRadius"
