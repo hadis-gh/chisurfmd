@@ -261,6 +261,61 @@ std::vector<TParticle> initialParticles(const unsigned int& particlesNum,
         particles = distParticleDLA<TParticle>(particlesNum, L, allSpecies[speciesNum].radius, gen);
     } else if (configuration == "TWO") {
         particles = createTwoParticle<TParticle, T>(gen, L);
+    } else if (configuration == "ROW") {
+        const Real spacing = 1.33;
+        const Real rowSpacing = std::sqrt(3.0) / 2.0 * spacing;
+
+        const std::vector<int> rowCounts = {
+            8, 8, 8, 8, 8, 9
+        };
+
+        const Real y0 =
+            areaL / 2.0
+            - (rowCounts.size() - 1) * rowSpacing / 2.0;
+
+        size_t index = 0;
+
+        for (size_t row = 0; row < rowCounts.size(); ++row) {
+
+            const int count = rowCounts[row];
+
+            Real x0 =
+                areaL / 2.0
+                - (count - 1) * spacing / 2.0;
+
+            // Stagger neighboring rows.
+            if (row % 2 == 1) {
+                x0 += spacing / 2.0;
+            }
+
+            for (int col = 0;
+                 col < count && index < particles.size();
+                 ++col, ++index) {
+
+                auto& p = particles[index];
+
+                p.position[0] = x0 + col * spacing;
+                p.position[1] = y0 + row * rowSpacing;
+
+                // Alternating handedness by row.
+                p.handedness =
+                    (row % 2 == 0) ? +1 : -1;
+
+                // Polar alignment and identical orientation.
+                p.alignment = +1;
+                p.phi = 0.0;
+
+                // Start at rest.
+                p.velocity[0] = 0.0;
+                p.velocity[1] = 0.0;
+                p.omega = 0.0;
+            }
+        }
+    }
+    else if (!particlesInit.ends_with(".bp")) {
+        assignParticleState(particles, chirality, alignment, gen);
+    }
+
     }
     else if (configuration.ends_with(".bp")) {
 
