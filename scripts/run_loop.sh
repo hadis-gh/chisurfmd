@@ -130,12 +130,20 @@ run_simulation 0 "RANDOM" "$highTemperature" "$timeCooling"
 # ------------------------- Cooling -------------------------------
 
 for ((i = 1; i <= numCoolingRuns; i++)); do
+
     temperature=$(echo "$highTemperature - $i * $stepTemperature" | bc)
     prevOutput="${outputDir}/run_$((i - 1)).bp"
 
-    run_simulation "$i" "$prevOutput" "$temperature" "$timeCooling"
-done
+    duration="$timeCooling"
 
+    # Longer relaxation in the ordering window
+    if (( $(echo "$temperature >= $criticalLow && \
+                  $temperature <= $criticalHigh" | bc -l) )); then
+        duration="$timeCritical"
+    fi
+
+    run_simulation "$i" "$prevOutput" "$temperature" "$duration"
+done
 
 # ------------------------- Heating -------------------------------
 
