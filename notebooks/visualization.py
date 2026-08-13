@@ -1206,3 +1206,268 @@ def plot_parameter_heatmap(parameter_matrix, parameter_name, temperatures, depos
 
     plt.show()
 
+
+# ============================================================
+# ORDER PARAMETERS CALCULATED DIRECTLY FROM SAVED TRAJECTORY
+# ============================================================
+
+def calculate_orientation_order(positions):
+    """ Nematic orientational order directly from saved phi values.
+
+    S2 = | < exp(i 2 phi) > |
+    Returns one value for every saved trajectory frame.
+    """
+    phi = positions['data'][:, :, 2]
+
+    qx = np.mean(np.cos(2.0 * phi), axis=1)
+    qy = np.mean(np.sin(2.0 * phi), axis=1)
+
+    return np.sqrt(qx**2 + qy**2)
+
+# ------------------------------------------------------------
+
+def calculate_chiral_row_order(positions, handedness, area=20.0, spacing_range=(0.9, 1.6), frame_skip=10,
+):
+    """ Handedness-weighted stripe/row order.
+
+    For every selected frame, search reciprocal-space directions
+    corresponding to the requested row-spacing range and retain
+    the strongest handedness modulation.
+
+    Returns
+    -------
+    frame_indices : ndarray
+    row_order     : ndarray
+        0 -> weak/no row order
+        1 -> strong ideal modulation
+    row_spacing   : ndarray
+        Approximate spacing between neighboring opposite-handed rows.
+    row_angle     : ndarray
+        Direction of the rows, in radians.
+    """
+
+    pos = positions['data']
+    hand = handedness['data']
+
+    # --------------------------------------------------------
+    # Allowed reciprocal-space wavevectors
+    #
+    # Alternating rows separated by d change handedness every d,
+    # therefore their modulation wavelength is 2d:
+    #
+    #       |k| = pi / d
+    # --------------------------------------------------------
+
+    d_min, d_max = spacing_range
+
+    k_min = np.pi / d_max
+    k_max = np.pi / d_min
+
+    # Periodic-box wavevectors: k = 2 pi / L * (nx, ny)
+    n_max = int(np.ceil(k_max * area / (2.0 * np.pi)))
+
+    k_vectors = []
+
+    for nx in range(-n_max, n_max + 1):
+        for ny in range(-n_max, n_max + 1):
+
+            if nx == 0 and ny == 0:
+                continue
+
+            k = (
+                2.0 * np.pi / area
+                * np.array([nx, ny], dtype=float)
+            )
+
+            kmag = np.linalg.norm(k)
+
+            if k_min <= kmag <= k_max:
+                k_vectors.append(k)
+
+    k_vectors = np.asarray(k_vectors)
+
+    if len(k_vectors) == 0:
+        raise ValueError(
+            "No wavevectors found for the requested spacing_range."
+        )
+
+    # --------------------------------------------------------
+    # Calculate row order through trajectory
+    # --------------------------------------------------------
+
+    frame_indices = np.arange(
+        0,
+        pos.shape[0],
+        frame_skip
+    )
+
+    row_order = np.zeros(len(frame_indices))
+    row_spacing = np.zeros(len(frame_indices))
+    row_angle = np.zeros(len(frame_indices))
+
+    for out_i, frame in enumerate(frame_indices):
+
+        xy = pos[frame, :, :2]
+        h = hand[frame].astype(float)
+
+        # phases: particles x candidate wavevectors
+        phases = xy @ k_vectors.T
+
+        amplitude = np.sum(
+            h[:, None] * np.exp(1j * phases),
+            axis=0
+        ) / len(h)
+
+        power = np.abs(amplitude)**2
+
+        best = np.argmax(power)
+
+        best_k = k_vectors[best]
+        k_mag = np.linalg.norm(best_k)
+
+        row_order[out_i] = power[best]
+
+        # Opposite-handed neighboring rows are half a wavelength apart
+        row_spacing[out_i] = np.pi / k_mag
+
+        # k is perpendicular to the rows
+        row_angle[out_i] = (
+            np.arctan2(best_k[1], best_k[0])
+            + np.pi / 2.0
+        ) % np.pi
+
+    return (
+        frame_indices,
+        row_order,
+        row_spacing,
+        row_angle
+    )
+
+# ============================================================
+# PLOT PYTHON-CALCULATED ORIENTATION ORDER
+# ============================================================
+
+def plot_orientation_order_python(
+    positions,
+    temperature_label=False,
+    linewidth=1.5,
+    fontsize=12,
+    figsize=(5, 3),
+    savepath=None,
+):
+    order = calculate_orientation_order(positions)
+
+    fig, ax = plt.subplots(figsize=figsize)
+
+    ax.plot(
+        order,
+        linewidth=linewidth
+    )
+
+    if temperature_label:
+        _apply_temp_xlabel(
+            ax,
+            len(order),
+            positions['temperature label'],
+            fontsize
+        )
+    else:
+        ax.set_xlabel("Steps", fontsize=fontsize)
+
+    ax.set_ylabel(r"Orientation order $S_2$", fontsize=fontsize)
+    ax.set_title("Orientation Order Parameter", fontsize=fontsize + 1)
+
+    ax.set_ylim(0, 1)
+
+    ax.tick_params(
+        axis='both',
+        labelsize=fontsize - 2
+    )
+
+    apply_style(
+        ax,
+        spine=False,
+        grid=True,
+        hide_top_right=False
+    )
+
+    plt.tight_layout()
+
+    if savepath:
+        fig.savefig(
+            savepath,
+            bbox_inches='tight'
+        )
+
+    plt.show()
+
+    return order, fig, ax
+
+# ============================================================
+# PLOT CHIRAL ROW ORDER
+# ============================================================
+
+def plot_chiral_row_order(positions, handedness, area=20.0,
+    spacing_range=(0.9, 1.6), frame_skip=1, temperature_label=False,
+    linewidth=1.5, fontsize=12, figsize=(5, 3), savepath=None):
+
+    (frame_indices, row_order, row_spacing, row_angle) = calculate_chiral_row_order(
+        positions,
+        handedness,
+        area=area,
+        spacing_range=spacing_range,
+        frame_skip=frame_skip
+    )
+
+    fig, ax = plt.subplots(figsize=figsize)
+
+    ax.plot(
+        frame_indices,
+        row_order,
+        linewidth=linewidth
+    )
+
+    if temperature_label:
+        _apply_temp_xlabel(
+            ax,
+            positions['data'].shape[0],
+            positions['temperature label'],
+            fontsize
+        )
+    else:
+        ax.set_xlabel("Steps", fontsize=fontsize)
+
+    ax.set_ylabel("Chiral Row Order", fontsize=fontsize)
+    ax.set_title("Alternating-Handedness Row Order",
+                 fontsize=fontsize + 1)
+
+    ax.set_ylim(0, 1)
+
+    ax.tick_params(
+        axis='both',
+        labelsize=fontsize - 2
+    )
+
+    apply_style(
+        ax,
+        spine=False,
+        grid=True,
+        hide_top_right=False
+    )
+
+    plt.tight_layout()
+
+    if savepath:
+        fig.savefig(
+            savepath,
+            bbox_inches='tight'
+        )
+
+    plt.show()
+
+    return {
+        'frame index': frame_indices,
+        'order': row_order,
+        'spacing': row_spacing,
+        'angle': row_angle,
+    }, fig, ax
