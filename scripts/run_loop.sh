@@ -12,7 +12,13 @@ fi
 source "$config"
 
 numCoolingRuns=$(echo "scale=0; ($highTemperature - $lowTemperature) / $stepTemperature" | bc)
-numHeatingRuns=$(echo "scale=0; ($highTemperature - $lowTemperature) / $stepTemperature" | bc)
+
+if (( $(echo "$timeHeating > 0" | bc -l) )); then
+    numHeatingRuns="$numCoolingRuns"
+else
+    numHeatingRuns=0
+fi
+
 totalRuns=$((1 + numCoolingRuns + numHeatingRuns))
 
 outputDir=${outputDir:-"outputs"}
@@ -115,7 +121,6 @@ run_simulation() {
 
     echo "------------------------------------------------------------"
 }
-
 
 echo "======================================================="
 echo "    Temperature Loop Molecular Dynamics Simulation     "
