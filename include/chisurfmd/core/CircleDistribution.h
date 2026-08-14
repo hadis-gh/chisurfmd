@@ -262,15 +262,15 @@ std::vector<TParticle> initialParticles(const unsigned int& particlesNum,
     } else if (configuration == "TWO") {
         particles = createTwoParticle<TParticle, T>(gen, L);
     } else if (configuration == "ROW") {
-        const Real spacing = 1.33;
-        const Real rowSpacing = std::sqrt(3.0) / 2.0 * spacing;
+        const T spacing = 1.33;
+        const T rowSpacing = std::sqrt(3.0) / 2.0 * spacing;
 
         const std::vector<int> rowCounts = {
             8, 8, 8, 8, 8, 9
         };
 
-        const Real y0 =
-            areaL / 2.0
+        const T y0 =
+            L / 2.0
             - (rowCounts.size() - 1) * rowSpacing / 2.0;
 
         size_t index = 0;
@@ -279,8 +279,8 @@ std::vector<TParticle> initialParticles(const unsigned int& particlesNum,
 
             const int count = rowCounts[row];
 
-            Real x0 =
-                areaL / 2.0
+            T x0 =
+                L / 2.0
                 - (count - 1) * spacing / 2.0;
 
             // Stagger neighboring rows.
@@ -311,11 +311,6 @@ std::vector<TParticle> initialParticles(const unsigned int& particlesNum,
                 p.omega = 0.0;
             }
         }
-    }
-    else if (!particlesInit.ends_with(".bp")) {
-        assignParticleState(particles, chirality, alignment, gen);
-    }
-
     }
     else if (configuration.ends_with(".bp")) {
 
