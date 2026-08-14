@@ -1087,75 +1087,94 @@ def plot_trajectory_temperature(positions, target_temperature, cooling=True, ste
     plt.tight_layout()
     plt.show()
 
+# ---------------------------------------------------------
+#  plot snapshot of the specific temperature
+# ---------------------------------------------------------
 
-def plot_snapshot_temperature(positions, handedness, 
-                              target_temperature, cooling=True,
-                              patchNums=None, line_length=0.45, 
-                              area=20, radius=True, particle_size=110, 
-                              color_palette='hsv'):
+def plot_snapshot_temperature(
+        positions, handedness, alignment,
+        target_temperature, cooling=True,
+        patchNums=None, line_length=0.45,
+        area=20, radius=True, particle_size=110,
+        color_palette='hsv'):
+
     positions_data = positions['data']
     handedness_data = handedness['data']
-    shot = target_temperature_index(positions, target_temperature, cooling)
+    alignment_data = alignment['data']
+
+    shot = target_temperature_index(
+        positions, target_temperature, cooling
+    )
 
     fig, ax = plt.subplots(figsize=(6, 4))
-    
+
     x = positions_data[shot, :, 0]
     y = positions_data[shot, :, 1]
-    phi = positions_data[shot, :, 2]  # orientation of each particle
-    h = handedness_data[shot, :]
+    phi = positions_data[shot, :, 2]
 
-    # Define colors based on handedness
-    colors = ['mistyrose' if val == 1 else 'lightsteelblue' for val in h]
-    
-    # Plot main particles
+    h = handedness_data[shot, :]
+    d = alignment_data[shot, :]
+
+    # Color according to handedness + alignment
+    # ---------------------------------------------------------
+    colors = np.empty(len(h), dtype=object)
+
+    colors[(h == 1) & (d == 1)] = '#DF8A90'
+    colors[(h == 1) & (d == -1)] = '#F9BEC2'
+    colors[(h == -1) & (d == 1)] = '#8BAECF'
+    colors[(h == -1) & (d == -1)] = '#BFD5EA'
+
+    # Fallback in case h or d contains unexpected values
+    valid = (
+        ((h == 1) | (h == -1)) &
+        ((d == 1) | (d == -1))
+    )
+    colors[~valid] = '#A00000'
+
+    # Plot particles
+    # ---------------------------------------------------------
     ax.scatter(
-        x, y, 
+        x,
+        y,
         s=particle_size,
         edgecolors='black',
-        facecolor=colors,
+        facecolors=colors,
         alpha=0.8
     )
 
-    if radius:
-        if patchNums is not None:
-            for a in range(patchNums):
-                phi_a = phi + 2*np.pi * a / patchNums
-                x_end = x + line_length * np.cos(phi_a)
-                y_end = y + line_length * np.sin(phi_a)
+    # Plot particle patches / radii
+    # ---------------------------------------------------------
+    if radius and patchNums is not None:
 
-                for i in range(len(x)):
-                    ax.plot([x[i], x_end[i]], [y[i], y_end[i]], color='black', linewidth=0.8, alpha=0.8)
-    # if radius:
-    #     if patchNums is not None:
-    #         phi = phi% (2*np.pi /patchNums)
-    #         x_end = x + line_length * np.cos(phi)
-    #         y_end = y + line_length * np.sin(phi)
-    #         for i in range(len(x)):
-    #             ax.plot([x[i], x_end[i]], [y[i], y_end[i]], color='black', linewidth=0.8, alpha=0.8)
-                    
-    else:
-        # Fallback: color by orientation
-        scatter = ax.scatter(
-            x, y,
-            c=phi,
-            s=60,
-            alpha=0.8,
-            vmin=-np.pi,
-            vmax=np.pi,
-            cmap=color_palette
-        )
-        cbar = plt.colorbar(scatter, ax=ax)
-        cbar.set_label('φ in radian')
+        for a in range(patchNums):
 
+            phi_a = phi + 2 * np.pi * a / patchNums
+
+            x_end = x + line_length * np.cos(phi_a)
+            y_end = y + line_length * np.sin(phi_a)
+
+            for i in range(len(x)):
+                ax.plot(
+                    [x[i], x_end[i]],
+                    [y[i], y_end[i]],
+                    color='black',
+                    linewidth=0.8,
+                    alpha=0.8
+                )
+
+    # Plot formatting
+    # ---------------------------------------------------------
     ax.set_xlabel('X Position')
     ax.set_ylabel('Y Position')
     ax.set_title(f'Configuration (T={target_temperature})')
-    
+
     ax.set_xlim(0, area)
     ax.set_ylim(0, area)
     ax.set_aspect('equal', adjustable='box')
+
     ax.grid(linestyle='--', alpha=0.5)
     ax.set_axisbelow(True)
+
     plt.tight_layout()
     plt.show()
     
