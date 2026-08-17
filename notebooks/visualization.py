@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from pathlib import Path
 from matplotlib.ticker import AutoMinorLocator
 import data_extraction
 import system_analysis
@@ -1095,8 +1096,8 @@ def plot_snapshot_temperature(
         positions, handedness, alignment,
         target_temperature, cooling=True,
         patchNums=None, line_length=0.45,
-        area=20, radius=True, particle_size=110,
-        color_palette='hsv'):
+        area=20, radius=True, particle_size=110, show_center=True,
+        color_palette='hsv', save_name = None):
 
     positions_data = positions['data']
     handedness_data = handedness['data']
@@ -1106,7 +1107,7 @@ def plot_snapshot_temperature(
         positions, target_temperature, cooling
     )
 
-    fig, ax = plt.subplots(figsize=(6, 4))
+    fig, ax = plt.subplots(figsize=(6, 4), dpi=150)
 
     x = positions_data[shot, :, 0]
     y = positions_data[shot, :, 1]
@@ -1170,12 +1171,23 @@ def plot_snapshot_temperature(
 
     ax.set_xlim(0, area)
     ax.set_ylim(0, area)
+    if show_center:
+        margin = area //10
+        ax.set_xlim(x.min()-margin, x.max()+margin)
+        ax.set_ylim(y.min()-margin, y.max()+margin)
+
+    ax.tick_params(axis='both', which='both', direction='in')
     ax.set_aspect('equal', adjustable='box')
 
     ax.grid(linestyle='--', alpha=0.5)
     ax.set_axisbelow(True)
 
-    plt.tight_layout()
+    fig.tight_layout()
+
+    if save_name is not None:
+        plot_name = f"{save_name}_{target_temperature}.pdf"
+        plt.savefig(plot_name, bbox_inches='tight')
+
     plt.show()
     
 ############## histogram of φ and Δφ at specific Temperature ##############
@@ -1460,11 +1472,12 @@ def plot_chiral_row_order(positions, handedness, area=20.0,
     ax.set_title("Alternating-Handedness Row Order",
                  fontsize=fontsize + 1)
 
-    ax.set_ylim(0, 1)
+    # ax.set_ylim(0, 1)
 
     ax.tick_params(
         axis='both',
-        labelsize=fontsize - 2
+        labelsize=fontsize - 2,
+        direction='in'
     )
 
     apply_style(
