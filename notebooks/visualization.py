@@ -1139,6 +1139,7 @@ def plot_snapshot_temperature(
         y,
         s=particle_size,
         edgecolors='black',
+        linewidths=.6,
         facecolors=colors,
         alpha=0.8
     )
@@ -1159,7 +1160,7 @@ def plot_snapshot_temperature(
                     [x[i], x_end[i]],
                     [y[i], y_end[i]],
                     color='black',
-                    linewidth=0.8,
+                    linewidth=0.5,
                     alpha=0.8
                 )
 
