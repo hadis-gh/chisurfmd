@@ -502,7 +502,7 @@ def plot_energies(
     fontsize=12,
     figsize=(5, 3),
     
-    savepath=None,
+    savename=None,
 ):
     if colors is None:
         colors = _PUB_COLORS
@@ -554,8 +554,8 @@ def plot_energies(
     apply_style(ax, spine=False, grid=True, hide_top_right=False)
     plt.tight_layout()
 
-    if savepath:
-        fig.savefig(savepath, bbox_inches='tight')
+    if savename:
+        fig.savefig(f'{savename}.pdf', bbox_inches='tight')
 
     plt.show()
 
