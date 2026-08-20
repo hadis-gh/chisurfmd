@@ -327,8 +327,10 @@ std::vector<TParticle> initialParticles(const unsigned int& particlesNum,
         auto varVelocities = io.InquireVariable<T>("velocities");
         auto varHandedness = io.InquireVariable<int8_t>("handedness");
         auto varAlignment = io.InquireVariable<int8_t>("alignment");
+        auto varHandednessChar = io.InquireVariable<char>("handedness");
+        auto varAlignmentChar = io.InquireVariable<char>("alignment");
 
-        if (!varPositions || !varVelocities || !varHandedness || !varAlignment) {
+        if (!varPositions || !varVelocities || ((!varHandedness || !varAlignment) && (!varHandednessChar || !varAlignmentChar))) {
             throw std::runtime_error("Missing particle-state variables in file: " + configuration);
         }
         // ---------- last saved state ----------
@@ -337,8 +339,13 @@ std::vector<TParticle> initialParticles(const unsigned int& particlesNum,
 
         varPositions.SetStepSelection({lastStep, 1});
         varVelocities.SetStepSelection({lastStep, 1});
-        varHandedness.SetStepSelection({lastStep, 1});
-        varAlignment.SetStepSelection({lastStep, 1});
+        if (varHandedness && varAlignment) {
+            varHandedness.SetStepSelection({lastStep, 1});
+            varAlignment.SetStepSelection({lastStep, 1});
+        } else {
+            varHandednessChar.SetStepSelection({lastStep, 1});
+            varAlignmentChar.SetStepSelection({lastStep, 1});
+        }
 
         // ---------- allocate storage ----------
         const std::vector<size_t> shape = varPositions.Shape();
@@ -352,8 +359,23 @@ std::vector<TParticle> initialParticles(const unsigned int& particlesNum,
 
         engine.Get(varPositions, positions.data(), adios2::Mode::Sync);
         engine.Get(varVelocities, velocities.data(), adios2::Mode::Sync);
-        engine.Get(varHandedness, handedness.data(), adios2::Mode::Sync);
-        engine.Get(varAlignment, alignment.data(), adios2::Mode::Sync);
+
+        if (varHandedness && varAlignment) {
+            engine.Get(varHandedness, handedness.data(), adios2::Mode::Sync);
+            engine.Get(varAlignment, alignment.data(), adios2::Mode::Sync);
+        } else {
+            std::vector<char> handednessChar(num_particles);
+            std::vector<char> alignmentChar(num_particles);
+
+            engine.Get(varHandednessChar, handednessChar.data(), adios2::Mode::Sync);
+            engine.Get(varAlignmentChar, alignmentChar.data(), adios2::Mode::Sync);
+
+            for (size_t i = 0; i < num_particles; ++i) {
+                handedness[i] = static_cast<int8_t>(handednessChar[i]);
+                alignment[i] = static_cast<int8_t>(alignmentChar[i]);
+            }
+        }
+
         engine.Close();
 
         // ---------- reconstruct particles ----------
