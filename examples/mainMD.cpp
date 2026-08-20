@@ -141,6 +141,23 @@ int main(int argc, char* argv[]) {
     const Real boxPBC = vm["areaL"].as<Real>();
     const Real fixRadius = vm["fixRadius"].as<Real>();
 
+    std::string method = vm["integration"].as<std::string>();
+    auto integrationMethod = VelocityVerletStep<ParticleT, Potential::ForceType>;
+
+    if      (method == "Euler")  integrationMethod = EulerStep<ParticleT, Potential::ForceType>;
+    else if (method == "SEuler") integrationMethod = EulerSymplecticStep<ParticleT, Potential::ForceType>;
+    else if (method != "VelocityVerlet") { std::cout << method << " integration wrong!"; return 1; }
+
+    const std::vector<Real> neighborDistances = vm["neighborDistances"].as<std::vector<Real>>();
+    const Real neighborCutoff = neighborDistances[0];
+
+    const bool enableCapVelocity = vm["enableCapVelocity"].as<bool>();
+    const std::vector<Real> maxVelocity = vm["maxVelocity"].as<std::vector<Real>>();
+
+    const Real relaxationTime = vm["relaxationTime"].as<Real>();
+    const Real collisionFrequency = vm["collisionFr"].as<Real>();
+    const Real temperature = vm["temperature"].as<Real>();
+
     int speciesInd = 0;
     Species<Real> species1 {mass, momentI, radius};
     Species<Real> species2 {2.0 * mass, momentI, 0.5 * radius};
@@ -166,23 +183,6 @@ int main(int argc, char* argv[]) {
 
     auto force = Potential::force(vm);
     auto potential = Potential::potential(vm);
-
-    std::string method = vm["integration"].as<std::string>();
-    auto integrationMethod = VelocityVerletStep<ParticleT, Potential::ForceType>;
-
-    if      (method == "Euler")  integrationMethod = EulerStep<ParticleT, Potential::ForceType>;
-    else if (method == "SEuler") integrationMethod = EulerSymplecticStep<ParticleT, Potential::ForceType>;
-    else if (method != "VelocityVerlet") { std::cout << method << " integration wrong!"; return 1; }
-
-    const std::vector<Real> neighborDistances = vm["neighborDistances"].as<std::vector<Real>>();
-    const Real neighborCutoff = neighborDistances[0];
-
-    const bool enableCapVelocity = vm["enableCapVelocity"].as<bool>();
-    const std::vector<Real> maxVelocity = vm["maxVelocity"].as<std::vector<Real>>();
-
-    const Real relaxationTime = vm["relaxationTime"].as<Real>();
-    const Real collisionFrequency = vm["collisionFr"].as<Real>();
-    const Real temperature = vm["temperature"].as<Real>();
 
     auto thermostat = [&]() {
         if constexpr (CHISURFMD_THERMOSTAT == ThermostatID::None)
@@ -296,7 +296,7 @@ int main(int argc, char* argv[]) {
             engine.Put(varVelocities, velocitiesVec.data());
             writeStateStep = step + writeStateIntervalSteps;
         }
-        if (step == writeEnergyStep) {
+        if (step == writeStateStep || step == nsteps) {
             auto kineticE = calKineticEnergy(particles, allSpecies);
             auto potentialE = calPotentialEnergy(particles, allSpecies, boxPBC, potential);
 
