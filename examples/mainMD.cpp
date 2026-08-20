@@ -271,13 +271,13 @@ int main(int argc, char* argv[]) {
         integrate(particles, allSpecies, dt, (nextEventStep - step) * dt, boxPBC, force, integrationMethod);
 
         step = nextEventStep;
+        Real currentTime = step * dt;
 
         engine.Put(varT, currentTime);
 
         if (enableCapVelocity) {
             capVelocity(particles, maxVelocity);
-        }
-        if (step == writeStateStep) {
+        } if (step == writeStateStep || step == nsteps) {
             for (size_t j = 0; j < particles.size(); ++j) {
                 const auto& p = particles[j];
                 handednessVec[j] = p.handedness;
@@ -296,7 +296,7 @@ int main(int argc, char* argv[]) {
             engine.Put(varVelocities, velocitiesVec.data());
             writeStateStep = step + writeStateIntervalSteps;
         }
-        if (step == writeStateStep || step == nsteps) {
+        if (step == writeEnergyStep || step == nsteps) {
             auto kineticE = calKineticEnergy(particles, allSpecies);
             auto potentialE = calPotentialEnergy(particles, allSpecies, boxPBC, potential);
 
