@@ -11,12 +11,21 @@ if [ ! -f "$config" ]; then
 fi
 source "$config"
 
-numCoolingRuns=$(echo "scale=0; ($highTemperature - $lowTemperature) / $stepTemperature" | bc)
+numRuns=$(echo "scale=0; ($highTemperature - $lowTemperature) / $stepTemperature" | bc)
+
+initialTemperature=$highTemperature
 
 if (( $(echo "$timeHeating > 0" | bc -l) )); then
-    numHeatingRuns="$numCoolingRuns"
+    numHeatingRuns="$numRuns"
 else
     numHeatingRuns=0
+fi
+
+if (( $(echo "$timeCooling > 0" | bc -l) )); then
+    numCoolingRuns="$numRuns"
+else
+    numCoolingRuns=0
+    initialTemperature=$lowTemperature
 fi
 
 totalRuns=$((1 + numCoolingRuns + numHeatingRuns))
@@ -129,8 +138,7 @@ echo "======================================================="
 
 # ------------------ Initial high-temperature run -----------------
 
-run_simulation 0 "RANDOM" "$highTemperature" "$timeCooling"
-
+run_simulation 0 "$particlesBegin" "$initialTemperature" "$initTime"
 
 # ------------------------- Cooling -------------------------------
 
