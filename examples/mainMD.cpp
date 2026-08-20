@@ -267,7 +267,6 @@ int main(int argc, char* argv[]) {
         engine.BeginStep();
 
         const auto nextEventStep = std::min({writeStateStep, writeEnergyStep, thermoStep, nsteps});
-        Real currentTime = step * dt;
         integrate(particles, allSpecies, dt, (nextEventStep - step) * dt, boxPBC, force, integrationMethod);
 
         step = nextEventStep;
