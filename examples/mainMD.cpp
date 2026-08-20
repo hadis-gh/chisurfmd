@@ -243,7 +243,7 @@ int main(int argc, char* argv[]) {
     const size_t nsteps = std::ceil(Time / dt);
 
     size_t step = 0;
-    size_t writeStateStep = writeStateIntervalSteps;
+    size_t writeStateStep = 0;
     size_t writeEnergyStep = writeEnergyIntervalSteps;
     size_t thermoStep = thermoIntervalSteps;
 
