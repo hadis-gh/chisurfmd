@@ -54,7 +54,7 @@ public:
         : dt(dt), desiredTemperature(desiredTemperature), relaxationTime(relaxationTime) {}
 
     void operator () (std::vector<TParticle>& particles, const std::vector<Species<T>>& allSpecies) const {
-        const T currentTemperature = calInternalTemperature(particles, allSpecies); 
+        const T currentTemperature = calRawTemperature(particles, allSpecies); 
         const auto lambda = std::sqrt(1 + dt / relaxationTime * (desiredTemperature / currentTemperature - 1));
         rescaleVelocities(particles, allSpecies, lambda);
     }
@@ -72,7 +72,7 @@ public:
         : desiredTemperature(desiredTemperature) {}
 
     void operator () (std::vector<TParticle>& particles, const std::vector<Species<T>>& allSpecies) const {
-        const T currentTemperature = calInternalTemperature(particles, allSpecies); 
+        const T currentTemperature = calRawTemperature(particles, allSpecies); 
         const auto lambda = std::sqrt(desiredTemperature / currentTemperature);
         rescaleVelocities(particles, allSpecies, lambda);
     }
@@ -85,16 +85,11 @@ template<typename TParticle, typename T = typename TParticle::value_type>
 void rescaleVelocities(std::vector<TParticle>& particles, const std::vector<Species<T>>& allSpecies, const T lambda) {
     for (auto& p : particles) {
         auto generalizedVel = getGeneralizedVelocities(p);
-        const T mass = allSpecies[p.species].mass;
-        const T MI = allSpecies[p.species].momentOfInertia;
 
         for (size_t i = 0; i < generalizedVel.size(); ++i) {
-            if (i < 2) {
-                generalizedVel[i] *= std::sqrt(lambda / mass);
-            } else {
-                generalizedVel[i] *= std::sqrt(lambda / MI);
-            }
+            generalizedVel[i] *= lambda;
         }
+
         setGeneralizedVelocities(p, generalizedVel);
     }
 }
