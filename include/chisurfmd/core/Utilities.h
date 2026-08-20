@@ -192,7 +192,7 @@ Vec<T> calCOMVelocity(const std::vector<TParticle>& particles, const std::vector
     T totalMass = 0.0;
     for (const auto& p : particles) {
         T mass = allSpecies[p.species].mass;
-        totalMomentum += mass * p.v;
+        totalMomentum += mass * p.velocity;
         totalMass += mass;
     }
     return totalMomentum / totalMass;
@@ -221,7 +221,7 @@ template<typename TParticle, typename T = typename TParticle::value_type>
 void removeCOMVelocity(std::vector<TParticle>& particles, const std::vector<Species<T>>& allSpecies) {
     Vec<T> comVel = calCOMVelocity(particles, allSpecies);
     for (auto& p : particles) {
-        p.v -= comVel;
+        p.velocity -= comVel;
     }
 }
 
