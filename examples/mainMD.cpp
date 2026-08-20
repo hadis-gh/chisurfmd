@@ -154,7 +154,7 @@ int main(int argc, char* argv[]) {
 
     auto particles = initialParticles<ParticleT>(particlesNum, allSpecies, speciesInd, areaL, gen, particlesInit);
     
-    if (!particlesInit.ends_with(".bp")) {
+    if (particlesInit=="RANDOM") {
         assignParticleState(particles, chirality, alignment, gen);
     }
     

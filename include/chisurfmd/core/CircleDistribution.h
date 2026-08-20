@@ -262,6 +262,8 @@ std::vector<TParticle> initialParticles(const unsigned int& particlesNum,
     } else if (configuration == "TWO") {
         particles = createTwoParticle<TParticle, T>(gen, L);
     } else if (configuration == "ROW") {
+
+        particles.resize(particlesNum);
         const T spacing = 1.33;
         const T rowSpacing = std::sqrt(3.0) / 2.0 * spacing;
 
@@ -379,6 +381,8 @@ std::vector<TParticle> initialParticles(const unsigned int& particlesNum,
 
             particles.push_back(p);
         }
+    } else {
+        throw std::runtime_error("Invalid initial configuration!");
     }
 
     // Set species for all particles
