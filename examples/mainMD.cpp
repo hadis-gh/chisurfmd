@@ -110,6 +110,7 @@ int main(int argc, char* argv[]) {
         ("collisionFr",           po::value<Real>()->default_value(1.0 / 60.0),               "collision frequency for Andersen thermostat")
         ("integration",           po::value<std::string>()->default_value("VelocityVerlet"),  "integration method (velocity verlet/ euler)")
         ("enableCapVelocity",     po::bool_switch()->default_value(false),                    "Enable capping of velocities")
+        ("resetInitialVelocity", po::bool_switch()->default_value(false),                     "randomize initial velocities at target temperature")
         ("maxVelocity",           po::value<std::vector<Real>>()->multitoken()->default_value(std::vector<Real>{1e5, 1e3}, "1e5 1e3"),
                                                                                               "capping amount for velocity {x-y, omega}")
         ("printOptions",          po::bool_switch()->default_value(true),                     "Print all runtime options")
@@ -157,7 +158,10 @@ int main(int argc, char* argv[]) {
     if (particlesInit=="RANDOM") {
         assignParticleState(particles, chirality, alignment, gen);
     }
-    
+    if (vm["resetInitialVelocity"].as<bool>()) {
+        resetVelocitiesRandom(particles, allSpecies, temperature, gen);
+        removeCOMVelocity(particles, allSpecies);
+    }
     particlesNum = particles.size();
 
     auto force = Potential::force(vm);
@@ -257,7 +261,8 @@ int main(int argc, char* argv[]) {
 // ================================== Integration Loop ==================================
 
     applyFixRadius(particles, fixRadius, areaL);
-    
+    //initial velocity?
+    //write states?
     while (step < nsteps) {
         engine.BeginStep();
 
