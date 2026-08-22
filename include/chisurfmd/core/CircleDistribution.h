@@ -261,7 +261,40 @@ std::vector<TParticle> initialParticles(const unsigned int& particlesNum,
         particles = distParticleDLA<TParticle>(particlesNum, L, allSpecies[speciesNum].radius, gen);
     } else if (configuration == "TWO") {
         particles = createTwoParticle<TParticle, T>(gen, L);
-    } else if (configuration == "ROW") {
+    } else if (configuration == "ROW400") {
+        const int nRows = 20;
+        const int nCols = 20;
+
+        particles.resize(nRows * nCols);
+
+        const T spacing = 1.33;
+
+        size_t index = 0;
+
+        for (int row = 0; row < nRows; ++row) {
+            for (int col = 0; col < nCols; ++col, ++index) {
+
+                auto& p = particles[index];
+
+                // Regular square lattice, centered in each periodic cell.
+                p.position[0] = (col + 0.5) * spacing;
+                p.position[1] = (row + 0.5) * spacing;
+
+                // Alternating handedness by row.
+                p.handedness =
+                    (row % 2 == 0) ? +1 : -1;
+
+                // Same alignment and orientation for all particles.
+                p.alignment = +1;
+                p.phi = 0.0;
+
+                // Start at rest.
+                p.velocity[0] = 0.0;
+                p.velocity[1] = 0.0;
+                p.omega = 0.0;
+            }
+        }
+    }    else if (configuration == "ROW") {
 
         particles.resize(particlesNum);
         const T spacing = 1.33;
