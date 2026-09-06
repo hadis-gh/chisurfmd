@@ -199,20 +199,16 @@ Vec<T> calCOMVelocity(const std::vector<TParticle>& particles, const std::vector
 }
 
 template<typename TParticle, typename T = typename TParticle::value_type>
-std::vector<T> calCOMvelocity(const std::vector<TParticle>& particles, const std::vector<Species<T>>& allSpecies) {
-    Vec<T> totalMomentum = {{0.0, 0.0}};
-    std::vector<T> totalMomentumVec;
-    T totalMass = 0.0;
-    for (int i = 0; i < 2; ++i) {
-        for (const auto& p : particles) {
-            T mass = allSpecies[p.species].mass;
-            totalMomentum[i] += mass * p.velocity[i];
-            totalMass += mass;
-        }
-        totalMomentumVec.push_back(totalMomentum[i] / totalMass);
-    }
+std::vector<T> calCOMvelocity(
+    const std::vector<TParticle>& particles,
+    const std::vector<Species<T>>& allSpecies
+) {
+    const auto comVelocity = calCOMVelocity(particles, allSpecies);
 
-    return totalMomentumVec;
+    return {
+        comVelocity[0],
+        comVelocity[1]
+    };
 }
 
 // ================================== remove COM angular velocity ==================================
