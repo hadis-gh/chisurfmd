@@ -101,7 +101,6 @@ int main(int argc, char* argv[]) {
         ("seed",                  po::value<unsigned int>()->default_value(1),                "random seed")
         ("areaL",                 po::value<Real>()->default_value(20.0),                     "simulation size")
         ("fixRadius",             po::value<Real>()->default_value(20.0),                     "cut-off range for the dynamics neighbors")
-        ("particlesDensity",      po::value<Real>(),                                          "packing density of particles")
         ("neighborDistances",     po::value<std::vector<Real>>()->multitoken()->default_value(std::vector<Real>{1.2, 2.0}, "1.2 2.0"),
                                                                                               "Distances for counting neighbors {x-y, omega}")
         ("particlesNum,n",        po::value<unsigned int>()->default_value(49),               "number of initial particles")
@@ -130,15 +129,10 @@ int main(int argc, char* argv[]) {
     const Real momentI = vm["momentI"].as<Real>();
     const Real radius = vm["particleRadius"].as<Real>();
     unsigned int particlesNum = vm["particlesNum"].as<unsigned int>();
-    Real areaL;
 
-    if (vm.count("particlesDensity") > 0) {
-        const Real density = vm["particlesDensity"].as<Real>();
-        areaL = std::sqrt(particlesNum * M_PI * radius * radius / density);
-    } else {
-        areaL = vm["areaL"].as<Real>();
-    }
-    const Real boxPBC = vm["areaL"].as<Real>();
+    const Real areaL = vm["areaL"].as<Real>();
+    const Real boxPBC = areaL;
+
     const Real fixRadius = vm["fixRadius"].as<Real>();
 
     std::string method = vm["integration"].as<std::string>();

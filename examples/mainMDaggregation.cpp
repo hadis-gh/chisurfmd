@@ -100,7 +100,6 @@ int main(int argc, char* argv[]) {
         ("particleRadius",        po::value<Real>()->default_value(.8),                        "particle radius")
         ("seed",                  po::value<unsigned int>(),                                  "random seed")
         ("areaL",                 po::value<Real>()->default_value(50.0),                     "simulation size")
-        ("particlesDensity",      po::value<Real>(),                                          "packing density of particles")
         ("neighborDistances",     po::value<std::vector<Real>>()->multitoken()->default_value(std::vector<Real>{1.2, 2.0}, "1.2 2.0"),
                                                                                               "Distances for counting neighbors {x-y, omega}")
         ("particlesNum,n",        po::value<unsigned int>()->default_value(2),                "number of initial particles")
@@ -130,12 +129,9 @@ int main(int argc, char* argv[]) {
     const Real radius = vm["particleRadius"].as<Real>();
     unsigned int particlesNum = vm["particlesNum"].as<unsigned int>();
     unsigned int particlesNumMax = vm["particlesNumMax"].as<unsigned int>();
-        if (vm.count("particlesDensity") > 0) {
-        const Real density = vm["particlesDensity"].as<Real>();
-        const Real areaL = sqrt(particlesNum * M_PI * radius * radius / (density));
-    }
+    
     Real areaL = vm["areaL"].as<Real>();
-    const Real boxPBC = vm["areaL"].as<Real>();
+    const Real boxPBC = areaL;
 
     int speciesInd = 0;
     Species<Real> species1 {mass, momentI, radius};
