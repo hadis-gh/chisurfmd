@@ -11,8 +11,8 @@ if [ ! -f "$config" ]; then
 fi
 source "$config"
 
-MD_EXE=${MD_EXE:-"../build/test/testNParticleMD"}
-DEPOSIT_MD_EXE=${DEPOSIT_MD_EXE:-"../build/test/testNParticleDepositionMD"}
+MD_EXE=${MD_EXE:-"../build/examples/chisurfmd_md"}
+DEPOSIT_MD_EXE=${DEPOSIT_MD_EXE:-"../build/examples/chisurfmd_aggregation"}
 
 outputDir=${outputDir:-"./outputs"}
 mkdir -p "$outputDir"
@@ -23,14 +23,14 @@ echo "Logging to: $logFile"
 
 args=(
     --seed "$seed"
-    --exclusionRadius "$exclusionRadius"
+    --particleRadius "$particleRadius"
     --thermoInterval "$thermoInterval"
     --writeStateInterval "$writeStateInterval"
     --writeEnergyInterval "$writeEnergyInterval"
     --integration "$integration"
     --collisionFr "$collisionFr"
 )
-if [ "$simulationType" == "rotation" ]; then
+if [ "$potentialType" == "orientedLJ" ]; then
     args+=(
         --LJangularScale "$LJangularScale"
         --LJPhiOrder "$LJPhiOrder"

@@ -10,6 +10,7 @@ if [ ! -f "$config" ]; then
     exit 1
 fi
 source "$config"
+MD_EXE=${MD_EXE:-"../build/examples/chisurfmd_md"}
 
 numRuns=$(echo "scale=0; ($highTemperature - $lowTemperature) / $stepTemperature" | bc)
 
@@ -108,7 +109,7 @@ run_simulation() {
             --L0 "$L0"
         )
 
-    elif [ "$potentialType" == "Tabular" ]; then
+    elif [ "$potentialType" == "TabularDFT" ]; then
         args+=(
             --dataReferenceDir "$dataReferenceDir"
             --E0 "$E0"
