@@ -28,14 +28,15 @@ echo "============================================="
 
 args=(
     --particlesInit "$particleInit"
-    --particlesType "$particlesType"
+    --chirality "$chirality"
+    --alignment "$alignment"
     --temperature "$temperature"
     --time "$timeCooling" --dt "$dt"
     --saveFile "$saveFile"
     --particlesNum "$particleNum"
     --seed "$seed"
     --areaL "$areaL"
-    --exclusionRadius "$exclusionRadius"
+    --particleRadius "$particleRadius"
     --thermoInterval "$thermoInterval"
     --writeStateInterval "$writeStateInterval"
     --writeEnergyInterval "$writeEnergyInterval"
@@ -43,7 +44,7 @@ args=(
     --collisionFr "$collisionFr"
 )
 
-if [ "$simulationType" == "rotation" ]; then
+if [ "$potentialType" == "orientedLJ" ]; then
     args+=(--LJangularScale "$LJangularScale"
            --LJPhiOrder "$LJPhiOrder"
            --LJalpha "$LJalpha"
