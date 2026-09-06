@@ -93,15 +93,15 @@ int main(int argc, char* argv[]) {
         ("thermoInterval",        po::value<Real>()->default_value(.1),                       "interval after which to apply thermostat")
         ("temperature,T",         po::value<Real>()->default_value(.3),                       "temperature")
         ("particlesInit",         po::value<std::string>()->default_value("RANDOM"),          "particle initialization")
-        ("particlesType",         po::value<std::string>()->default_value("EP"),            "particles type handedness & orientation")
+        ("chirality",             po::value<std::string>()->default_value("homochiral"),      "initial chirality: homochiral or racemic")
+        ("alignment",             po::value<std::string>()->default_value("polar"),           "initial alignment: polar or apolar")        
         ("mass",                  po::value<Real>()->default_value(1.0),                      "mass of particles")       
         ("momentI",               po::value<Real>()->default_value(1.0),                      "moment of inersia")
-        ("exclusionRadius",       po::value<Real>()->default_value(.5),                       "exclusion radius")
+        ("particleRadius",        po::value<Real>()->default_value(.5),                       "particle radius")
         ("seed",                  po::value<unsigned int>()->default_value(1),                "random seed")
         ("areaL",                 po::value<Real>()->default_value(20.0),                     "simulation size")
         ("fixRadius",             po::value<Real>()->default_value(20.0),                     "cut-off range for the dynamics neighbors")
-        ("particlesDensity",      po::value<Real>(),                                          "packing density of particles")
-        ("neighborDistances",     po::value<std::vector<Real>>()->multitoken()->default_value(std::vector<Real>{1.2, 1.5, 2.0}, "1.2 1.5 2.0"),
+        ("neighborDistances",     po::value<std::vector<Real>>()->multitoken()->default_value(std::vector<Real>{1.2, 2.0}, "1.2 2.0"),
                                                                                               "Distances for counting neighbors {x-y, omega}")
         ("particlesNum,n",        po::value<unsigned int>()->default_value(49),               "number of initial particles")
         ("saveFile",              po::value<std::string>()->default_value("outputs/run_0.bp"),"file path to save simulation output")
@@ -109,6 +109,7 @@ int main(int argc, char* argv[]) {
         ("collisionFr",           po::value<Real>()->default_value(1.0 / 60.0),               "collision frequency for Andersen thermostat")
         ("integration",           po::value<std::string>()->default_value("VelocityVerlet"),  "integration method (velocity verlet/ euler)")
         ("enableCapVelocity",     po::bool_switch()->default_value(false),                    "Enable capping of velocities")
+        ("resetInitialVelocity", po::bool_switch()->default_value(false),                     "randomize initial velocities at target temperature")
         ("maxVelocity",           po::value<std::vector<Real>>()->multitoken()->default_value(std::vector<Real>{1e5, 1e3}, "1e5 1e3"),
                                                                                               "capping amount for velocity {x-y, omega}")
         ("printOptions",          po::bool_switch()->default_value(true),                     "Print all runtime options")
@@ -126,33 +127,13 @@ int main(int argc, char* argv[]) {
     
     const Real mass = vm["mass"].as<Real>();
     const Real momentI = vm["momentI"].as<Real>();
-    const Real radius = vm["exclusionRadius"].as<Real>();
+    const Real radius = vm["particleRadius"].as<Real>();
     unsigned int particlesNum = vm["particlesNum"].as<unsigned int>();
-    Real areaL;
 
-    if (vm.count("particlesDensity") > 0) {
-        const Real density = vm["particlesDensity"].as<Real>();
-        areaL = std::sqrt(particlesNum * M_PI * radius * radius / density);
-    } else {
-        areaL = vm["areaL"].as<Real>();
-    }
-    const Real boxPBC = vm["areaL"].as<Real>();
+    const Real areaL = vm["areaL"].as<Real>();
+    const Real boxPBC = areaL;
+
     const Real fixRadius = vm["fixRadius"].as<Real>();
-
-    int speciesInd = 0;
-    Species<Real> species1 {mass, momentI, radius};
-    Species<Real> species2 {2.0 * mass, momentI, 0.5 * radius};
-    std::vector<Species<Real>> allSpecies {species1, species2};
-
-    auto particlesInit = vm["particlesInit"].as<std::string>(); 
-    auto particlesType = vm["particlesType"].as<std::string>(); 
-
-    std::mt19937 gen(vm["seed"].as<unsigned int>());
-    auto particles = initialParticles<ParticleT>(particlesNum, allSpecies, speciesInd, areaL, gen, particlesInit, particlesType);
-    particlesNum = particles.size();
-
-    auto force = Potential::force(vm);
-    auto potential = Potential::potential(vm);
 
     std::string method = vm["integration"].as<std::string>();
     auto integrationMethod = VelocityVerletStep<ParticleT, Potential::ForceType>;
@@ -170,6 +151,32 @@ int main(int argc, char* argv[]) {
     const Real relaxationTime = vm["relaxationTime"].as<Real>();
     const Real collisionFrequency = vm["collisionFr"].as<Real>();
     const Real temperature = vm["temperature"].as<Real>();
+
+    int speciesInd = 0;
+    Species<Real> species1 {mass, momentI, radius};
+    Species<Real> species2 {2.0 * mass, momentI, 0.5 * radius};
+    std::vector<Species<Real>> allSpecies {species1, species2};
+
+    std::mt19937 gen(vm["seed"].as<unsigned int>());
+
+    auto particlesInit = vm["particlesInit"].as<std::string>(); 
+
+    auto chirality = vm["chirality"].as<std::string>();
+    auto alignment = vm["alignment"].as<std::string>();
+
+    auto particles = initialParticles<ParticleT>(particlesNum, allSpecies, speciesInd, areaL, gen, particlesInit);
+    
+    if (particlesInit=="RANDOM") {
+        assignParticleState(particles, chirality, alignment, gen);
+    }
+    if (vm["resetInitialVelocity"].as<bool>()) {
+        resetVelocitiesRandom(particles, allSpecies, temperature, gen);
+        removeCOMVelocity(particles, allSpecies);
+    }
+    particlesNum = particles.size();
+
+    auto force = Potential::force(vm);
+    auto potential = Potential::potential(vm);
 
     auto thermostat = [&]() {
         if constexpr (CHISURFMD_THERMOSTAT == ThermostatID::None)
@@ -201,12 +208,13 @@ int main(int argc, char* argv[]) {
     adios2::Variable<Real> varKineticEnergy = io.DefineVariable<Real>("kinetic energy", {1, 3}, {0, 0}, {1, 3});
     adios2::Variable<Real> varPotentialEnergy = io.DefineVariable<Real>("potential energy");
     adios2::Variable<Real> varNeighborCount = io.DefineVariable<Real>("number of neighbors", {1, neighborDistances.size()}, {0, 0}, {1, neighborDistances.size()});
-    adios2::Variable<Real> varComVelocity = io.DefineVariable<Real>("center of mass velocity", {1, D}, {0, 0}, {1, D});
+    adios2::Variable<Real> varComVelocity = io.DefineVariable<Real>("center of mass velocity", {1, 2}, {0, 0}, {1, 2});
     adios2::Variable<Real> varComAngVelocity = io.DefineVariable<Real>("center of mass angular velocity");
     adios2::Variable<Real> varRealTemperature = io.DefineVariable<Real>("real temperature", {1, 3}, {0, 0}, {1, 3});
     adios2::Variable<Real> varOrientationOrder = io.DefineVariable<Real>("orientation order");
 
-    io.DefineAttribute<std::string>("particlesType", particlesType);
+    io.DefineAttribute<std::string>("chirality", chirality);
+    io.DefineAttribute<std::string>("alignment", alignment);
     io.DefineAttribute<Real>("particlesNum", particlesNum);
     io.DefineAttribute<Real>("temperature", temperature);
     io.DefineAttribute<Real>("radius", radius);
@@ -229,7 +237,7 @@ int main(int argc, char* argv[]) {
     const size_t nsteps = std::ceil(Time / dt);
 
     size_t step = 0;
-    size_t writeStateStep = writeStateIntervalSteps;
+    size_t writeStateStep = 0;
     size_t writeEnergyStep = writeEnergyIntervalSteps;
     size_t thermoStep = thermoIntervalSteps;
 
@@ -247,22 +255,22 @@ int main(int argc, char* argv[]) {
 // ================================== Integration Loop ==================================
 
     applyFixRadius(particles, fixRadius, areaL);
-    
+    //initial velocity?
+    //write states?
     while (step < nsteps) {
         engine.BeginStep();
 
         const auto nextEventStep = std::min({writeStateStep, writeEnergyStep, thermoStep, nsteps});
-        Real currentTime = step * dt;
         integrate(particles, allSpecies, dt, (nextEventStep - step) * dt, boxPBC, force, integrationMethod);
 
         step = nextEventStep;
+        Real currentTime = step * dt;
 
         engine.Put(varT, currentTime);
 
         if (enableCapVelocity) {
             capVelocity(particles, maxVelocity);
-        }
-        if (step == writeStateStep) {
+        } if (step == writeStateStep || step == nsteps) {
             for (size_t j = 0; j < particles.size(); ++j) {
                 const auto& p = particles[j];
                 handednessVec[j] = p.handedness;
@@ -281,7 +289,7 @@ int main(int argc, char* argv[]) {
             engine.Put(varVelocities, velocitiesVec.data());
             writeStateStep = step + writeStateIntervalSteps;
         }
-        if (step == writeEnergyStep) {
+        if (step == writeEnergyStep || step == nsteps) {
             auto kineticE = calKineticEnergy(particles, allSpecies);
             auto potentialE = calPotentialEnergy(particles, allSpecies, boxPBC, potential);
 

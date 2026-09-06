@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from pathlib import Path
 from matplotlib.ticker import AutoMinorLocator
 import data_extraction
 import system_analysis
@@ -501,7 +502,7 @@ def plot_energies(
     fontsize=12,
     figsize=(5, 3),
     
-    savepath=None,
+    savename=None,
 ):
     if colors is None:
         colors = _PUB_COLORS
@@ -553,8 +554,8 @@ def plot_energies(
     apply_style(ax, spine=False, grid=True, hide_top_right=False)
     plt.tight_layout()
 
-    if savepath:
-        fig.savefig(savepath, bbox_inches='tight')
+    if savename:
+        fig.savefig(f'{savename}.pdf', bbox_inches='tight')
 
     plt.show()
 
@@ -1026,13 +1027,13 @@ def plot_deltaphi_hist_steps(positions, step_target, min_dis=20, step_window=100
 
 ############## snapshot of configuration at specific Temperature ##############
 
-def target_temperature_index (variable_name, target_temperature):
+def target_temperature_index (variable_name, target_temperature, cooling):
     data = variable_name['data']
     temperature_labels = variable_name['temperature label'].flatten()
     print(f"available temperatures are from {min(temperature_labels)} to {max(temperature_labels)}.")
           
     try:
-        index = np.where(temperature_labels == target_temperature)[0][0]
+        index = np.where(temperature_labels == target_temperature)[0][0 if cooling else 1]
     except IndexError:
         print(f"🞩🞩🞩 Target temperature {target_temperature} not found in temperature_labels. Please choose a valid temperature! 🞩🞩🞩")
         return 0
@@ -1040,10 +1041,10 @@ def target_temperature_index (variable_name, target_temperature):
     total_snapshots = data.shape[0]
     return int(total_snapshots / len(temperature_labels) * index)
 
-def plot_trajectory_temperature(positions, target_temperature, step_window=10000):
+def plot_trajectory_temperature(positions, target_temperature, cooling=True, step_window=10000):
     positions_data = positions['data']
 
-    step_min = target_temperature_index(positions, target_temperature)
+    step_min = target_temperature_index(positions, target_temperature, cooling)
     step_max = step_min + step_window
 
     fig, ax = plt.subplots(1, 2, figsize=(8, 4))
@@ -1087,83 +1088,117 @@ def plot_trajectory_temperature(positions, target_temperature, step_window=10000
     plt.tight_layout()
     plt.show()
 
+# ---------------------------------------------------------
+#  plot snapshot of the specific temperature
+# ---------------------------------------------------------
 
-def plot_snapshot_temperature(positions, handedness, target_temperature, patchNums=None,
-                               line_length=0.45, area=20, radius=True, color_palette='hsv'):
+def plot_snapshot_temperature(
+        positions, handedness, alignment,
+        target_temperature, cooling=True,
+        patchNums=None, line_length=0.45,
+        area=20, radius=True, particle_size=110, show_center=True,
+        color_palette='hsv', save_name = None):
+
     positions_data = positions['data']
     handedness_data = handedness['data']
-    shot = target_temperature_index(positions, target_temperature)
+    alignment_data = alignment['data']
 
-    fig, ax = plt.subplots(figsize=(6, 4))
-    
+    shot = target_temperature_index(
+        positions, target_temperature, cooling
+    )
+
+    fig, ax = plt.subplots(figsize=(6, 4), dpi=150)
+
     x = positions_data[shot, :, 0]
     y = positions_data[shot, :, 1]
-    phi = positions_data[shot, :, 2]  # orientation of each particle
-    h = handedness_data[shot, :]
+    phi = positions_data[shot, :, 2]
 
-    # Define colors based on handedness
-    colors = ['mistyrose' if val == 1 else 'lightsteelblue' for val in h]
-    
-    # Plot main particles
+    h = handedness_data[shot, :]
+    d = alignment_data[shot, :]
+
+    # Color according to handedness + alignment
+    # ---------------------------------------------------------
+    colors = np.empty(len(h), dtype=object)
+
+    colors[(h == 1) & (d == 1)] = '#DF8A90'
+    colors[(h == 1) & (d == -1)] = '#F9BEC2'
+    colors[(h == -1) & (d == 1)] = '#8BAECF'
+    colors[(h == -1) & (d == -1)] = '#BFD5EA'
+
+    # Fallback in case h or d contains unexpected values
+    valid = (
+        ((h == 1) | (h == -1)) &
+        ((d == 1) | (d == -1))
+    )
+    colors[~valid] = '#A00000'
+
+    # Plot particles
+    # ---------------------------------------------------------
     ax.scatter(
-        x, y, 
-        s=110,
+        x,
+        y,
+        s=particle_size,
         edgecolors='black',
-        facecolor=colors,
+        linewidths=.6,
+        facecolors=colors,
         alpha=0.8
     )
 
-    if radius:
-        if patchNums is not None:
-            for a in range(patchNums):
-                phi_a = phi + 2*np.pi * a / patchNums
-                x_end = x + line_length * np.cos(phi_a)
-                y_end = y + line_length * np.sin(phi_a)
+    # Plot particle patches / radii
+    # ---------------------------------------------------------
+    if radius and patchNums is not None:
 
-                for i in range(len(x)):
-                    ax.plot([x[i], x_end[i]], [y[i], y_end[i]], color='black', linewidth=0.8, alpha=0.8)
-    # if radius:
-    #     if patchNums is not None:
-    #         phi = phi% (2*np.pi /patchNums)
-    #         x_end = x + line_length * np.cos(phi)
-    #         y_end = y + line_length * np.sin(phi)
-    #         for i in range(len(x)):
-    #             ax.plot([x[i], x_end[i]], [y[i], y_end[i]], color='black', linewidth=0.8, alpha=0.8)
-                    
-    else:
-        # Fallback: color by orientation
-        scatter = ax.scatter(
-            x, y,
-            c=phi,
-            s=60,
-            alpha=0.8,
-            vmin=-np.pi,
-            vmax=np.pi,
-            cmap=color_palette
-        )
-        cbar = plt.colorbar(scatter, ax=ax)
-        cbar.set_label('φ in radian')
+        for a in range(patchNums):
 
+            phi_a = phi + 2 * np.pi * a / patchNums
+
+            x_end = x + line_length * np.cos(phi_a)
+            y_end = y + line_length * np.sin(phi_a)
+
+            for i in range(len(x)):
+                ax.plot(
+                    [x[i], x_end[i]],
+                    [y[i], y_end[i]],
+                    color='black',
+                    linewidth=0.5,
+                    alpha=0.8
+                )
+
+    # Plot formatting
+    # ---------------------------------------------------------
     ax.set_xlabel('X Position')
     ax.set_ylabel('Y Position')
     ax.set_title(f'Configuration (T={target_temperature})')
-    
+
     ax.set_xlim(0, area)
     ax.set_ylim(0, area)
+    if show_center:
+        margin = area //10
+        ax.set_xlim(x.min()-margin, x.max()+margin)
+        ax.set_ylim(y.min()-margin, y.max()+margin)
+
+    ax.tick_params(axis='both', which='both', direction='in')
     ax.set_aspect('equal', adjustable='box')
+
     ax.grid(linestyle='--', alpha=0.5)
     ax.set_axisbelow(True)
-    plt.tight_layout()
+
+    fig.tight_layout()
+
+    if save_name is not None:
+        plot_name = f"{save_name}_{target_temperature}.pdf"
+        plt.savefig(plot_name, bbox_inches='tight')
+
     plt.show()
     
 ############## histogram of φ and Δφ at specific Temperature ##############
 
-def plot_hist_phi_temperature(positions, target_t, step_window, bins_num=100):
-    step_target = target_temperature_index(positions, target_t)
+def plot_hist_phi_temperature(positions, target_t, step_window, cooling=True, bins_num=100):
+    step_target = target_temperature_index(positions, target_t, cooling)
     plot_hist_phi_steps(positions, step_target, step_window, bins_num)
 
-def plot_delta_phi_hist_temperature(positions, target_t, min_dis, step_window, bins_num=100):
-    step_target = target_temperature_index(positions, target_t)
+def plot_delta_phi_hist_temperature(positions, target_t, min_dis, step_window, cooling=True, bins_num=100):
+    step_target = target_temperature_index(positions, target_t, cooling)
     plot_deltaphi_hist_steps(positions, step_target, min_dis, step_window, bins_num)
 
 #------------------------------   AGGREGATION   ------------------------------
@@ -1203,3 +1238,269 @@ def plot_parameter_heatmap(parameter_matrix, parameter_name, temperatures, depos
 
     plt.show()
 
+
+# ============================================================
+# ORDER PARAMETERS CALCULATED DIRECTLY FROM SAVED TRAJECTORY
+# ============================================================
+
+def calculate_orientation_order(positions):
+    """ Nematic orientational order directly from saved phi values.
+
+    S2 = | < exp(i 2 phi) > |
+    Returns one value for every saved trajectory frame.
+    """
+    phi = positions['data'][:, :, 2]
+
+    qx = np.mean(np.cos(2.0 * phi), axis=1)
+    qy = np.mean(np.sin(2.0 * phi), axis=1)
+
+    return np.sqrt(qx**2 + qy**2)
+
+# ------------------------------------------------------------
+
+def calculate_chiral_row_order(positions, handedness, area=20.0, spacing_range=(0.9, 1.6), frame_skip=10,
+):
+    """ Handedness-weighted stripe/row order.
+
+    For every selected frame, search reciprocal-space directions
+    corresponding to the requested row-spacing range and retain
+    the strongest handedness modulation.
+
+    Returns
+    -------
+    frame_indices : ndarray
+    row_order     : ndarray
+        0 -> weak/no row order
+        1 -> strong ideal modulation
+    row_spacing   : ndarray
+        Approximate spacing between neighboring opposite-handed rows.
+    row_angle     : ndarray
+        Direction of the rows, in radians.
+    """
+
+    pos = positions['data']
+    hand = handedness['data']
+
+    # --------------------------------------------------------
+    # Allowed reciprocal-space wavevectors
+    #
+    # Alternating rows separated by d change handedness every d,
+    # therefore their modulation wavelength is 2d:
+    #
+    #       |k| = pi / d
+    # --------------------------------------------------------
+
+    d_min, d_max = spacing_range
+
+    k_min = np.pi / d_max
+    k_max = np.pi / d_min
+
+    # Periodic-box wavevectors: k = 2 pi / L * (nx, ny)
+    n_max = int(np.ceil(k_max * area / (2.0 * np.pi)))
+
+    k_vectors = []
+
+    for nx in range(-n_max, n_max + 1):
+        for ny in range(-n_max, n_max + 1):
+
+            if nx == 0 and ny == 0:
+                continue
+
+            k = (
+                2.0 * np.pi / area
+                * np.array([nx, ny], dtype=float)
+            )
+
+            kmag = np.linalg.norm(k)
+
+            if k_min <= kmag <= k_max:
+                k_vectors.append(k)
+
+    k_vectors = np.asarray(k_vectors)
+
+    if len(k_vectors) == 0:
+        raise ValueError(
+            "No wavevectors found for the requested spacing_range."
+        )
+
+    # --------------------------------------------------------
+    # Calculate row order through trajectory
+    # --------------------------------------------------------
+
+    frame_indices = np.arange(
+        0,
+        pos.shape[0],
+        frame_skip
+    )
+
+    row_order = np.zeros(len(frame_indices))
+    row_spacing = np.zeros(len(frame_indices))
+    row_angle = np.zeros(len(frame_indices))
+
+    for out_i, frame in enumerate(frame_indices):
+
+        xy = pos[frame, :, :2]
+        h = hand[frame].astype(float)
+
+        # phases: particles x candidate wavevectors
+        phases = xy @ k_vectors.T
+
+        amplitude = np.sum(
+            h[:, None] * np.exp(1j * phases),
+            axis=0
+        ) / len(h)
+
+        power = np.abs(amplitude)**2
+
+        best = np.argmax(power)
+
+        best_k = k_vectors[best]
+        k_mag = np.linalg.norm(best_k)
+
+        row_order[out_i] = power[best]
+
+        # Opposite-handed neighboring rows are half a wavelength apart
+        row_spacing[out_i] = np.pi / k_mag
+
+        # k is perpendicular to the rows
+        row_angle[out_i] = (
+            np.arctan2(best_k[1], best_k[0])
+            + np.pi / 2.0
+        ) % np.pi
+
+    return (
+        frame_indices,
+        row_order,
+        row_spacing,
+        row_angle
+    )
+
+# ============================================================
+# PLOT PYTHON-CALCULATED ORIENTATION ORDER
+# ============================================================
+
+def plot_orientation_order_python(
+    positions,
+    temperature_label=False,
+    linewidth=1.5,
+    fontsize=12,
+    figsize=(5, 3),
+    savepath=None,
+):
+    order = calculate_orientation_order(positions)
+
+    fig, ax = plt.subplots(figsize=figsize)
+
+    ax.plot(
+        order,
+        linewidth=linewidth
+    )
+
+    if temperature_label:
+        _apply_temp_xlabel(
+            ax,
+            len(order),
+            positions['temperature label'],
+            fontsize
+        )
+    else:
+        ax.set_xlabel("Steps", fontsize=fontsize)
+
+    ax.set_ylabel(r"Orientation order $S_2$", fontsize=fontsize)
+    ax.set_title("Orientation Order Parameter", fontsize=fontsize + 1)
+
+    ax.set_ylim(0, 1)
+
+    ax.tick_params(
+        axis='both',
+        labelsize=fontsize - 2
+    )
+
+    apply_style(
+        ax,
+        spine=False,
+        grid=True,
+        hide_top_right=False
+    )
+
+    plt.tight_layout()
+
+    if savepath:
+        fig.savefig(
+            savepath,
+            bbox_inches='tight'
+        )
+
+    plt.show()
+
+    return order, fig, ax
+
+# ============================================================
+# PLOT CHIRAL ROW ORDER
+# ============================================================
+
+def plot_chiral_row_order(positions, handedness, area=20.0,
+    spacing_range=(0.9, 1.6), frame_skip=1, temperature_label=False,
+    linewidth=1.5, fontsize=12, figsize=(5, 3), savepath=None):
+
+    (frame_indices, row_order, row_spacing, row_angle) = calculate_chiral_row_order(
+        positions,
+        handedness,
+        area=area,
+        spacing_range=spacing_range,
+        frame_skip=frame_skip
+    )
+
+    fig, ax = plt.subplots(figsize=figsize)
+
+    ax.plot(
+        frame_indices,
+        row_order,
+        linewidth=linewidth
+    )
+
+    if temperature_label:
+        _apply_temp_xlabel(
+            ax,
+            positions['data'].shape[0],
+            positions['temperature label'],
+            fontsize
+        )
+    else:
+        ax.set_xlabel("Steps", fontsize=fontsize)
+
+    ax.set_ylabel("Chiral Row Order", fontsize=fontsize)
+    ax.set_title("Alternating-Handedness Row Order",
+                 fontsize=fontsize + 1)
+
+    # ax.set_ylim(0, 1)
+
+    ax.tick_params(
+        axis='both',
+        labelsize=fontsize - 2,
+        direction='in'
+    )
+
+    apply_style(
+        ax,
+        spine=False,
+        grid=True,
+        hide_top_right=False
+    )
+
+    plt.tight_layout()
+
+    if savepath:
+        fig.savefig(
+            savepath,
+            bbox_inches='tight'
+        )
+
+    plt.show()
+
+    return {
+        'frame index': frame_indices,
+        'order': row_order,
+        'spacing': row_spacing,
+        'angle': row_angle,
+    }, fig, ax

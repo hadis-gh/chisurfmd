@@ -47,6 +47,59 @@ InteractionType getInteractionType(
         : InteractionType::OA;
 }
 // ------------------------------------------------------------
+// Canonical pair ordering
+// 
+//   EA    : +alignment particle first
+//   OP/OA : +handedness particle first
+//   EP    : already exchange-symmetric in the fitted basis
+//
+// This assumes that any global handedness/alignment transformation
+// needed to construct the four reference tables has already been
+// absorbed into their angle convention.
+// ------------------------------------------------------------
+template<typename Particle>
+struct CanonicalPair {
+    const Particle* first;
+    const Particle* second;
+    InteractionType type;
+    bool swapped;
+};
+// ------------------------------------------------------------
+template<typename Particle>
+CanonicalPair<Particle> canonicalizePair(
+    const Particle& p1,
+    const Particle& p2
+) {
+    const auto type = getInteractionType(p1, p2);
+
+    bool swap = false;
+
+    switch (type) {
+        case InteractionType::EP:
+            break;
+
+        case InteractionType::EA:
+            // Same handedness, opposite alignment: +1 first.
+            swap = p1.alignment < p2.alignment;
+            break;
+
+        case InteractionType::OP:
+        case InteractionType::OA:
+            // Opposite handedness: +1 first.
+            swap = p1.handedness < p2.handedness;
+            break;
+    }
+
+    if (swap) {
+        return CanonicalPair<Particle>{
+            &p2, &p1, type, true
+        };
+    }
+
+    return CanonicalPair<Particle>{
+        &p1, &p2, type, false
+    };
+}
 
 // ============================================================
 // Fourier evaluator
@@ -129,6 +182,10 @@ public:
         return out;
     }
 
+    const std::vector<FourierTerm<T>>& terms() const {
+        return m_terms;
+    }
+
 private:
     std::vector<FourierTerm<T>> m_terms;
 };
@@ -157,9 +214,12 @@ public:
         if (m_isConstant) {
             return FourierValue<T>{m_constant, T{0}, T{0}};
         }
-
         return m_surface.evaluate(chi, psi);
     }
+
+    bool isConstant() const { return m_isConstant; }
+    T constantValue() const { return m_constant; }
+    const FourierSurface2D<T>& surface() const { return m_surface; }
 
 private:
     bool m_isConstant = true;
@@ -224,45 +284,121 @@ public:
           m_alpha(std::move(alpha)),
           m_cutoff(cutoff) {}
 
-    T cutoff() const {
-        return m_cutoff;
-    }
+    T cutoff() const { return m_cutoff; }
 
     ChiMorseValue<T> evaluate(T r, T chi, T psi) const {
         if (r <= T{0} || r > m_cutoff) {
-            return ChiMorseValue<T>{T{0}, T{0}, T{0}, T{0}};
+            return {T{0}, T{0}, T{0}, T{0}};
         }
 
-        const auto D = m_D.evaluate(chi, psi);
-        const auto re = m_re.evaluate(chi, psi);
-        const auto alpha = m_alpha.evaluate(chi, psi);
+        FourierValue<T> D, re, alpha;
+        evaluateAngular<true>(chi, psi, D, re, alpha);
 
         const auto morse = evaluateMorse(
-            r,
-            D.value,
-            re.value,
-            alpha.value
+            r, D.value, re.value, alpha.value
         );
 
-        ChiMorseValue<T> out;
-
-        out.energy = morse.energy;
-        out.dUdr = morse.dUdr;
-
-        out.dUdChi =
+        return {
+            morse.energy,
+            morse.dUdr,
             morse.dUdD * D.dChi
-            + morse.dUdRe * re.dChi
-            + morse.dUdAlpha * alpha.dChi;
-
-        out.dUdPsi =
+                + morse.dUdRe * re.dChi
+                + morse.dUdAlpha * alpha.dChi,
             morse.dUdD * D.dPsi
-            + morse.dUdRe * re.dPsi
-            + morse.dUdAlpha * alpha.dPsi;
+                + morse.dUdRe * re.dPsi
+                + morse.dUdAlpha * alpha.dPsi
+        };
+    }
 
-        return out;
+    // Energy-only path: avoids all angular derivatives.
+    T energy(T r, T chi, T psi) const {
+        if (r <= T{0} || r > m_cutoff) return T{0};
+
+        FourierValue<T> D, re, alpha;
+        evaluateAngular<false>(chi, psi, D, re, alpha);
+
+        const T q = r - re.value;
+        const T z = std::exp(-alpha.value * q);
+        return D.value * (z * z - T{2} * z);
     }
 
 private:
+    template<bool Derivatives>
+    void evaluateAngular(
+        T chi, T psi,
+        FourierValue<T>& D,
+        FourierValue<T>& re,
+        FourierValue<T>& alpha
+    ) const {
+        const auto init = [](const AngularParameter<T>& p) {
+            return p.isConstant()
+                ? FourierValue<T>{p.constantValue(), T{0}, T{0}}
+                : FourierValue<T>{T{0}, T{0}, T{0}};
+        };
+
+        D = init(m_D);
+        re = init(m_re);
+        alpha = init(m_alpha);
+
+        const FourierSurface2D<T>* basis = nullptr;
+        if (!m_D.isConstant()) basis = &m_D.surface();
+        else if (!m_re.isConstant()) basis = &m_re.surface();
+        else if (!m_alpha.isConstant()) basis = &m_alpha.surface();
+        else return;
+
+        const auto& terms = basis->terms();
+
+        for (std::size_t i = 0; i < terms.size(); ++i) {
+            const auto& b = terms[i];
+            const T m = static_cast<T>(b.m);
+            const T n = static_cast<T>(b.n);
+            const T mc = m * chi;
+            const T np = n * psi;
+
+            T chiVal, psiVal, dChiVal = T{0}, dPsiVal = T{0};
+
+            if constexpr (Derivatives) {
+                if (b.chiFunction == TrigType::Cos) {
+                    chiVal = std::cos(mc);
+                    dChiVal = -m * std::sin(mc);
+                } else {
+                    chiVal = std::sin(mc);
+                    dChiVal = m * std::cos(mc);
+                }
+
+                if (b.psiFunction == TrigType::Cos) {
+                    psiVal = std::cos(np);
+                    dPsiVal = -n * std::sin(np);
+                } else {
+                    psiVal = std::sin(np);
+                    dPsiVal = n * std::cos(np);
+                }
+            } else {
+                chiVal = (b.chiFunction == TrigType::Cos)
+                    ? std::cos(mc) : std::sin(mc);
+                psiVal = (b.psiFunction == TrigType::Cos)
+                    ? std::cos(np) : std::sin(np);
+            }
+
+            const auto add = [&](const AngularParameter<T>& p,
+                                 FourierValue<T>& out) {
+                if (p.isConstant()) return;
+
+                const T c = p.surface().terms()[i].coefficient;
+                out.value += c * chiVal * psiVal;
+
+                if constexpr (Derivatives) {
+                    out.dChi += c * dChiVal * psiVal;
+                    out.dPsi += c * chiVal * dPsiVal;
+                }
+            };
+
+            add(m_D, D);
+            add(m_re, re);
+            add(m_alpha, alpha);
+        }
+    }
+
     AngularParameter<T> m_D;
     AngularParameter<T> m_re;
     AngularParameter<T> m_alpha;
@@ -314,7 +450,8 @@ struct ChiMorseModels {
 template<typename T>
 FourierSurface2D<T> loadSurface(
     const json& basisTerms,
-    const json& parameter
+    const json& parameter,
+    T scale = T{1}
 ) {
     const auto coeffs =
         parameter.at("coefficients").template get<std::vector<T>>();
@@ -331,19 +468,13 @@ FourierSurface2D<T> loadSurface(
     for (std::size_t i = 0; i < coeffs.size(); ++i) {
         const auto& b = basisTerms.at(i);
 
-        FourierTerm<T> term;
-
-        term.m = b.at("m").get<int>();
-        term.n = b.at("n").get<int>();
-        term.chiFunction = parseTrig(
-            b.at("chi_function").get<std::string>()
-        );
-        term.psiFunction = parseTrig(
-            b.at("psi_function").get<std::string>()
-        );
-        term.coefficient = coeffs[i];
-
-        terms.push_back(term);
+        terms.push_back({
+            b.at("m").get<int>(),
+            b.at("n").get<int>(),
+            parseTrig(b.at("chi_function").get<std::string>()),
+            parseTrig(b.at("psi_function").get<std::string>()),
+            coeffs[i] * scale
+        });
     }
 
     return FourierSurface2D<T>(std::move(terms));
@@ -352,29 +483,34 @@ FourierSurface2D<T> loadSurface(
 template<typename T>
 AngularParameter<T> loadParameter(
     const json& basisTerms,
-    const json& parameter
+    const json& parameter,
+    T scale = T{1}
 ) {
-    const std::string type =
+    const auto type =
         parameter.at("type").get<std::string>();
 
     if (type == "constant") {
         return AngularParameter<T>::constant(
-            parameter.at("value").get<T>()
+            parameter.at("value").get<T>() * scale
         );
     }
 
     if (type == "fourier") {
         return AngularParameter<T>::fourier(
-            loadSurface<T>(basisTerms, parameter)
+            loadSurface<T>(basisTerms, parameter, scale)
         );
     }
 
-    throw std::runtime_error("Unknown parameter type: " + type);
+    throw std::runtime_error(
+        "Unknown parameter type: " + type
+    );
 }
 // ------------------------------------------------------------
 template<typename T>
 ChiMorseModel<T> loadSingleChiMorseModel(
-    const json& modelJson
+    const json& modelJson,
+    T E0,
+    T L0
 ) {
     const auto& basis =
         modelJson.at("basis_terms");
@@ -382,26 +518,26 @@ ChiMorseModel<T> loadSingleChiMorseModel(
     const auto& params =
         modelJson.at("parameters");
 
-    auto D =
-        loadParameter<T>(
-            basis,
-            params.at("D")
-        );
+    auto D = loadParameter<T>(
+        basis,
+        params.at("D"),
+        T{1} / E0
+    );
 
-    auto re =
-        loadParameter<T>(
-            basis,
-            params.at("re")
-        );
+    auto re = loadParameter<T>(
+        basis,
+        params.at("re"),
+        T{1} / L0
+    );
 
-    auto alpha =
-        loadParameter<T>(
-            basis,
-            params.at("alpha")
-        );
+    auto alpha = loadParameter<T>(
+        basis,
+        params.at("alpha"),
+        L0
+    );
 
     const T cutoff =
-        modelJson.at("cutoff").get<T>();
+        modelJson.at("cutoff").get<T>() / L0;
 
     return ChiMorseModel<T>(
         std::move(D),
@@ -413,14 +549,21 @@ ChiMorseModel<T> loadSingleChiMorseModel(
 // ------------------------------------------------------------
 template<typename T>
 ChiMorseModels<T> loadChiMorseModels(
-    const std::string& filename
+    const std::string& filename,
+    T E0,
+    T L0
 ) {
+    if (E0 <= T{0} || L0 <= T{0}) {
+        throw std::runtime_error(
+            "ChiMorse E0 and L0 must be positive"
+        );
+    }
+
     std::ifstream file(filename);
 
     if (!file) {
         throw std::runtime_error(
-            "Could not open chiMorse JSON file: "
-            + filename
+            "Could not open ChiMorse JSON file: " + filename
         );
     }
 
@@ -433,18 +576,18 @@ ChiMorseModels<T> loadChiMorseModels(
     const auto& factors =
         j.at("handedness_factor");
 
-    return ChiMorseModels<T>{
+    return {
         loadSingleChiMorseModel<T>(
-            interactions.at("EP")
+            interactions.at("EP"), E0, L0
         ),
         loadSingleChiMorseModel<T>(
-            interactions.at("EA")
+            interactions.at("EA"), E0, L0
         ),
         loadSingleChiMorseModel<T>(
-            interactions.at("OP")
+            interactions.at("OP"), E0, L0
         ),
         loadSingleChiMorseModel<T>(
-            interactions.at("OA")
+            interactions.at("OA"), E0, L0
         ),
         factors.at("equal").get<T>(),
         factors.at("opposite").get<T>()
@@ -479,30 +622,29 @@ public:
         const Vec<T, 2>&,
         const T r
     ) const {
-        const auto type =
-            getInteractionType(p1, p2);
+        const auto pair =
+            canonicalizePair(p1, p2);
 
         const auto& model =
-            m_models.get(type);
+            m_models.get(pair.type);
 
         if (r <= T{0} || r > model.cutoff()) {
             return T{0};
         }
 
         const T h =
-            m_models.getHandednessFactor(type);
+            m_models.getHandednessFactor(pair.type);
+
+        const auto& c1 = *pair.first;
+        const auto& c2 = *pair.second;
 
         const T chi =
-            p2.phi - h * p1.phi;
+            c2.phi - h * c1.phi;
 
         const T psi =
-            p1.phi + h * p2.phi;
+            c1.phi + h * c2.phi;
 
-        return model.evaluate(
-            r,
-            chi,
-            psi
-        ).energy;
+        return model.energy(r, chi, psi);
     }
 
 private:
@@ -528,24 +670,27 @@ public:
         const Vec<T, 2>& dr,
         const T r
     ) const {
-        const auto type =
-            getInteractionType(p1, p2);
+        const auto pair =
+            canonicalizePair(p1, p2);
 
         const auto& model =
-            m_models.get(type);
+            m_models.get(pair.type);
 
         if (r <= T{0} || r > model.cutoff()) {
             return {{T{0}, T{0}, T{0}}};
         }
 
         const T h =
-            m_models.getHandednessFactor(type);
+            m_models.getHandednessFactor(pair.type);
+
+        const auto& c1 = *pair.first;
+        const auto& c2 = *pair.second;
 
         const T chi =
-            p2.phi - h * p1.phi;
+            c2.phi - h * c1.phi;
 
         const T psi =
-            p1.phi + h * p2.phi;
+            c1.phi + h * c2.phi;
 
         const auto value =
             model.evaluate(r, chi, psi);
@@ -553,15 +698,27 @@ public:
         const T radialForce =
             -value.dUdr;
 
+        // dr always points from the actual p1 to the actual p2,
+        // so these are the Cartesian force components on p2.
         const T fx =
             radialForce * dr[0] / r;
 
         const T fy =
             radialForce * dr[1] / r;
 
-        const T torqueOn2 =
+        // Torques of the canonical first and second particles.
+        const T torqueOnCanonical1 =
+            h * value.dUdChi
+            - value.dUdPsi;
+
+        const T torqueOnCanonical2 =
             -value.dUdChi
             -h * value.dUdPsi;
+
+        // The force functor must return the torque on the actual p2.
+        const T torqueOn2 = pair.swapped
+            ? torqueOnCanonical1
+            : torqueOnCanonical2;
 
         return {{fx, fy, torqueOn2}};
     }
@@ -569,68 +726,72 @@ public:
 private:
     ChiMorseModels<T> m_models;
 };
+// ============================================================
+// Factory struct for ChiSurfMD
+// ============================================================
 
-// ============================================================
-// Factory struct for chiSurfMD
-// ============================================================
-namespace po = boost::program_options;
-// ------------------------------------------------------------
 template<typename Particle, typename SFINAE = void>
 struct ChiMorse;
+
+
 // ------------------------------------------------------------
 template<typename T>
 struct ChiMorse<ParticleOriented<T>>
 {
-    static void initProgramOptions(po::options_description& desc) {
+    static void initProgramOptions(
+        po::options_description& desc
+    ) {
         desc.add_options()
             (
                 "chiMorseModel",
-                po::value<std::string>()->required(),
-                "path to chiMorse JSON model"
+                po::value<std::string>()->default_value("/home/hadis/chimorse/examples/models/chimorse_all.json"),
+                "path to ChiMorse JSON model"
+            )
+            (
+                "E0",
+                po::value<T>()->default_value(T{0.4}),
+                "reference energy in eV"
+            )
+            (
+                "L0",
+                po::value<T>()->default_value(T{7.0}),
+                "reference length in Angstrom"
             );
     }
 
-    static auto force(const po::variables_map& vm) {
-        try {
-            const auto filename =
-                vm["chiMorseModel"].as<std::string>();
 
-            auto models =
-                loadChiMorseModels<T>(filename);
-
-            return ChiMorseForce<ParticleOriented<T>>(
-                std::move(models)
+    static auto force(
+        const po::variables_map& vm
+    ) {
+        auto models =
+            loadChiMorseModels<T>(
+                vm["chiMorseModel"].as<std::string>(),
+                vm["E0"].as<T>(),
+                vm["L0"].as<T>()
             );
 
-        } catch (const boost::bad_any_cast& e) {
-            std::cerr
-                << "Error initializing ChiMorseForce: "
-                << e.what()
-                << std::endl;
-            throw;
-        }
+        return ChiMorseForce<ParticleOriented<T>>(
+            std::move(models)
+        );
     }
 
-    static auto potential(const po::variables_map& vm) {
-        try {
-            const auto filename =
-                vm["chiMorseModel"].as<std::string>();
 
-            auto models =
-                loadChiMorseModels<T>(filename);
-
-            return ChiMorsePotential<ParticleOriented<T>>(
-                std::move(models)
+    static auto potential(
+        const po::variables_map& vm
+    ) {
+        auto models =
+            loadChiMorseModels<T>(
+                vm["chiMorseModel"].as<std::string>(),
+                vm["E0"].as<T>(),
+                vm["L0"].as<T>()
             );
 
-        } catch (const boost::bad_any_cast& e) {
-            std::cerr
-                << "Error initializing ChiMorsePotential: "
-                << e.what()
-                << std::endl;
-            throw;
-        }
+        return ChiMorsePotential<ParticleOriented<T>>(
+            std::move(models)
+        );
     }
 
-    using ForceType = ChiMorseForce<ParticleOriented<T>>;
+
+    using ForceType =
+        ChiMorseForce<ParticleOriented<T>>;
 };

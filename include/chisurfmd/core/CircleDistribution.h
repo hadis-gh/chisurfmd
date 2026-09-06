@@ -8,6 +8,7 @@
 #include <stdexcept>
 #include <unordered_set>
 #include <queue>
+#include <algorithm>
 #include <adios2.h>
 
 #include "Vec.h"
@@ -249,8 +250,7 @@ std::vector<TParticle> initialParticles(const unsigned int& particlesNum,
                                         const std::vector<Species<T>>& allSpecies, 
                                         const int& speciesNum, 
                                         const T& L, std::mt19937& gen, 
-                                        const std::string& configuration,
-                                        const std::string& particlesType) {
+                                        const std::string& configuration) {
     std::vector<TParticle> particles;
 
     if (configuration == "RANDOM") {
@@ -261,37 +261,158 @@ std::vector<TParticle> initialParticles(const unsigned int& particlesNum,
         particles = distParticleDLA<TParticle>(particlesNum, L, allSpecies[speciesNum].radius, gen);
     } else if (configuration == "TWO") {
         particles = createTwoParticle<TParticle, T>(gen, L);
+    } else if (configuration == "ROW400") {
+        const int nRows = 20;
+        const int nCols = 20;
+
+        particles.resize(nRows * nCols);
+
+        const T spacing = 1.33;
+
+        size_t index = 0;
+
+        for (int row = 0; row < nRows; ++row) {
+            for (int col = 0; col < nCols; ++col, ++index) {
+
+                auto& p = particles[index];
+
+                // Regular square lattice, centered in each periodic cell.
+                p.position[0] = (col + 0.5) * spacing;
+                p.position[1] = (row + 0.5) * spacing;
+
+                // Alternating handedness by row.
+                p.handedness =
+                    (row % 2 == 0) ? +1 : -1;
+
+                // Same alignment and orientation for all particles.
+                p.alignment = +1;
+                p.phi = 0.0;
+
+                // Start at rest.
+                p.velocity[0] = 0.0;
+                p.velocity[1] = 0.0;
+                p.omega = 0.0;
+            }
+        }
+    }    else if (configuration == "ROW") {
+
+        particles.resize(particlesNum);
+        const T spacing = 1.33;
+        const T rowSpacing = std::sqrt(3.0) / 2.0 * spacing;
+
+        const std::vector<int> rowCounts = {
+            8, 8, 8, 8, 8, 9
+        };
+
+        const T y0 =
+            L / 2.0
+            - (rowCounts.size() - 1) * rowSpacing / 2.0;
+
+        size_t index = 0;
+
+        for (size_t row = 0; row < rowCounts.size(); ++row) {
+
+            const int count = rowCounts[row];
+
+            T x0 =
+                L / 2.0
+                - (count - 1) * spacing / 2.0;
+
+            // Stagger neighboring rows.
+            if (row % 2 == 1) {
+                x0 += spacing / 2.0;
+            }
+
+            for (int col = 0;
+                 col < count && index < particles.size();
+                 ++col, ++index) {
+
+                auto& p = particles[index];
+
+                p.position[0] = x0 + col * spacing;
+                p.position[1] = y0 + row * rowSpacing;
+
+                // Alternating handedness by row.
+                p.handedness =
+                    (row % 2 == 0) ? +1 : -1;
+
+                // Polar alignment and identical orientation.
+                p.alignment = +1;
+                p.phi = 0.0;
+
+                // Start at rest.
+                p.velocity[0] = 0.0;
+                p.velocity[1] = 0.0;
+                p.omega = 0.0;
+            }
+        }
     }
     else if (configuration.ends_with(".bp")) {
 
         adios2::ADIOS adios;
         adios2::IO io = adios.DeclareIO("ReadConfig");
 
-        adios2::Engine engine = io.Open(configuration, adios2::Mode::ReadRandomAccess);
+        adios2::Engine engine = 
+            io.Open(configuration, adios2::Mode::ReadRandomAccess);
 
-        adios2::Variable<T> varPositions = io.InquireVariable<T>("positions");
-        adios2::Variable<T> varVelocities = io.InquireVariable<T>("velocities");
-        if (!varPositions || !varVelocities) {
-            throw std::runtime_error("Missing required variables in file: " + configuration);
+        // ---------- variables ----------
+        auto varPositions = io.InquireVariable<T>("positions");
+        auto varVelocities = io.InquireVariable<T>("velocities");
+        auto varHandedness = io.InquireVariable<int8_t>("handedness");
+        auto varAlignment = io.InquireVariable<int8_t>("alignment");
+        auto varHandednessChar = io.InquireVariable<char>("handedness");
+        auto varAlignmentChar = io.InquireVariable<char>("alignment");
+
+        if (!varPositions || !varVelocities || ((!varHandedness || !varAlignment) && (!varHandednessChar || !varAlignmentChar))) {
+            throw std::runtime_error("Missing particle-state variables in file: " + configuration);
         }
-
+        // ---------- last saved state ----------
         size_t totalSteps = varPositions.Steps();
         size_t lastStep = totalSteps - 1;
-        // std::cout << "Reading step " << lastStep + 1 << " (final step) of " << totalSteps << " steps." << std::endl;
-        
+
         varPositions.SetStepSelection({lastStep, 1});
         varVelocities.SetStepSelection({lastStep, 1});
+        if (varHandedness && varAlignment) {
+            varHandedness.SetStepSelection({lastStep, 1});
+            varAlignment.SetStepSelection({lastStep, 1});
+        } else {
+            varHandednessChar.SetStepSelection({lastStep, 1});
+            varAlignmentChar.SetStepSelection({lastStep, 1});
+        }
 
-        std::vector<size_t> shape = varPositions.Shape();
+        // ---------- allocate storage ----------
+        const std::vector<size_t> shape = varPositions.Shape();
         const size_t num_particles = shape[0];
         const size_t dimensions = shape[1];
 
         std::vector<T> positions(num_particles * dimensions);
         std::vector<T> velocities(num_particles * dimensions);
+        std::vector<int8_t> handedness(num_particles * dimensions);
+        std::vector<int8_t> alignment(num_particles * dimensions);
 
         engine.Get(varPositions, positions.data(), adios2::Mode::Sync);
         engine.Get(varVelocities, velocities.data(), adios2::Mode::Sync);
+
+        if (varHandedness && varAlignment) {
+            engine.Get(varHandedness, handedness.data(), adios2::Mode::Sync);
+            engine.Get(varAlignment, alignment.data(), adios2::Mode::Sync);
+        } else {
+            std::vector<char> handednessChar(num_particles);
+            std::vector<char> alignmentChar(num_particles);
+
+            engine.Get(varHandednessChar, handednessChar.data(), adios2::Mode::Sync);
+            engine.Get(varAlignmentChar, alignmentChar.data(), adios2::Mode::Sync);
+
+            for (size_t i = 0; i < num_particles; ++i) {
+                handedness[i] = static_cast<int8_t>(handednessChar[i]);
+                alignment[i] = static_cast<int8_t>(alignmentChar[i]);
+            }
+        }
+
         engine.Close();
+
+        // ---------- reconstruct particles ----------
+        constexpr int D = degreesOfFreedom<TParticle>();
 
         for (size_t i = 0; i < num_particles; ++i) {
             TParticle p;
@@ -303,29 +424,25 @@ std::vector<TParticle> initialParticles(const unsigned int& particlesNum,
                 qDot[a] = velocities[i * dimensions + a];
             }
 
-            if (q[0] <= L && q[0] >= 0. && q[1] <= L && q[1] >= 0.) {
-                setGeneralizedPositions(p, q);
-                setGeneralizedVelocities(p, qDot);
-                particles.push_back(p);
+            // Ignore padded/invalid particles
+            if (q[0] < 0 || q[0] > L || q[1] < 0 || q[1] > L) {
+                continue;
             }
+            setGeneralizedPositions(p, q);
+            setGeneralizedVelocities(p, qDot);
+
+            p.handedness = handedness[i];
+            p.alignment  = alignment[i];
+
+            particles.push_back(p);
         }
+    } else {
+        throw std::runtime_error("Invalid initial configuration!");
     }
 
     // Set species for all particles
     for (auto& p : particles) {
         p.species = speciesNum;
-        
-        std::uniform_int_distribution<int8_t> dis(0, 1);
-        if (particlesType == "OP") {
-            p.handedness = dis(gen) * 2 - 1;
-        } else if (particlesType == "EA") {
-            p.alignment = dis(gen) * 2 - 1;
-        } else if (particlesType == "EP" || particlesType == "OA") {
-            p.handedness = 1;
-            p.alignment = 1;
-        } else {
-            throw std::runtime_error("Wrong Particles Type: " + particlesType);
-        }
     }
 
     return particles;
@@ -350,6 +467,115 @@ std::vector<ParticleOriented<T>> initialParticlesOriented(const unsigned int& pa
     }
     
     return particlesOriented;
+}
+
+// ========================== Assign state to single-new particle ==========================
+
+template<typename Particle>
+void assignNewParticleState(Particle& particle,
+                            const std::vector<Particle>& particles,
+                            const std::string& chirality,
+                            const std::string& alignment,
+                            std::mt19937& gen) {
+    std::bernoulli_distribution coin(0.5);
+
+    // ---------- handedness ----------
+    if (chirality == "homochiral") {
+        particle.handedness = +1;
+    }
+    else if (chirality == "racemic") {
+
+        size_t positive = 0;
+        size_t negative = 0;
+
+        for (const auto& p : particles) {
+            if (p.handedness == +1) ++positive;
+            else if (p.handedness == -1) ++negative;
+        }
+
+        if (positive < negative)
+            particle.handedness = +1;
+        else if (negative < positive)
+            particle.handedness = -1;
+        else
+            particle.handedness = coin(gen) ? +1 : -1;
+    }
+    else {
+        throw std::runtime_error(
+            "chirality must be 'homochiral' or 'racemic'"
+        );
+    }
+
+    // ---------- alignment ----------
+    if (alignment == "polar") {
+        particle.alignment = +1;
+    }
+    else if (alignment == "apolar") {
+
+        size_t positive = 0;
+        size_t negative = 0;
+
+        for (const auto& p : particles) {
+            if (p.alignment == +1) ++positive;
+            else if (p.alignment == -1) ++negative;
+        }
+
+        if (positive < negative)
+            particle.alignment = +1;
+        else if (negative < positive)
+            particle.alignment = -1;
+        else
+            particle.alignment = coin(gen) ? +1 : -1;
+    }
+    else {
+        throw std::runtime_error(
+            "alignment must be 'polar' or 'apolar'"
+        );
+    }
+}
+// ===============================  Assign state to existed particles  ===============================
+
+template<typename Particle>
+void assignParticleState(std::vector<Particle>& particles,
+                        const std::string& chirality,
+                        const std::string& alignment,
+                        std::mt19937& gen) {
+    const size_t N = particles.size();
+
+    std::vector<int8_t> handedness(N, +1);
+    std::vector<int8_t> directions(N, +1);
+
+    // ---------- handedness ----------
+    if (chirality == "racemic") {
+        for (size_t i = N / 2; i < N; ++i)
+            handedness[i] = -1;
+
+        std::shuffle(handedness.begin(), handedness.end(), gen);
+    }
+    else if (chirality != "homochiral") {
+        throw std::runtime_error(
+            "chirality must be 'homochiral' or 'racemic'"
+        );
+    }
+
+    // ---------- alignment ----------
+    if (alignment == "apolar") {
+        for (size_t i = N / 2; i < N; ++i)
+            directions[i] = -1;
+
+        std::shuffle(directions.begin(), directions.end(), gen);
+    }
+    else if (alignment != "polar") {
+        throw std::runtime_error(
+            "alignment must be 'polar' or 'apolar'"
+        );
+    }
+
+    // ---------- assign ----------
+    for (size_t i = 0; i < N; ++i) {
+        particles[i].handedness = handedness[i];
+        particles[i].alignment  = directions[i];
+    }
 }
 
 // ================================== Deposite Particles RANDOM ==================================
