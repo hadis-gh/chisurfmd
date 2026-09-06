@@ -199,8 +199,8 @@ int main(int argc, char* argv[]) {
     constexpr int D = degreesOfFreedom<ParticleT>();
 
     adios2::Variable<Real> varT = io.DefineVariable<Real>("time");
-    adios2::Variable<int8_t> varHandedness = io.DefineVariable<int8_t>("handedness", {particlesNum}, {0}, {particlesNum});
-    adios2::Variable<int8_t> varAlignment = io.DefineVariable<int8_t>("alignment", {particlesNum}, {0}, {particlesNum});
+    adios2::Variable<int8_t> varHandedness = io.DefineVariable<int8_t>("handedness", {particlesNumMax}, {0}, {particlesNumMax});
+    adios2::Variable<int8_t> varAlignment = io.DefineVariable<int8_t>("alignment", {particlesNumMax}, {0}, {particlesNumMax});
     adios2::Variable<Real> varPositions = io.DefineVariable<Real>("positions", {particlesNumMax, D}, {0, 0}, {particlesNumMax, D});
     adios2::Variable<Real> varVelocities = io.DefineVariable<Real>("velocities", {particlesNumMax, D}, {0, 0}, {particlesNumMax, D});
     adios2::Variable<Real> varKineticEnergy = io.DefineVariable<Real>("kinetic energy", {1, 3}, {0, 0}, {1, 3});
@@ -289,11 +289,13 @@ int main(int argc, char* argv[]) {
             engine.BeginStep();
     
             const auto nextEventStep = std::min({writeStateStep, writeEnergyStep, thermoStep, nsteps});
-            Real currentTime = step * dt;
+
             integrate(particles, allSpecies, dt, (nextEventStep - step) * dt, boxPBC, force, integrationMethod);
             
             step = nextEventStep;
     
+            const Real currentTime = step * dt;
+
             engine.Put(varT, currentTime);
         
             if (enableCapVelocity) {
