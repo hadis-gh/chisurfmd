@@ -45,8 +45,13 @@ std::vector<T> calInternalTemperature(const std::vector<TParticle>& particles, c
 
 template<typename TParticle, typename T = typename TParticle::value_type>
 T calRawTemperature(const std::vector<TParticle>& particles, const std::vector<Species<T>>& allSpecies) {
-    T rawKE = calRawKineticEnergy(particles, allSpecies);
-    return (2 * rawKE) / (constants::boltzmann * particles.size() * 3.0);
+    const T rawKE = calRawKineticEnergy(particles, allSpecies);
+    constexpr int D = degreesOfFreedom<TParticle>();
+    return
+        (2 * rawKE) /
+        (constants::boltzmann *
+         particles.size() *
+         static_cast<T>(D));
 }
 
 template<typename TParticle, typename T = typename TParticle::value_type>
