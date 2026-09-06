@@ -15,8 +15,6 @@ endif()
 # 2: EXTERNAL DEPENDENCIES
 # ==============================================================================
 find_package(Boost COMPONENTS program_options REQUIRED)
-
-set(Adios2_DIR "/opt/pkg/adios2/lib/cmake/adios2")
 find_package(Adios2 REQUIRED)
 
 # ==============================================================================
