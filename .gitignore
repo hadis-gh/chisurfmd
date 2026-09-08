@@ -17,3 +17,5 @@ build*
 .bashrc
 
 !chisurfmd_logo.png
+!assets/*.png
+!assets/*.gif
