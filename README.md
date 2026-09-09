@@ -71,20 +71,10 @@ directly in molecular-dynamics simulations. The example below shows an
 annealing trajectory together with energy/trajectory diagnostics and selected
 low-temperature configurations.
 
-<table>
-  <tr>
-    <td width="50%" align="right" valign="top">
-      <img src="assets/chimorse_annealing.gif" width="80%" alt="Annealing trajectory animation"/>
-    </td>
-    <td width="50%" align="left" valign="top">
-      <img src="assets/trajectoryRightSide.png" width="80%" alt="Energy evolution and selected particle trajectories during annealing"/>
-    </td>
-  </tr>
-</table>
-
-<p align="center">
-  <img src="assets/chimorse_annealed.png" width="80%" alt="Annealed ChiMorse structures for different chirality and alignment combinations"/>
-</p>
+<div align="center" style="line-height: 0;">
+  <img src="assets/chimorse_annealing.gif" width="50%" alt="Annealing trajectory animation" style="display: inline-block; vertical-align: top;" /><img src="assets/trajectoryRightSide.png" width="50%" alt="Energy evolution and selected particle trajectories during annealing" style="display: inline-block; vertical-align: top;" />
+  <img src="assets/chimorse_annealed.png" width="100%" alt="Annealed ChiMorse structures for different chirality and alignment combinations" style="display: block; margin: 0 auto;" />
+</div>
 
 ### Patchy-particle annealing
 
@@ -93,7 +83,7 @@ infrastructure. Here, patch number and geometry modify the structures produced
 during annealing.
 
 <p align="center">
-  <img src="assets/patchymodel_annealing.png" width="80%" alt="Annealed structures for patchy interactions with different patch numbers"/>
+  <img src="assets/patchymodel_annealing.png" width="100%" alt="Annealed structures for patchy interactions with different patch numbers"/>
 </p>
 
 ### Particle aggregation
@@ -103,7 +93,7 @@ allowing cluster growth to be studied as a function of temperature and
 deposition interval.
 
 <p align="center">
-  <img src="assets/cluster_growth.png" width="80%" alt="Cluster growth for different temperatures and deposition intervals"/>
+  <img src="assets/cluster_growth.png" width="100%" alt="Cluster growth for different temperatures and deposition intervals"/>
 </p>
 
 These examples are intended to show the simulation and analysis capabilities
