@@ -1,221 +1,328 @@
 <p align="center">
-  <img src="docs/chisurfmd_logo.png" alt="ChiSurfMD logo" width="360"/>
+  <img src="assets/chisurfmd_logo.png" width="40%" alt="ChiSurfMD logo"/>
 </p>
 
-<!-- <h1 align="center">lettuce&nbsp;·&nbsp;MD</h1> -->
-
 <p align="center">
-  <em>A 2D molecular-dynamics engine for anisotropic, chiral, patchy-particle self-assembly</em>
+  <strong>A modular C++20 molecular-dynamics framework for two-dimensional particle systems with anisotropic and chiral interactions.</strong>
 </p>
 
 <p align="center">
   <img src="https://img.shields.io/badge/C%2B%2B-20-00599C?logo=cplusplus&logoColor=white" alt="C++20"/>
   <img src="https://img.shields.io/badge/build-CMake-064F8C?logo=cmake&logoColor=white" alt="CMake"/>
   <img src="https://img.shields.io/badge/I%2FO-ADIOS2-E8743B" alt="ADIOS2"/>
-  <img src="https://img.shields.io/badge/analysis-Python%20%2F%20Jupyter-3776AB?logo=python&logoColor=white" alt="Python"/>
+  <img src="https://img.shields.io/badge/analysis-Python%20%2F%20Jupyter-3776AB?logo=python&logoColor=white" alt="Python / Jupyter"/>
 </p>
 
----
+ChiSurfMD is a research-oriented molecular-dynamics framework for
+**two-dimensional particle systems with configurable interaction models**. It
+combines a template-based C++20 simulation core with ADIOS2 output, scripted
+simulation workflows, and Python/Jupyter analysis and visualization.
 
-## Overview
-
-This repository is a research portfolio piece containing the molecular-dynamics architecture I developed to study the **self-assembly of orientation-dependent and chiral particles in two dimensions**. It features a generic, template-based C++ core paired with a fully automated, config-driven Bash-to-Python pipeline.
-
-The design prioritizes clean separation of concerns: the **particle model, interaction potential, integrator, and thermostat are independent, composable compile-time policies**. This allows for rapid iteration on physics questions without rewriting the core loop. Bash orchestration handles complex parameter sweeps (like temperature annealing and diffusion-limited aggregation), while a modular Python layer translates the binary streams into high-quality visualizations.
-
-> **Note:** This repository is intended to demonstrate modular code architecture and scientific-computing workflows for academic review. It is not packaged for general third-party installation.
-
----
-
-## Key Results
-
-> *Replace these placeholders with your best Jupyter notebook outputs. A PI should see your physics working immediately.*
-
-<p align="center">
-  <img src="assets/aggregation_animation.gif" alt="DLA Aggregation Animation" width="45%"/>
-  &nbsp;&nbsp;
-  <img src="assets/phase_heatmap.png" alt="Phase Diagram Heatmap" width="45%"/>
-</p>
-<p align="center">
-  <em>Left: DLA deposition sequence showing chiral alignment. Right: (T, deposition-rate) heatmap of orientational order.</em>
-</p>
-
----
+The framework was developed for surface self-assembly of anisotropic and
+chiral particles, while keeping particle models, interaction potentials,
+integrators, thermostats, and simulation protocols sufficiently modular to
+support other custom 2D interaction studies. ChiSurfMD is intended for
+specialized small-to-medium simulations and rapid model development rather
+than as a replacement for general-purpose MD packages such as LAMMPS or
+GROMACS.
 
 ## Contents
 
-- [Pipeline at a Glance](#pipeline-at-a-glance)
-- [The C++ Engine](#the-c-engine)
-- [Simulation Workflows](#simulation-workflows)
-- [Analysis & Visualization](#analysis--visualization)
-- [Build & Run Reference](#build--run-reference)
+- [What ChiSurfMD does](#what-chisurfmd-does)
+- [Demonstration at a glance](#demonstration-at-a-glance)
+- [Architecture](#architecture)
+- [Build](#build)
+- [Simulation workflows](#simulation-workflows)
+- [Interaction models](#interaction-models)
+- [Output](#output)
+- [Analysis and visualization](#analysis-and-visualization)
+- [Repository structure](#repository-structure)
+- [Scope](#scope)
+- [Citation](#citation)
+- [License](#license)
 
----
+## What ChiSurfMD does
 
-## Pipeline at a Glance
+| Stage | Capability |
+|---|---|
+| **Particles** | Simulate translational or orientable particles in two dimensions. |
+| **Interactions** | Select among isotropic, anisotropic, patchy, tabulated, and ChiMorse potentials. |
+| **Dynamics** | Combine interchangeable integration and temperature-control schemes. |
+| **Workflows** | Run individual trajectories, temperature schedules, deposition, and aggregation studies. |
+| **Output** | Write trajectory and observable data using ADIOS2 `.bp` files. |
+| **Analysis** | Extract, analyze, visualize, and animate simulations with Python and Jupyter. |
+| **Reproducibility** | Use seeded simulations, configuration scripts, and parameter-sweep workflows. |
 
-A single `config.sh` parameterizes the entire run. Bash scripts dispatch the compiled C++ engine, which streams trajectories and observables to **ADIOS2 `.bp`** files. The Python analysis layer then automatically ingests and visualizes the data.
+The framework separates the molecular-dynamics engine from the physical model
+and analysis layer, making it practical to prototype and compare custom
+interaction models without rewriting the full simulation workflow.
+
+## Demonstration at a glance
+
+The examples below illustrate three types of simulations supported by the
+framework: anisotropic molecular annealing, patchy-particle self-assembly, and
+deposition-driven aggregation.
+
+### Annealing with the ChiMorse interaction
+
+ChiSurfMD can evaluate the Fourier–Morse interaction generated by the
+independent [ChiMorse](https://github.com/hadis-gh/chimorse) package and use it
+directly in molecular-dynamics simulations. The example below shows an
+annealing trajectory together with energy/trajectory diagnostics and selected
+low-temperature configurations.
+
+<table>
+  <tr>
+    <td width="50%" align="right" valign="top">
+      <img src="assets/chimorse_annealing.gif" width="80%" alt="Annealing trajectory animation"/>
+    </td>
+    <td width="50%" align="left" valign="top">
+      <img src="assets/trajectoryRightSide.png" width="80%" alt="Energy evolution and selected particle trajectories during annealing"/>
+    </td>
+  </tr>
+</table>
+
+<p align="center">
+  <img src="assets/chimorse_annealed.png" width="80%" alt="Annealed ChiMorse structures for different chirality and alignment combinations"/>
+</p>
+
+### Patchy-particle annealing
+
+Alternative interaction models can be explored using the same simulation
+infrastructure. Here, patch number and geometry modify the structures produced
+during annealing.
+
+<p align="center">
+  <img src="assets/patchymodel_annealing.png" width="80%" alt="Annealed structures for patchy interactions with different patch numbers"/>
+</p>
+
+### Particle aggregation
+
+The aggregation workflow combines particle deposition with MD relaxation,
+allowing cluster growth to be studied as a function of temperature and
+deposition interval.
+
+<p align="center">
+  <img src="assets/LJ_aggregation.png" width="80%" alt="Cluster growth for different temperatures and deposition intervals"/>
+</p>
+
+These examples are intended to show the simulation and analysis capabilities
+of the framework. Detailed physical interpretation of the ChiMorse interaction
+and its chirality/alignment classes belongs to the associated scientific study.
+
+## Architecture
+
+The particle representation, interaction potential, thermostat, numerical
+integration, output, and analysis layers are kept separate so that the same
+simulation workflow can be reused with different physical models.
 
 ```mermaid
 flowchart LR
-    A["config.sh<br/>(parameters)"] --> B{"Workflow"}
-    B -->|single| S1["run_single.sh"]
-    B -->|annealing| S2["run_loop.sh"]
-    B -->|aggregation| S3["run_aggregation.sh"]
-
-    S1 --> E1["run_main_MD<br/>(C++ engine)"]
-    S2 --> E1
-    S3 --> E2["run_aggregation<br/>(C++ engine)"]
-
-    E1 --> O[("ADIOS2 .bp<br/>trajectories + observables")]
-    E2 --> O
-
-    O --> P["Python modules<br/>extraction · analysis · visualization"]
-    P --> N["Jupyter notebooks<br/>02 / 03 / 04"]
-    N --> R["Figures · animations<br/>phase heatmaps"]
-
-
----
-
-## The Engine
-
-The core is header-only and generic over the particle type. Algorithms (integration, thermostatting, energy/temperature measurement) are written against a small **generalized-coordinate interface** (`getGeneralizedPositions` / `…Velocities` and their setters), so the same code path drives a translational point particle or a fully oriented rigid body without specialization.
-
-```mermaid
-flowchart TD
-    subgraph CT["Compile-time policies (CMake cache → macros)"]
-        P1["Particle model<br/>ParticleDot (2 DOF) · ParticleOriented (3 DOF)"]
-        P2["Interaction potential<br/>Isotropic / Oriented / Geometric / Patchy / Chiral / Morse"]
-        P3["Thermostat<br/>VelocityScaling / Berendsen / Andersen / None"]
-    end
-
-    P1 --> K["Generalized-coordinate interface"]
-    P2 --> K
-    P3 --> K
-    K --> L["Integrator (runtime-selected)<br/>VelocityVerlet · Euler · SymplecticEuler"]
-    L --> M["Event-driven MD loop<br/>(integrate → measure → thermostat)"]
-    M --> OUT[("ADIOS2 .bp")]
+    A["CMake configuration"] --> B["C++20 MD engine"]
+    C["Bash workflows"] --> B
+    B --> D[("ADIOS2 .bp output")]
+    D --> E["Python analysis"]
+    E --> F["Jupyter notebooks"]
+    F --> G["Figures and animations"]
 ```
 
-### Particle Models
+At the C++ level, generalized positions and velocities allow the integration
+and analysis routines to operate on both translational and orientable
+particles.
 
-| Model | DOF | Description |
-|---|---|---|
-| `ParticleDot` | 2 | Translational point particle (x, y). |
-| `ParticleOriented` | 3 | Adds an orientation φ and angular velocity ω; carries handedness/alignment labels for chirality studies. |
+### Core components
 
-Particles support multiple **species** (mass, moment of inertia, exclusion radius) and periodic boundary conditions with the minimum-image convention.
+- **Particle representations**
+  - `ParticleDot`: translational motion in \(x,y\)
+  - `ParticleOriented`: translational motion plus orientation \(\phi\)
 
-### Interaction Potentials
+- **Integration schemes**
+  - Velocity Verlet
+  - Symplectic Euler
+  - Explicit Euler
 
-Each potential is a self-contained factory exposing `force`, `potential`, and its own command-line options; the active one is fixed at build time via `LETTUCE_POTENTIAL`. Force and energy are provided as separate functors for accurate energetics and integration.
+- **Temperature control**
+  - Andersen thermostat
+  - Berendsen thermostat
+  - velocity scaling
+  - thermostat-free dynamics
 
-| Potential | Orientation | Summary |
-|---|:---:|---|
-| `IsotropicLJ` | — | Standard 12–6 Lennard-Jones. |
-| `OrientedLJ` | ✓ | LJ with a smooth angular term `A·(1 + cos(m·Δφ + α))`; `α` encodes a chiral phase, `m` the rotational order. |
-| `GeometricLJ` | ✓ | Explicit off-centre patches; patch–patch LJ interactions with the resulting torque. |
-| `PatchyLJ` | ✓ | Discrete attractive surface patches. |
-| `ChiralPatchyLJ` | ✓ | Patchy interactions with a handedness-dependent angular offset. |
-| `AnisotropicMorse` | ✓ | Orientation-dependent Morse interaction with a Fourier-modulated well. |
-| `TabularDFT` | ✓ | Tabulated potential driven by external (e.g. first-principles) data. |
+The active particle, potential, and thermostat types are selected during CMake
+configuration, while simulation parameters and workflow settings are supplied
+at runtime or through scripts.
 
-### Integrators &amp; Thermostats
+## Build
 
-- **Integrators** (runtime, `--integration`): Velocity Verlet (default, symplectic), Symplectic Euler, explicit Euler.
-- **Thermostats** (compile-time, `LETTUCE_THERMOSTAT`): velocity rescaling, Berendsen, stochastic Andersen, or none — each generalised to both translational and rotational degrees of freedom.
+### Requirements
 
-### Observables
+- C++20 compiler
+- CMake 3.20 or newer
+- Boost `program_options`
+- ADIOS2
+- Python/Jupyter for analysis
+- GNU `parallel` for parallel aggregation sweeps (optional)
 
-Streamed to `.bp` on independent state/energy intervals:
+### Configure and compile
 
-- positions &amp; velocities (generalized coordinates)
-- kinetic energy resolved per DOF (x, y, φ) and potential energy
-- per-DOF temperature
-- orientational order parameter ⟨cos 2Δφ⟩
-- neighbour counts at multiple shell radii
-- centre-of-mass velocity and angular momentum
-- handedness / alignment labels
-
----
-
-## Build &amp; run
-
-> Reference steps for reproducing the pipeline on a Linux / HPC environment.
-
-### Prerequisites
-
-- A **C++20** compiler (GCC&nbsp;≥&nbsp;10 or Clang&nbsp;≥&nbsp;12) and **CMake&nbsp;≥&nbsp;3.20**
-- **Boost** (`program_options`) and **ADIOS2** — engine and binary I/O
-- **GNU&nbsp;parallel** — aggregation parameter sweeps (optional)
-- **Python&nbsp;≥&nbsp;3.10** with `numpy`, `matplotlib`, `scipy`, `jupyter`, and the **ADIOS2 Python bindings** (to read `.bp` output)
-
-### Build
-
-The particle model, potential, and thermostat are **compile-time policies**, chosen as CMake cache options; run-time parameters (temperature, step size, …) are supplied later on the command line.
+A typical oriented-particle build is:
 
 ```bash
-cmake -B build -DCMAKE_BUILD_TYPE=Release \
-      -Dlettuce_md_PARTICLE=ParticleOriented \
-      -Dlettuce_POTENTIAL=OrientedLJ \
-      -Dlettuce_md_THERMOSTAT=ThermostatID::Andersen
+cmake -S . -B build \
+    -DCMAKE_BUILD_TYPE=Release \
+    -Dchisurfmd_PARTICLE=ParticleOriented \
+    -Dchisurfmd_POTENTIAL=OrientedLJ \
+    -Dchisurfmd_THERMOSTAT=ThermostatID::Andersen
+
 cmake --build build -j
 ```
 
-This builds the example drivers (`run_main_MD`, `run_aggregation`) under `build/`. Run either with `--help` to list every option.
-
-### Run
-
-Each workflow is launched through a `config.sh` that defines the parameters for a sweep:
+If ADIOS2 is installed in a non-standard location, its CMake directory can be
+provided during configuration:
 
 ```bash
-cd scripts
-./run_single.sh       config.sh   # one trajectory at fixed T
-./run_loop.sh         config.sh   # temperature annealing + heating
-./run_aggregation.sh  config.sh   # DLA deposition over a (T, rate) grid
+cmake -S . -B build \
+    -DAdios2_DIR=/path/to/adios2/lib/cmake/adios2
 ```
 
-Results are streamed to ADIOS2 `.bp` files; open the matching notebook in `notebooks/` to analyse them.
+The main executables are:
 
----
+```text
+build/examples/chisurfmd_md
+build/examples/chisurfmd_aggregation
+```
+
+Use `--help` to inspect the available runtime options:
+
+```bash
+./build/examples/chisurfmd_md --help
+./build/examples/chisurfmd_aggregation --help
+```
 
 ## Simulation workflows
 
-All three modes are config-driven and reproducible (seeded RNG).
+The `scripts/` directory provides reusable workflows around the compiled
+executables.
 
-**1 · Single run** — one trajectory at a fixed temperature (`run_single.sh`).
+### Single trajectory
 
-**2 · Temperature annealing** — `run_loop.sh` starts from a random configuration at high temperature, cools in fixed steps, then re-heats, **chaining each run's final configuration as the next run's initial state**. This produces an ordered sequence of `.bp` files spanning the cooling/heating cycle.
+Runs one molecular-dynamics trajectory for a selected particle model,
+potential, thermostat, temperature, and initial configuration.
 
-```mermaid
-flowchart LR
-    R["RANDOM init<br/>(high T)"] --> C1["cool: T − ΔT"] --> C2["…"] --> Cmin["low T"]
-    Cmin --> H1["heat: T + ΔT"] --> H2["…"] --> Hmax["high T"]
+```bash
+cd scripts
+./run_single.sh <config.sh>
 ```
 
-**3 · Diffusion-limited aggregation** — `run_aggregation.sh` runs a two-stage protocol and sweeps a **temperature × deposition-rate grid in parallel** (GNU `parallel`). The deposition driver grows a cluster one particle at a time, relaxing the system with a full MD loop after each addition.
+### Temperature annealing and heating
 
-```mermaid
-flowchart TD
-    seed["Seed cluster<br/>moved to box centre"] --> dep{"size &lt; N_max ?"}
-    dep -->|yes| add["Deposit one particle<br/>(DLA placement + random φ)"]
-    add --> relax["Reset velocities → MD relaxation<br/>at target T"]
-    relax --> dep
-    dep -->|no| done["Final aggregate → .bp"]
+Runs sequential MD simulations over a temperature schedule. The final
+configuration at one temperature initializes the next step.
+
+```bash
+cd scripts
+./run_annealing.sh <config.sh>
 ```
 
----
+### Aggregation
 
-## Analysis &amp; visualization
+Combines particle deposition with MD relaxation to study cluster growth as a
+function of temperature and deposition interval.
 
-The `notebooks/` build on three Python modules — `data_extraction` (reads `.bp` and assembles parameter sweeps), `system_analysis` (cluster metrics), and `visualization` (plots and animations).
+```bash
+cd scripts
+./run_aggregation.sh <config.sh>
+```
 
-| Notebook | Purpose |
+## Interaction models
+
+The active interaction model is selected at build time.
+
+| Potential | Oriented particles | Purpose |
+|---|:---:|---|
+| `IsotropicLJ` | — | Standard isotropic Lennard–Jones interaction |
+| `OrientedLJ` | ✓ | Lennard–Jones interaction with angular dependence |
+| `GeometricLJ` | ✓ | Geometry-based orientation-dependent interaction |
+| `PatchyLJ` | ✓ | Discrete attractive patch interactions |
+| `ChiralPatchyLJ` | ✓ | Patchy interaction with handedness dependence |
+| `TabularDFT` | ✓ | Interaction defined from tabulated external data |
+| `ChiMorse` | ✓ | Fourier-parameterized anisotropic Morse interaction |
+
+This separation makes the simulation engine useful both for testing simplified
+model interactions and for running analytical or tabulated potentials derived
+from external calculations.
+
+## Output
+
+Simulation data are written as ADIOS2 `.bp` files. Depending on the selected
+particle model and workflow, output can include:
+
+- time;
+- generalized positions and velocities;
+- handedness and alignment labels;
+- kinetic and potential energy;
+- translational and rotational temperature;
+- neighbor counts;
+- orientational order;
+- center-of-mass quantities.
+
+Particle-state and observable output intervals can be controlled independently
+of the MD integration time step.
+
+## Analysis and visualization
+
+The `notebooks/` directory provides the Python/Jupyter analysis layer for
+reading ADIOS2 output, inspecting trajectories, computing structural
+quantities, and generating figures or animations.
+
+| Notebook / module | Purpose |
 |---|---|
-| `02_MD_Single_File` | Single trajectory: energy/temperature traces, neighbour and order-parameter evolution, COM kinematics; configuration snapshots, trajectories, animations; φ and Δφ histograms. |
-| `03_MD_Temperature_Loop` | Annealing/heating across temperature: energetics, neighbour counts, and order parameter vs. T; snapshots and orientation histograms at chosen temperatures; full-cycle animation. |
-| `04_MD_Aggregation` | Aggregate structure and growth dynamics; **(T, deposition-rate) heatmaps** of orientational order, neighbour number, radius of gyration, convex-hull area, and compactness. |
+| `01_Potential.ipynb` | Inspect interaction-potential surfaces. |
+| `02_MD_Single_File.ipynb` | Analyze a single trajectory. |
+| `03_MD_Temperature_Loop.ipynb` | Analyze annealing/heating simulations. |
+| `04_MD_Aggregation.ipynb` | Analyze cluster-growth simulations. |
+| `data_extraction.py` | Read and organize ADIOS2 simulation output. |
+| `system_analysis.py` | Structural and cluster analysis. |
+| `visualization.py` | Configuration, trajectory, observable, and animation tools. |
 
----
+The analysis layer is intentionally separate from the C++ simulation core so
+that simulation output can be inspected and post-processed without coupling
+visualization logic to the MD engine.
 
-<p align="center"><sub>Research portfolio · computational / theoretical physics</sub></p>
+## Repository structure
+
+```text
+chisurfmd/
+├── include/chisurfmd/
+│   ├── core/          # particle models, vectors, species, utilities, energy
+│   ├── md/            # integration and thermostats
+│   └── potential/     # interaction models
+├── examples/          # simulation drivers
+├── scripts/           # single, annealing, and aggregation workflows
+├── notebooks/         # analysis and visualization
+├── assets/            # representative figures and animations
+├── CMakeLists.txt
+├── LICENSE
+└── README.md
+```
+
+## Scope
+
+ChiSurfMD is a compact research code for custom two-dimensional interaction
+models and self-assembly studies. The current implementation uses direct
+pairwise force evaluation and is therefore best suited to small-to-medium
+systems rather than large-scale production molecular dynamics.
+
+The project was developed as part of a broader multiscale simulation workflow,
+but ChiSurfMD can be used independently: ChiMorse is one supported interaction
+model rather than a required dependency of the simulation framework.
+
+## Citation
+
+If you use ChiSurfMD in research, please cite the software release and relevant
+scientific work when public citation information is available.
+Machine-readable citation metadata are provided in [`CITATION.cff`](CITATION.cff).
+
+## License
+
+ChiSurfMD is released under the **MIT License**. See [`LICENSE`](LICENSE) for
+details.
