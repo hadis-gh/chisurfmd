@@ -103,7 +103,7 @@ allowing cluster growth to be studied as a function of temperature and
 deposition interval.
 
 <p align="center">
-  <img src="assets/LJ_aggregation.png" width="80%" alt="Cluster growth for different temperatures and deposition intervals"/>
+  <img src="assets/cluster_growth.png" width="80%" alt="Cluster growth for different temperatures and deposition intervals"/>
 </p>
 
 These examples are intended to show the simulation and analysis capabilities
