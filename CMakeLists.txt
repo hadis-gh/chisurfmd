@@ -14,7 +14,7 @@ endif()
 # ==============================================================================
 # 2: EXTERNAL DEPENDENCIES
 # ==============================================================================
-find_package(Boost COMPONENTS program_options REQUIRED)
+find_package(Boost CONFIG REQUIRED COMPONENTS program_options)
 find_package(Adios2 REQUIRED)
 
 # ==============================================================================
