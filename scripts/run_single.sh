@@ -2,59 +2,96 @@
 
 set -eu
 
+# ==============================================================================
+# 1. LOAD CONFIGURATION
+# ==============================================================================
 config=${1:-"config.sh"}
+
 if [ ! -f "$config" ]; then
-    echo "Error: '$config' not found."
+    echo "Error: configuration file '$config' not found."
     exit 1
 fi
+
 source "$config"
 
-MD_EXE=${MD_EXE:-"../test/testNParticleMD"}
+# ==============================================================================
+# 2. PATHS AND OUTPUT
+# ==============================================================================
+MD_EXE=${MD_EXE:-"../build/examples/chisurfmd_md"}
 outputDir=${outputDir:-"./outputs"}
+saveFile=${saveFile:-"${outputDir}/final_run.bp"}
+
 mkdir -p "$outputDir"
 
-logFile="log.txt"
+logFile="${outputDir}/log.txt"
 exec > >(tee "$logFile") 2>&1
-echo "Logging to: $logFile"
 
-simulationType=${1:-"oriented"}
-particleInit=${2:-"RANDOM"}
-temperature=${3:-"$highTemperature"}
-saveFile=${4:-"${outputDir}/final_run.bp"}
+# ==============================================================================
+# 3. DEFAULT RUNTIME OPTIONS
+# ==============================================================================
+potentialType=${potentialType:-"OrientedLJ"}
 
-echo "============================================="
-echo "    Single Molecular Dynamics Simulation     "
-echo "============================================="
+particleInit=${particleInit:-"RANDOM"}
+temperature=${temperature:-0.5}
+integration=${integration:-"VelocityVerlet"}
 
+# ==============================================================================
+# 4. COMMON MD ARGUMENTS
+# ==============================================================================
 args=(
     --particlesInit "$particleInit"
+    --particlesNum "$particlesNum"
+    --particleRadius "$particleRadius"
+    --momentI "$momentI"
     --chirality "$chirality"
     --alignment "$alignment"
-    --temperature "$temperature"
-    --time "$timeCooling" --dt "$dt"
-    --saveFile "$saveFile"
-    --particlesNum "$particleNum"
-    --seed "$seed"
+    
     --areaL "$areaL"
-    --particleRadius "$particleRadius"
-    --thermoInterval "$thermoInterval"
+    --seed "$seed"
+
+    --integration "$integration"
+    --time "$time"
+    --dt "$dt"
     --writeStateInterval "$writeStateInterval"
     --writeEnergyInterval "$writeEnergyInterval"
-    --integration "$integration"
+    
+    --temperature "$temperature"
+    --thermoInterval "$thermoInterval"
     --collisionFr "$collisionFr"
+
+    --saveFile "$saveFile"
 )
 
-if [ "$potentialType" == "orientedLJ" ]; then
-    args+=(--LJangularScale "$LJangularScale"
-           --LJPhiOrder "$LJPhiOrder"
-           --LJalpha "$LJalpha"
-           --momentI "$momentI")
+# ==============================================================================
+# 5. POTENTIAL-SPECIFIC ARGUMENTS
+# ==============================================================================
+
+if [ "$potentialType" == "OrientedLJ" ]; then
+    args+=(
+        --LJangularScale "$LJangularScale"
+        --LJPhiOrder "$LJPhiOrder"
+        --LJalpha "$LJalpha"
+    )
 fi
 
-"$MD_EXE" "${args[@]}" || { 
-    printf "Error: Simulation failed.\n";
-    exit 1; 
+# ==============================================================================
+# 6. RUN SIMULATION
+# ==============================================================================
+
+echo "=================================================="
+echo "        Single Molecular Dynamics Simulation      "
+echo "=================================================="
+echo "Config:     $config"
+echo "Potential:  $potentialType"
+echo "Output:     $saveFile"
+echo "--------------------------------------------------"
+
+"$MD_EXE" "${args[@]}" || {
+    echo "Error: simulation failed."
+    exit 1
 }
 
-printf "\nSimulation completed successfully.\n";
-echo "------------------------------------------------------------"
+echo
+echo "Simulation completed successfully."
+echo "Output written to: $saveFile"
+echo "=================================================="

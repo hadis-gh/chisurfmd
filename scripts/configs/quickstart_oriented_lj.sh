@@ -1,0 +1,55 @@
+#!/usr/bin/env bash
+# ==============================================================================
+# 1. MODEL
+# ==============================================================================
+potentialType="OrientedLJ"
+
+particleInit="RANDOM"
+particlesNum=16
+
+chirality="homochiral"
+alignment="polar"
+
+# ==============================================================================
+# 2. SYSTEM
+# ==============================================================================
+seed=14
+
+areaL=5.0
+particleRadius=0.5
+momentI=1.0
+
+# ==============================================================================
+# 3. MOLECULAR DYNAMICS
+# ==============================================================================
+temperature=0.5
+
+time=100.0
+dt=0.01
+
+integration="VelocityVerlet"
+
+# ==============================================================================
+# 4. THERMOSTAT AND OUTPUT INTERVALS
+# ==============================================================================
+thermoInterval=0.5
+collisionFr=1.6
+
+writeStateInterval=0.01
+writeEnergyInterval=0.01
+git add scripts/run_single.sh \
+        scripts/configs/quickstart_oriented_lj.sh
+
+git commit -m "examples: add reproducible OrientedLJ quick start"
+# ==============================================================================
+# 5. ORIENTED LENNARD-JONES PARAMETERS
+# ==============================================================================
+LJangularScale=1.0
+LJPhiOrder=2
+LJalpha=3.141592653589793
+
+# ==============================================================================
+# 6. OUTPUT
+# ==============================================================================
+outputDir="./outputs/quickstart"
+saveFile="${outputDir}/quickstart_oriented_lj.bp"
