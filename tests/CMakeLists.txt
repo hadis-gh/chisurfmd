@@ -47,3 +47,22 @@ add_test(
     NAME VelocityVerletNVE
     COMMAND test_integration
 )
+
+# ==============================================================================
+# QUICK-START SMOKE TEST
+# ==============================================================================
+add_test(
+    NAME QuickStartSmoke
+    COMMAND
+        bash
+        ${CMAKE_CURRENT_SOURCE_DIR}/test_smoke.sh
+        ${PROJECT_SOURCE_DIR}
+        $<TARGET_FILE:chisurfmd_md>
+)
+
+set_tests_properties(
+    QuickStartSmoke
+    PROPERTIES
+        TIMEOUT 30
+        LABELS "smoke"
+)
