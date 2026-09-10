@@ -1,21 +1,44 @@
+# ------------------------
+# Python
+# ------------------------
 __pycache__/
 *.pyc
 *.egg-info/
 .venv/
 .ipynb_checkpoints/
-.vscode
-a.out
+
+# ------------------------
+# Build
+# ------------------------
+build*/
 *.o
-runs
-build*
-*.mp4
-*.pdf
-*.png
+a.out
+
+# ------------------------
+# Editor
+# ------------------------
+.vscode/
+
+# ------------------------
+# Simulation output
+# ------------------------
+outputs/
+runs/
+*.bp
 *.dat
 *.lock
-*.bp
-.bashrc
+log.txt
 
-!chisurfmd_logo.png
+# ------------------------
+# Generated figures
+# ------------------------
+*.png
+*.gif
+*.mp4
+*.pdf
+
+# ------------------------
+# Keep README assets
+# ------------------------
 !assets/*.png
 !assets/*.gif
