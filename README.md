@@ -10,8 +10,8 @@
   <img src="https://img.shields.io/badge/C%2B%2B-20-00599C?logo=cplusplus&logoColor=white" alt="C++20"/>
   <img src="https://img.shields.io/badge/build-CMake-064F8C?logo=cmake&logoColor=white" alt="CMake"/>
   <img src="https://img.shields.io/badge/I%2FO-ADIOS2-E8743B" alt="ADIOS2"/>
-  <img src="https://github.com/hadis-gh/chisurfmd/actions/workflows/test.yml/badge.svg" alt="Tests"/>
   <img src="https://img.shields.io/badge/analysis-Python%20%2F%20Jupyter-3776AB?logo=python&logoColor=white" alt="Python / Jupyter"/>
+  <img src="https://github.com/hadis-gh/chisurfmd/actions/workflows/ci.yml/badge.svg" alt="CI"/>
 </p>
 
 ChiSurfMD is a research-oriented molecular-dynamics framework for
