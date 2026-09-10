@@ -54,3 +54,12 @@ include_directories(
 )
 
 add_subdirectory(examples)
+
+# ==============================================================================
+# TESTS
+# ==============================================================================
+include(CTest)
+
+if(BUILD_TESTING)
+    add_subdirectory(tests)
+endif()
