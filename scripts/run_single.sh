@@ -3,6 +3,16 @@
 set -eu
 
 # ==============================================================================
+SCRIPT_DIR="$(
+    cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &&
+    pwd
+)"
+
+PROJECT_ROOT="$(
+    cd -- "$SCRIPT_DIR/.." &&
+    pwd
+)"
+# ==============================================================================
 # 1. LOAD CONFIGURATION
 # ==============================================================================
 config=${1:-"config.sh"}
@@ -17,9 +27,9 @@ source "$config"
 # ==============================================================================
 # 2. PATHS AND OUTPUT
 # ==============================================================================
-MD_EXE=${MD_EXE:-"../build/examples/chisurfmd_md"}
-outputDir=${outputDir:-"./outputs"}
-saveFile=${saveFile:-"${outputDir}/final_run.bp"}
+MD_EXE=${MD_EXE:-"$PROJECT_ROOT/build/examples/chisurfmd_md"}
+outputDir="$PROJECT_ROOT/outputs/quickstart"
+saveFile="${outputDir}/quickstart_oriented_lj.bp"
 
 mkdir -p "$outputDir"
 
