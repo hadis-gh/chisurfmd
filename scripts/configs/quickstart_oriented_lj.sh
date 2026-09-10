@@ -24,7 +24,7 @@ momentI=1.0
 # ==============================================================================
 temperature=0.5
 
-time=100.0
+time=5.0
 dt=0.01
 
 integration="VelocityVerlet"
@@ -37,10 +37,6 @@ collisionFr=1.6
 
 writeStateInterval=0.01
 writeEnergyInterval=0.01
-git add scripts/run_single.sh \
-        scripts/configs/quickstart_oriented_lj.sh
-
-git commit -m "examples: add reproducible OrientedLJ quick start"
 # ==============================================================================
 # 5. ORIENTED LENNARD-JONES PARAMETERS
 # ==============================================================================
