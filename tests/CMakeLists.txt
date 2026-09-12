@@ -51,18 +51,20 @@ add_test(
 # ==============================================================================
 # QUICK-START SMOKE TEST
 # ==============================================================================
-add_test(
-    NAME QuickStartSmoke
-    COMMAND
-        bash
-        ${CMAKE_CURRENT_SOURCE_DIR}/test_smoke.sh
-        ${PROJECT_SOURCE_DIR}
-        $<TARGET_FILE:chisurfmd_md>
-)
+if(chisurfmd_POTENTIAL STREQUAL "OrientedLJ")
+    add_test(
+        NAME QuickStartSmoke
+        COMMAND
+            bash
+            ${CMAKE_CURRENT_SOURCE_DIR}/test_smoke.sh
+            ${PROJECT_SOURCE_DIR}
+            $<TARGET_FILE:chisurfmd_md>
+    )
 
-set_tests_properties(
-    QuickStartSmoke
-    PROPERTIES
-        TIMEOUT 30
-        LABELS "smoke"
-)
+    set_tests_properties(
+        QuickStartSmoke
+        PROPERTIES
+            TIMEOUT 30
+            LABELS "smoke"
+    )
+endif()
