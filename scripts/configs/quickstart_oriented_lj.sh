@@ -47,5 +47,5 @@ LJalpha=3.141592653589793
 # ==============================================================================
 # 6. OUTPUT
 # ==============================================================================
-outputDir="./outputs/quickstart"
+outputDir="$PROJECT_ROOT/outputs/quickstart"
 saveFile="${outputDir}/quickstart_oriented_lj.bp"

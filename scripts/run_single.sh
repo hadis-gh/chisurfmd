@@ -28,8 +28,9 @@ source "$config"
 # 2. PATHS AND OUTPUT
 # ==============================================================================
 MD_EXE=${MD_EXE:-"$PROJECT_ROOT/build/examples/chisurfmd_md"}
-outputDir="$PROJECT_ROOT/outputs/quickstart"
-saveFile="${outputDir}/quickstart_oriented_lj.bp"
+
+outputDir=${outputDir:-"$PROJECT_ROOT/outputs"}
+saveFile=${saveFile:-"${outputDir}/final_run.bp"}
 
 mkdir -p "$outputDir"
 
