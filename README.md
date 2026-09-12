@@ -10,6 +10,8 @@
   <img src="https://img.shields.io/badge/C%2B%2B-20-00599C?logo=cplusplus&logoColor=white" alt="C++20"/>
   <img src="https://img.shields.io/badge/build-CMake-064F8C?logo=cmake&logoColor=white" alt="CMake"/>
   <img src="https://img.shields.io/badge/I%2FO-ADIOS2-E8743B" alt="ADIOS2"/>
+  <img src="https://img.shields.io/badge/license-GPLv3%2B-blue.svg"
+     alt="GPL-3.0-or-later"/>
   <img src="https://img.shields.io/badge/analysis-Python%20%2F%20Jupyter-3776AB?logo=python&logoColor=white" alt="Python / Jupyter"/>
   <img src="https://github.com/hadis-gh/chisurfmd/actions/workflows/ci.yml/badge.svg" alt="CI"/>
 </p>
@@ -39,6 +41,7 @@ GROMACS.
 - [Analysis and visualization](#analysis-and-visualization)
 - [Repository structure](#repository-structure)
 - [Scope](#scope)
+- [Research use](#research-use)
 - [Citation](#citation)
 - [License](#license)
 
@@ -306,13 +309,35 @@ The project was developed as part of a broader multiscale simulation workflow,
 but ChiSurfMD can be used independently: ChiMorse is one supported interaction
 model rather than a required dependency of the simulation framework.
 
+## Research use
+
+ChiSurfMD was used for molecular-dynamics calculations contributing to part of
+the results in:
+
+> Hadis Ghodrati, Sibylle Gemming, Florian Günther, and Jeffrey Kelling,  
+> **“A Symmetry-Constrained Fourier–Morse Framework for Compact Anisotropic
+> Interaction Potentials.”**  
+> *Manuscript/preprint details will be added when publicly available.*
+
+The manuscript describes the associated interaction-model methodology; the
+software release here provides the molecular-dynamics implementation used for
+the corresponding simulation workflow.
+
+
 ## Citation
 
-If you use ChiSurfMD in research, please cite the software release and relevant
-scientific work when public citation information is available.
-Machine-readable citation metadata are provided in [`CITATION.cff`](CITATION.cff).
+If you use ChiSurfMD, please cite the archived software release:
+
+> Hadis Ghodrati and Jeffrey Kelling,  
+> **ChiSurfMD: A modular 2D molecular-dynamics framework for anisotropic and
+> chiral particle interactions**, version 0.1.0.  
+> Zenodo. DOI: [10.5281/zenodo.22725770](https://doi.org/10.5281/zenodo.22725770)
+
+Machine-readable citation metadata are provided in
+[`CITATION.cff`](CITATION.cff).
+
 
 ## License
 
-ChiSurfMD is released under the **MIT License**. See [`LICENSE`](LICENSE) for
-details.
+ChiSurfMD is distributed under the
+[GNU General Public License v3.0 or later](LICENSE).
