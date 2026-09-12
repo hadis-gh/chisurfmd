@@ -267,10 +267,9 @@ quantities, and generating figures or animations.
 
 | Notebook / module | Purpose |
 |---|---|
-| `01_Potential.ipynb` | Inspect interaction-potential surfaces. |
-| `02_MD_Single_File.ipynb` | Analyze a single trajectory. |
-| `03_MD_Temperature_Loop.ipynb` | Analyze annealing/heating simulations. |
-| `04_MD_Aggregation.ipynb` | Analyze cluster-growth simulations. |
+| `01_MD_Single_File.ipynb` | Analyze a single trajectory. |
+| `02_MD_Temperature_Loop.ipynb` | Analyze annealing/heating simulations. |
+| `03_MD_Aggregation.ipynb` | Analyze cluster-growth simulations. |
 | `data_extraction.py` | Read and organize ADIOS2 simulation output. |
 | `system_analysis.py` | Structural and cluster analysis. |
 | `visualization.py` | Configuration, trajectory, observable, and animation tools. |
