@@ -744,8 +744,7 @@ struct ChiMorse<ParticleOriented<T>>
         desc.add_options()
             (
                 "chiMorseModel",
-                po::value<std::string>()->default_value("/home/hadis/chimorse/examples/models/chimorse_all.json"),
-                "path to ChiMorse JSON model"
+                po::value<std::string>()->required(), "path to ChiMorse JSON model"
             )
             (
                 "E0",
