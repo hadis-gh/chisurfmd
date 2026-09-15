@@ -21,8 +21,6 @@ contact:
 
 version: 0.1.0
 
-doi: "10.5281/zenodo.22725770"
-
 repository-code: "https://github.com/hadis-gh/chisurfmd"
 
 license: GPL-3.0-or-later
