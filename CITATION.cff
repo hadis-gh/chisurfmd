@@ -1,0 +1,46 @@
+cff-version: 1.2.0
+message: "If you use ChiSurfMD in your research, please cite this software using these metadata."
+
+title: "ChiSurfMD: A modular 2D molecular-dynamics framework for anisotropic and chiral particle interactions"
+type: software
+
+authors:
+  - family-names: Ghodrati
+    given-names: Hadis
+    orcid: "https://orcid.org/0009-0004-1451-8086"
+
+  - family-names: Kelling
+    given-names: Jeffrey
+    orcid: "https://orcid.org/0000-0003-1761-2591"
+
+contact:
+  - family-names: Ghodrati
+    given-names: Hadis
+    orcid: "https://orcid.org/0009-0004-1451-8086"
+    email: "hadis.ghodrati-saeini@physik.tu-chemnitz.de"
+
+version: 0.1.0
+
+doi: "10.5281/zenodo.22725770"
+
+repository-code: "https://github.com/hadis-gh/chisurfmd"
+
+license: GPL-3.0-or-later
+
+keywords:
+  - C++
+  - molecular dynamics
+  - computational physics
+  - anisotropic interactions
+  - chiral interactions
+  - self-assembly
+  - particle simulation
+
+abstract: >-
+  ChiSurfMD is a modular C++20 molecular-dynamics framework for
+  two-dimensional particle systems with configurable anisotropic and chiral
+  interactions. It provides interchangeable particle models, interaction
+  potentials, numerical integrators, and thermostats, together with ADIOS2
+  output, scripted simulation workflows, and Python/Jupyter analysis tools.
+  The software was developed for specialized self-assembly studies and rapid
+  testing of custom two-dimensional interaction models.

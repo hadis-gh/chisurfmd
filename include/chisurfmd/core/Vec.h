@@ -40,8 +40,7 @@ public:
     bool operator==(const Vec<TT, D>& other)const;
 
     template<typename TT>    
-    bool operator!=(const Vec<TT, D>& other){ return !(*this == other);}
-
+    bool operator!=(const Vec<TT, D>& other) const { return !(*this == other);}
     bool operator>=(const T& number) const;
     bool operator<=(const T& number)const;
 

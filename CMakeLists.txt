@@ -2,7 +2,7 @@
 # 1: PROJECT SETUP
 # ==============================================================================
 cmake_minimum_required(VERSION 3.20)
-project(chisurfmd LANGUAGES CXX)
+project(chisurfmd VERSION 0.1.0 LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 20)
 
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
@@ -14,7 +14,7 @@ endif()
 # ==============================================================================
 # 2: EXTERNAL DEPENDENCIES
 # ==============================================================================
-find_package(Boost COMPONENTS program_options REQUIRED)
+find_package(Boost CONFIG REQUIRED COMPONENTS program_options)
 find_package(Adios2 REQUIRED)
 
 # ==============================================================================
@@ -54,3 +54,12 @@ include_directories(
 )
 
 add_subdirectory(examples)
+
+# ==============================================================================
+# TESTS
+# ==============================================================================
+include(CTest)
+
+if(BUILD_TESTING)
+    add_subdirectory(tests)
+endif()

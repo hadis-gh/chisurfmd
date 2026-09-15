@@ -786,12 +786,23 @@ import cv2
 def draw_grid(frame, frame_size, area, grid_spacing=10, color=(200, 200, 200)):
     scale = frame_size / area
     spacing_pixels = int(grid_spacing * scale)
+    
+    # Customize dash look (in pixels)
+    dash_length = 6
+    space_length = 4
+    step = dash_length + space_length
 
+    # Draw vertical dashed lines
     for x in range(0, frame_size, spacing_pixels):
-        cv2.line(frame, (x, 0), (x, frame_size), color, 1)
+        for y_start in range(0, frame_size, step):
+            y_end = min(y_start + dash_length, frame_size)
+            cv2.line(frame, (x, y_start), (x, y_end), color, 1, lineType=cv2.LINE_AA)
 
+    # Draw horizontal dashed lines
     for y in range(0, frame_size, spacing_pixels):
-        cv2.line(frame, (0, y), (frame_size, y), color, 1)
+        for x_start in range(0, frame_size, step):
+            x_end = min(x_start + dash_length, frame_size)
+            cv2.line(frame, (x_start, y), (x_end, y), color, 1, lineType=cv2.LINE_AA)
 
 def map_to_frame(x, y, frame_size, area):
     scale = frame_size / area
@@ -856,66 +867,277 @@ def animate_position_simple(positions, output_name, line_length=0.4, area=50, co
     print("Processing complete.            ", end='\r')
     print("Video saved as", output_name)
 
-def animate_position_handedness(positions, handedness, output_name, line_length=0.38, area=20, color_p=False, frame_skip=1000, frame_size=800, fps=20):
-    positions_data = positions['data']
-    num_steps = positions_data.shape[0]
-    num_particles = positions_data.shape[1]
-    has_phi = positions_data.shape[2] == 3
+# =================================================================
 
-    handedness_data = handedness['data']
+def animate_position_handedness(
+        positions, handedness, alignment, output_name,
+        start_step=0, end_step=None,
+        line_length=0.38, area=20, color_p=False,
+        frame_skip=1000, frame_size=800, fps=20,
+        patchNums=1, show_temperature=True, show_legend=True):
+
+    pos = positions['data']
+    hand = handedness['data']
+    align = alignment['data']
+    temperature_labels = np.asarray(positions['temperature label']).flatten()
+
+    total_steps, num_particles = pos.shape[:2]
+    has_phi = pos.shape[2] == 3
+
+    start_step = max(0, start_step)
+    end_step = total_steps if end_step is None else min(end_step, total_steps)
+
+    color_map = {
+        ( 1,  1): (144, 138, 223),
+        ( 1, -1): (194, 190, 249),
+        (-1,  1): (207, 174, 139),
+        (-1, -1): (234, 213, 191),
+    }
+
+    fallback_color = (0, 0, 160)
+    alpha = 0.72
 
     fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-    out = cv2.VideoWriter(output_name, fourcc, fps, (frame_size, frame_size))
+    out = cv2.VideoWriter(
+        output_name, fourcc, fps,
+        (frame_size, frame_size)
+    )
 
-    particle_radius = max(5, frame_size // int(2.5* area))
-    for step in range(0, num_steps, frame_skip):
-        frame = np.ones((frame_size, frame_size, 3), dtype=np.uint8) * 255  # White background
-        
-        draw_grid(frame, frame_size, area, grid_spacing=10, color=(200, 200, 200))
+    if not out.isOpened():
+        raise RuntimeError(f"Could not open video writer for {output_name}")
 
+    # Layout
+    left_margin, right_margin = 65, 30
+    top_margin, bottom_margin = 75, 65
+
+    plot_size = min(
+        frame_size - left_margin - right_margin,
+        frame_size - top_margin - bottom_margin
+    )
+
+    x0, y0 = left_margin, top_margin
+
+    scale = plot_size / area
+    particle_radius = max(5, int(0.38 * scale))
+
+    padding = particle_radius + 2
+    scale = (plot_size - 2 * padding) / area
+
+    particle_radius = max(5, int(0.38 * scale))
+
+    def to_pixel(x, y):
+        px = x0 + padding + int(x * scale)
+        py = y0 + plot_size - padding - int(y * scale)
+        return px, py
+
+    phi_offsets = 2 * np.pi * np.arange(patchNums) / patchNums
+
+    # Static background: create only once
+    base_frame = np.full(
+        (frame_size, frame_size, 3),
+        250,
+        dtype=np.uint8
+    )
+
+    cv2.rectangle(
+        base_frame,
+        (x0, y0),
+        (x0 + plot_size, y0 + plot_size),
+        (70, 70, 70),
+        1,
+        lineType=cv2.LINE_AA
+    )
+
+    for value in np.arange(5, area, 5):
+        p = int(value * scale)
+
+        cv2.line(
+            base_frame,
+            (x0 + p, y0),
+            (x0 + p, y0 + plot_size),
+            (220, 220, 220),
+            1,
+            lineType=cv2.LINE_AA
+        )
+
+        cv2.line(
+            base_frame,
+            (x0, y0 + p),
+            (x0 + plot_size, y0 + p),
+            (220, 220, 220),
+            1,
+            lineType=cv2.LINE_AA
+        )
+
+    # Static text
+    cv2.putText(
+        base_frame,
+        "Particle Configuration",
+        (left_margin, 35),
+        cv2.FONT_HERSHEY_SIMPLEX,
+        0.9,
+        (30, 30, 30),
+        2,
+        lineType=cv2.LINE_AA
+    )
+
+    cv2.putText(
+        base_frame,
+        "X Position",
+        (x0 + plot_size // 2 - 42, frame_size - 15),
+        cv2.FONT_HERSHEY_SIMPLEX,
+        0.55,
+        (70, 70, 70),
+        1,
+        lineType=cv2.LINE_AA
+    )
+
+    if show_legend:
+        legend_y = y0 + plot_size + 28
+
+        legend_items = [
+            ((1, 1), "h=+1, d=+1"),
+            ((1, -1), "h=+1, d=-1"),
+            ((-1, 1), "h=-1, d=+1"),
+            ((-1, -1), "h=-1, d=-1"),
+        ]
+
+        for xpos, (key, label) in zip(
+                [x0, x0 + 165, x0 + 330, x0 + 495],
+                legend_items):
+
+            cv2.circle(
+                base_frame,
+                (xpos + 7, legend_y - 4),
+                6,
+                color_map[key],
+                -1,
+                lineType=cv2.LINE_AA
+            )
+
+            cv2.circle(
+                base_frame,
+                (xpos + 7, legend_y - 4),
+                6,
+                (30, 30, 30),
+                1,
+                lineType=cv2.LINE_AA
+            )
+
+            cv2.putText(
+                base_frame,
+                label,
+                (xpos + 18, legend_y),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                0.42,
+                (60, 60, 60),
+                1,
+                lineType=cv2.LINE_AA
+            )
+
+    for step in range(start_step, end_step, frame_skip):
+
+        frame = base_frame.copy()
+        overlay = frame.copy()
+        particles = []
+
+        # Draw all particle fills onto ONE overlay
         for i in range(num_particles):
-            x, y = positions_data[step, i, :2]
-            h = handedness_data[step, i]
-            
-            color = [(255,204,204) if h == 1 else (205,230,255)]
+            x, y = pos[step, i, :2]
 
-            # Skip NaN values (particle not yet deposited)
             if np.isnan(x) or np.isnan(y):
                 continue
 
-            cx, cy = map_to_frame(x, y, frame_size, area)
+            h = hand[step, i]
+            d = align[step, i]
 
-            if has_phi:
-                phi = positions_data[step, i, 2]
-            
-            # Draw circle with black outline and white fill
-            cv2.circle(frame, (cx, cy), particle_radius, (0, 0, 0), 2, lineType=cv2.LINE_AA)
-            cv2.circle(frame, (cx, cy), particle_radius - 1, color[0], -1, lineType=cv2.LINE_AA)
+            color = color_map.get(
+                (int(h), int(d)),
+                fallback_color
+            )
+
+            cx, cy = to_pixel(x, y)
+
+            cv2.circle(
+                overlay,
+                (cx, cy),
+                particle_radius - 1,
+                color,
+                -1,
+                lineType=cv2.LINE_AA
+            )
+
+            phi = pos[step, i, 2] if has_phi else np.nan
+            particles.append((cx, cy, x, y, phi))
+
+        # ONE full-frame blend instead of one per particle
+        frame = cv2.addWeighted(
+            overlay, alpha,
+            frame, 1 - alpha,
+            0
+        )
+
+        # Outlines and orientation lines
+        for cx, cy, x, y, phi in particles:
+
+            cv2.circle(
+                frame,
+                (cx, cy),
+                particle_radius,
+                (45, 45, 45),
+                2,
+                lineType=cv2.LINE_AA
+            )
 
             if has_phi and not color_p and not np.isnan(phi):
-                # Draw direction line from center to end of radius
-                x_end = x + line_length * np.cos(phi)
-                y_end = y + line_length * np.sin(phi)
+                for offset in phi_offsets:
+                    phi_a = phi + offset
 
-                # Skip NaN values in phi-based calculations
-                if np.isnan(x_end) or np.isnan(y_end):
-                    continue
+                    x_end = x + line_length * np.cos(phi_a)
+                    y_end = y + line_length * np.sin(phi_a)
+                    cx_end, cy_end = to_pixel(x_end, y_end)
 
-                cx_end, cy_end = map_to_frame(x_end, y_end, frame_size, area)
-                cv2.line(frame, (cx, cy), (cx_end, cy_end), (0, 0, 0), 2, lineType=cv2.LINE_AA)
+                    cv2.line(
+                        frame,
+                        (cx, cy),
+                        (cx_end, cy_end),
+                        (20, 20, 20),
+                        2,
+                        lineType=cv2.LINE_AA
+                    )
 
-        # Add text for step count
-        text = f"Step {step}/{num_steps}"
-        cv2.putText(frame, text, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 0), 2, lineType=cv2.LINE_AA)
+        temp_index = min(
+            step * len(temperature_labels) // total_steps,
+            len(temperature_labels) - 1
+        )
+
+        current_temperature = temperature_labels[temp_index]
+
+        if show_temperature:
+            info = f"T = {current_temperature:.2f}    |    Step = {step}"
+        else:
+            info = f"Step = {step}"
+
+        cv2.putText(
+            frame,
+            info,
+            (left_margin, 63),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.62,
+            (65, 65, 65),
+            2,
+            lineType=cv2.LINE_AA
+        )
 
         out.write(frame)
 
-        if step % (50 * frame_skip) == 0:
-            print(f"Processing frame{step}/{num_steps}      ", end='\r')
+        if (step - start_step) % (50 * frame_skip) == 0:
+            print(f"Processing step {step}/{end_step}", end='\r')
 
     out.release()
-    print("Processing complete.            ", end='\r')
-    print("Video saved as", output_name)
+
+    print("\nProcessing complete.")
+    print("Video saved as:", output_name)
 
 ############## Histogram of φ and Δφ at specific step ##############
 
@@ -1094,7 +1316,7 @@ def plot_trajectory_temperature(positions, target_temperature, cooling=True, ste
 
 def plot_snapshot_temperature(
         positions, handedness, alignment,
-        target_temperature, cooling=True,
+        target_temperature=None, target_step=None, cooling=True,
         patchNums=None, line_length=0.45,
         area=20, radius=True, particle_size=110, show_center=True,
         color_palette='hsv', save_name = None):
@@ -1103,18 +1325,49 @@ def plot_snapshot_temperature(
     handedness_data = handedness['data']
     alignment_data = alignment['data']
 
-    shot = target_temperature_index(
-        positions, target_temperature, cooling
+    temperature_labels = positions['temperature label'].flatten()
+
+    if target_temperature is not None:
+        # Temperature -> trajectory step
+        target_step = target_temperature_index(
+            positions, target_temperature, cooling
+        )
+
+    elif target_step is not None:
+        # Trajectory step -> temperature
+        total_T = len(temperature_labels)
+
+        temp_index = (
+            target_step * total_T
+        ) // len(positions_data)
+
+        temp_index = np.clip(temp_index, 0, total_T - 1)
+
+        target_temperature = temperature_labels[temp_index].item()
+
+    else:
+        raise ValueError(
+            "Please provide either target_temperature or target_step."
+        )
+
+    print(
+        f"available temperatures are from "
+        f"{temperature_labels.min()} to {temperature_labels.max()}."
     )
+    print(
+        f"selected step: {target_step} "
+        f"out of {len(positions_data)}"
+    )
+    print("-" * 30)
 
     fig, ax = plt.subplots(figsize=(6, 4), dpi=150)
 
-    x = positions_data[shot, :, 0]
-    y = positions_data[shot, :, 1]
-    phi = positions_data[shot, :, 2]
+    x = positions_data[target_step, :, 0]
+    y = positions_data[target_step, :, 1]
+    phi = positions_data[target_step, :, 2]
 
-    h = handedness_data[shot, :]
-    d = alignment_data[shot, :]
+    h = handedness_data[target_step, :]
+    d = alignment_data[target_step, :]
 
     # Color according to handedness + alignment
     # ---------------------------------------------------------
