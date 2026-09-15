@@ -255,7 +255,7 @@ def _read_variables_batch_directory(output_dir, variable_names, print_message=Tr
 ################# MD aggregation directory,find file #################
 
 def file_selection(output_dir, temperature, deposition_interval):
-    formatted_temp = f"{temperature:.2f}"
+    formatted_temp = f"{temperature:.1f}"
     formatted_dep_rate = f"{deposition_interval:.1f}"
     return os.path.join(output_dir, f'aggregated_{formatted_temp}_{formatted_dep_rate}.bp')
 
