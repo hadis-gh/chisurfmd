@@ -192,6 +192,15 @@ Use `--help` to inspect the available runtime options:
 ./build/examples/chisurfmd_aggregation --help
 ```
 
+### Quick start
+
+After building with `ParticleOriented` and `OrientedLJ`:
+
+```bash
+./scripts/run_single.sh scripts/configs/quickstart_oriented_lj.sh
+```
+The example runs a small deterministic simulation and writes the result to `outputs/quickstart/.`
+
 ## Simulation workflows
 
 The `scripts/` directory provides reusable workflows around the compiled
@@ -271,7 +280,7 @@ quantities, and generating figures or animations.
 | Notebook / module | Purpose |
 |---|---|
 | `01_MD_Single_File.ipynb` | Analyze a single trajectory. |
-| `02_MD_Temperature_Loop.ipynb` | Analyze annealing/heating simulations. |
+| `02_MD_Temperature_Annealing.ipynb` | Analyze annealing/heating simulations. |
 | `03_MD_Aggregation.ipynb` | Analyze cluster-growth simulations. |
 | `data_extraction.py` | Read and organize ADIOS2 simulation output. |
 | `system_analysis.py` | Structural and cluster analysis. |
