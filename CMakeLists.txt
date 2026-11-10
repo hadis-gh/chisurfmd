@@ -54,6 +54,7 @@ include_directories(
 )
 
 add_subdirectory(examples)
+add_subdirectory(benchmarks)
 
 # ==============================================================================
 # TESTS

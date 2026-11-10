@@ -1,0 +1,2 @@
+add_executable(chisurfmd_benchmarkPair benchmarkPairEvaluation.cpp)
+target_link_libraries(chisurfmd_benchmarkPair Boost::program_options adios2::cxx11)
