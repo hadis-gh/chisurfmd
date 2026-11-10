@@ -1,0 +1,2212 @@
+{
+  "format": "chimorse_multi_interaction",
+  "version": 1,
+  "angle_units": "radian",
+  "angle_definition": {
+    "chi": "phi1 - h * phi2",
+    "psi": "phi1 + h * phi2"
+  },
+  "handedness_factor": {
+    "equal": 1,
+    "opposite": -1
+  },
+  "morse": "D * (exp(-2*alpha*(r-re)) - 2*exp(-alpha*(r-re)))",
+  "interactions": {
+    "EP": {
+      "cutoff": 12.0,
+      "basis_terms": [
+        {
+          "m": 0,
+          "n": 0,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 1,
+          "n": 0,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 2,
+          "n": 0,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 3,
+          "n": 0,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 4,
+          "n": 0,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 5,
+          "n": 0,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 6,
+          "n": 0,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 7,
+          "n": 0,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 8,
+          "n": 0,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 0,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 0,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "sin"
+        },
+        {
+          "m": 1,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 1,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "sin"
+        },
+        {
+          "m": 2,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 2,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "sin"
+        },
+        {
+          "m": 3,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 3,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "sin"
+        },
+        {
+          "m": 4,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 4,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "sin"
+        },
+        {
+          "m": 5,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 5,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "sin"
+        },
+        {
+          "m": 6,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 6,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "sin"
+        },
+        {
+          "m": 7,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 7,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "sin"
+        },
+        {
+          "m": 8,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 8,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "sin"
+        }
+      ],
+      "parameters": {
+        "D": {
+          "type": "fourier",
+          "coefficients": [
+            0.5431244727431058,
+            0.2108050073454197,
+            0.116297527018367,
+            0.1236382991180088,
+            -0.007891199406226283,
+            0.012196060344726003,
+            0.018345243723958828,
+            -0.006799809746181769,
+            0.005673208627960718,
+            -0.002067417770796784,
+            -0.001498116237676795,
+            0.011037704094802718,
+            0.02747702664950319,
+            0.03718002823659973,
+            -0.003163993976744681,
+            0.00214309760358065,
+            -0.0010147772173344147,
+            -0.0015137508855176908,
+            0.0013276392658482835,
+            0.00889226240307296,
+            0.0010943882644148435,
+            -0.003901043977856,
+            -0.00017929860151194373,
+            -0.001092611458945232,
+            -1.5271885884317508e-07,
+            0.002875678757729855,
+            0.0005291093969098031
+          ]
+        },
+        "re": {
+          "type": "fourier",
+          "coefficients": [
+            9.59205321180591,
+            -0.5091520363110438,
+            -0.1654513980327159,
+            -0.285522259585079,
+            0.06659932840941958,
+            -0.01603642552006948,
+            -0.03798201293877248,
+            0.008878869242191157,
+            -0.006048428710069796,
+            0.022344534979238915,
+            0.02697694955040762,
+            -5.3710130551665655e-05,
+            -0.05382798667178461,
+            -0.08242889035602573,
+            0.011043560649617602,
+            0.017261854971455007,
+            0.00318386848248021,
+            0.021005030546677822,
+            0.007142978232214804,
+            -0.01158084499051758,
+            -0.007087109783406088,
+            0.0034774455198343453,
+            -0.00031801103632469086,
+            0.003815961513641311,
+            0.0018666569403627507,
+            -0.004876583108506998,
+            -0.0033512770071534984
+          ]
+        },
+        "alpha": {
+          "type": "constant",
+          "value": 1.1
+        }
+      }
+    },
+    "EA": {
+      "cutoff": 12.0,
+      "basis_terms": [
+        {
+          "m": 0,
+          "n": 0,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 1,
+          "n": 0,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 1,
+          "n": 0,
+          "chi_function": "sin",
+          "psi_function": "cos"
+        },
+        {
+          "m": 2,
+          "n": 0,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 2,
+          "n": 0,
+          "chi_function": "sin",
+          "psi_function": "cos"
+        },
+        {
+          "m": 3,
+          "n": 0,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 3,
+          "n": 0,
+          "chi_function": "sin",
+          "psi_function": "cos"
+        },
+        {
+          "m": 4,
+          "n": 0,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 4,
+          "n": 0,
+          "chi_function": "sin",
+          "psi_function": "cos"
+        },
+        {
+          "m": 5,
+          "n": 0,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 5,
+          "n": 0,
+          "chi_function": "sin",
+          "psi_function": "cos"
+        },
+        {
+          "m": 6,
+          "n": 0,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 6,
+          "n": 0,
+          "chi_function": "sin",
+          "psi_function": "cos"
+        },
+        {
+          "m": 7,
+          "n": 0,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 7,
+          "n": 0,
+          "chi_function": "sin",
+          "psi_function": "cos"
+        },
+        {
+          "m": 8,
+          "n": 0,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 8,
+          "n": 0,
+          "chi_function": "sin",
+          "psi_function": "cos"
+        },
+        {
+          "m": 0,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 0,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "sin"
+        },
+        {
+          "m": 1,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 1,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "sin"
+        },
+        {
+          "m": 1,
+          "n": 9,
+          "chi_function": "sin",
+          "psi_function": "cos"
+        },
+        {
+          "m": 1,
+          "n": 9,
+          "chi_function": "sin",
+          "psi_function": "sin"
+        },
+        {
+          "m": 2,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 2,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "sin"
+        },
+        {
+          "m": 2,
+          "n": 9,
+          "chi_function": "sin",
+          "psi_function": "cos"
+        },
+        {
+          "m": 2,
+          "n": 9,
+          "chi_function": "sin",
+          "psi_function": "sin"
+        },
+        {
+          "m": 3,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 3,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "sin"
+        },
+        {
+          "m": 3,
+          "n": 9,
+          "chi_function": "sin",
+          "psi_function": "cos"
+        },
+        {
+          "m": 3,
+          "n": 9,
+          "chi_function": "sin",
+          "psi_function": "sin"
+        },
+        {
+          "m": 4,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 4,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "sin"
+        },
+        {
+          "m": 4,
+          "n": 9,
+          "chi_function": "sin",
+          "psi_function": "cos"
+        },
+        {
+          "m": 4,
+          "n": 9,
+          "chi_function": "sin",
+          "psi_function": "sin"
+        },
+        {
+          "m": 5,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 5,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "sin"
+        },
+        {
+          "m": 5,
+          "n": 9,
+          "chi_function": "sin",
+          "psi_function": "cos"
+        },
+        {
+          "m": 5,
+          "n": 9,
+          "chi_function": "sin",
+          "psi_function": "sin"
+        },
+        {
+          "m": 6,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 6,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "sin"
+        },
+        {
+          "m": 6,
+          "n": 9,
+          "chi_function": "sin",
+          "psi_function": "cos"
+        },
+        {
+          "m": 6,
+          "n": 9,
+          "chi_function": "sin",
+          "psi_function": "sin"
+        },
+        {
+          "m": 7,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 7,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "sin"
+        },
+        {
+          "m": 7,
+          "n": 9,
+          "chi_function": "sin",
+          "psi_function": "cos"
+        },
+        {
+          "m": 7,
+          "n": 9,
+          "chi_function": "sin",
+          "psi_function": "sin"
+        },
+        {
+          "m": 8,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 8,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "sin"
+        },
+        {
+          "m": 8,
+          "n": 9,
+          "chi_function": "sin",
+          "psi_function": "cos"
+        },
+        {
+          "m": 8,
+          "n": 9,
+          "chi_function": "sin",
+          "psi_function": "sin"
+        }
+      ],
+      "parameters": {
+        "D": {
+          "type": "fourier",
+          "coefficients": [
+            0.5408104642361447,
+            0.11311905900132085,
+            -0.1600162468991103,
+            -0.07382454987988947,
+            -0.04758020567677419,
+            -0.02837242239869643,
+            0.0984312005007586,
+            -0.014533872381427402,
+            -0.007691612581956578,
+            -0.002362481528812326,
+            -0.012950709942766248,
+            -0.01799816615347358,
+            -0.0037598779386226826,
+            0.004786889605946858,
+            -0.005658789633243377,
+            0.003375129356503981,
+            0.002626104643753523,
+            -0.0001237554806499509,
+            9.8791850485117e-06,
+            0.024787707635092405,
+            3.9819863685781754e-05,
+            -0.014732348661134083,
+            2.1652250728247936e-05,
+            -0.03815830884754663,
+            -0.00010217087096411553,
+            -0.014374008421030421,
+            2.5946010871992097e-05,
+            -0.011188224136538442,
+            2.2631470787260593e-05,
+            0.001176500206948802,
+            3.854742422939906e-05,
+            0.002628001636666323,
+            2.73476704860147e-05,
+            0.005831652499354958,
+            3.009735596853767e-05,
+            0.007005689125726637,
+            -0.00013033303746842642,
+            -0.009394464554620322,
+            8.54780633330509e-05,
+            0.0015092707865511058,
+            -3.464560376401059e-05,
+            -0.0006022783176477981,
+            -3.34332974584229e-05,
+            -0.002047187482133591,
+            -7.728498738979358e-06,
+            -0.0002911554233045164,
+            1.1781572832595405e-05,
+            0.0019441363620916873,
+            7.545943951083336e-06,
+            0.001549785095012069,
+            -2.2734765373878966e-05
+          ]
+        },
+        "re": {
+          "type": "fourier",
+          "coefficients": [
+            9.589823958333325,
+            -0.32387680311198275,
+            0.4040831510710936,
+            0.12521861417878832,
+            0.09744743584435343,
+            0.05360617087737127,
+            -0.2636046963401043,
+            0.05615005791536981,
+            0.02932397914252986,
+            -0.01910396061107975,
+            0.006057375616135763,
+            0.025435401285333503,
+            0.017600554638251845,
+            -0.0020877609695267216,
+            0.013036981884712525,
+            0.0032146950742381725,
+            -0.0074180587366020805,
+            0.03322908532510245,
+            -5.239834527028416e-05,
+            -0.06160960445082919,
+            -8.62437799650574e-05,
+            -0.010860832177298455,
+            -0.00012335536308966628,
+            0.08662745592033302,
+            0.00025280060362494974,
+            0.03913210207281352,
+            -2.4978999447354268e-05,
+            -0.010956749005408396,
+            -1.5167695663683877e-05,
+            0.01126285477022534,
+            4.425093499592375e-05,
+            0.007475930578869444,
+            -0.00010716172146706542,
+            0.006891736809256941,
+            -0.00015107642793631978,
+            -0.006217307399774801,
+            0.00025055399167173885,
+            0.014345958482269088,
+            -0.00024239323506551887,
+            -0.0011425968532212277,
+            3.92416814315925e-05,
+            -0.005455129169709257,
+            0.00017402950063315984,
+            -0.002118207682621429,
+            -1.338244379200688e-06,
+            0.009146599174965587,
+            3.266998627747535e-05,
+            -0.0037762993535954952,
+            1.26515491453222e-05,
+            0.001430946426730533,
+            6.573702263556532e-05
+          ]
+        },
+        "alpha": {
+          "type": "constant",
+          "value": 1.1
+        }
+      }
+    },
+    "OP": {
+      "cutoff": 12.0,
+      "basis_terms": [
+        {
+          "m": 0,
+          "n": 0,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 1,
+          "n": 0,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 2,
+          "n": 0,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 3,
+          "n": 0,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 4,
+          "n": 0,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 5,
+          "n": 0,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 6,
+          "n": 0,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 7,
+          "n": 0,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 8,
+          "n": 0,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 9,
+          "n": 0,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 10,
+          "n": 0,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 11,
+          "n": 0,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 12,
+          "n": 0,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 13,
+          "n": 0,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 14,
+          "n": 0,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 15,
+          "n": 0,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 16,
+          "n": 0,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 17,
+          "n": 0,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 18,
+          "n": 0,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 19,
+          "n": 0,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 20,
+          "n": 0,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 0,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 0,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "sin"
+        },
+        {
+          "m": 1,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 1,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "sin"
+        },
+        {
+          "m": 2,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 2,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "sin"
+        },
+        {
+          "m": 3,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 3,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "sin"
+        },
+        {
+          "m": 4,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 4,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "sin"
+        },
+        {
+          "m": 5,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 5,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "sin"
+        },
+        {
+          "m": 6,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 6,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "sin"
+        },
+        {
+          "m": 7,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 7,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "sin"
+        },
+        {
+          "m": 8,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 8,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "sin"
+        },
+        {
+          "m": 9,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 9,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "sin"
+        },
+        {
+          "m": 10,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 10,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "sin"
+        },
+        {
+          "m": 11,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 11,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "sin"
+        },
+        {
+          "m": 12,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 12,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "sin"
+        },
+        {
+          "m": 13,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 13,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "sin"
+        },
+        {
+          "m": 14,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 14,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "sin"
+        },
+        {
+          "m": 15,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 15,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "sin"
+        },
+        {
+          "m": 16,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 16,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "sin"
+        },
+        {
+          "m": 17,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 17,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "sin"
+        },
+        {
+          "m": 18,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 18,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "sin"
+        },
+        {
+          "m": 19,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 19,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "sin"
+        },
+        {
+          "m": 20,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 20,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "sin"
+        }
+      ],
+      "parameters": {
+        "D": {
+          "type": "fourier",
+          "coefficients": [
+            0.6948307471065351,
+            0.16973928095080099,
+            0.11279151420774317,
+            0.2186566833580107,
+            -0.22267061664115229,
+            -0.009771901732194221,
+            0.045246698845053376,
+            -0.09880829403706515,
+            0.020060973444983445,
+            0.017311325012866655,
+            -0.05038874551708945,
+            0.019801366912614166,
+            0.012957365501412377,
+            -0.020881295572537636,
+            0.01700148506384375,
+            0.004345168368850683,
+            -0.012442152123056712,
+            0.008592873667420108,
+            0.0004623222584378932,
+            -0.005191103380258686,
+            0.004852412941392775,
+            7.434427978254138e-05,
+            -0.00036074715335204923,
+            0.0005236528502472141,
+            -1.9966837240898848e-05,
+            -4.786990512059119e-05,
+            0.0007706678088092061,
+            0.000325028899394314,
+            -0.0004012247860272285,
+            0.000771015912171661,
+            -0.0005518185497326651,
+            -0.00028203300273809545,
+            -0.0010463430705972907,
+            -0.0007224832136474273,
+            -1.5996376967485765e-05,
+            -0.0005901260988537202,
+            2.0593808676952832e-05,
+            0.0005172168915619085,
+            -0.0003566549098082449,
+            -0.0004459590861190313,
+            -0.00036910098174941855,
+            -0.00024137974669141,
+            -0.0006325713444493702,
+            -0.00042473110432460215,
+            9.39184909908887e-05,
+            -0.0008464774540744499,
+            4.513458702333495e-05,
+            4.779574695690236e-05,
+            8.985541645652878e-05,
+            -0.00031826633303167623,
+            -0.0007063055309171305,
+            -0.00015449656912217002,
+            7.596914347436211e-05,
+            0.0001989275451003067,
+            -0.0002619471312708191,
+            0.00025925932298451193,
+            -0.00030916529793775793,
+            -6.484223604692751e-05,
+            0.00028212551969130327,
+            7.401226798207927e-05,
+            -9.259591935846176e-05,
+            0.0002993452934349494,
+            0.0002582732961043978
+          ]
+        },
+        "re": {
+          "type": "fourier",
+          "coefficients": [
+            9.307614525463084,
+            -0.41114040982778605,
+            -0.21252095106099358,
+            -0.5361037954832679,
+            0.5207954372763288,
+            -0.022968479668556474,
+            -0.11657687398907321,
+            0.1246218232438416,
+            0.005921948444840583,
+            -0.031432675539438966,
+            0.05713359648597721,
+            -0.004165088369299186,
+            -0.027885138298151136,
+            0.022716089623972147,
+            -0.0018222049035844967,
+            -0.011886571407270063,
+            0.010850068932213153,
+            0.0005586302440148301,
+            -0.007172036191416424,
+            0.004708792355571336,
+            0.004292986577818369,
+            0.0011996603779833442,
+            0.0019117945966033285,
+            -0.0014993305564957385,
+            -0.0016526288523546538,
+            0.004066856173123752,
+            0.0011883088706280496,
+            0.0006569930127466039,
+            0.0014918799932648245,
+            0.000769157351079415,
+            0.004729004141267512,
+            -0.0005493078749420066,
+            0.0004710681929327255,
+            0.0001964208343862052,
+            -0.001646526935780353,
+            0.0010315446724686456,
+            0.0023831491110010983,
+            -0.0019624899720139255,
+            0.004512300388363191,
+            -0.00010293717717876905,
+            -0.0012013117679433027,
+            -0.002183865802323298,
+            -0.0024204462564009627,
+            0.0019350614473259142,
+            7.129595465199534e-05,
+            0.0005585627405861188,
+            0.002155428355858878,
+            -6.077070781355248e-05,
+            0.001843520363145279,
+            0.00029021147330719754,
+            0.002059358893545699,
+            0.000622006239096376,
+            -6.329526468668804e-06,
+            0.0013249391517412556,
+            0.0013610371987108835,
+            -0.0018780964488993301,
+            -0.0004996311648729351,
+            -0.0007013484944181636,
+            0.0011561972532355587,
+            0.0004699721432271653,
+            6.0135612364536906e-05,
+            -0.00015768158699543122,
+            0.0003278896015880134
+          ]
+        },
+        "alpha": {
+          "type": "constant",
+          "value": 1.1
+        }
+      }
+    },
+    "OA": {
+      "cutoff": 12.0,
+      "basis_terms": [
+        {
+          "m": 0,
+          "n": 0,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 1,
+          "n": 0,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 1,
+          "n": 0,
+          "chi_function": "sin",
+          "psi_function": "cos"
+        },
+        {
+          "m": 2,
+          "n": 0,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 2,
+          "n": 0,
+          "chi_function": "sin",
+          "psi_function": "cos"
+        },
+        {
+          "m": 3,
+          "n": 0,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 3,
+          "n": 0,
+          "chi_function": "sin",
+          "psi_function": "cos"
+        },
+        {
+          "m": 4,
+          "n": 0,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 4,
+          "n": 0,
+          "chi_function": "sin",
+          "psi_function": "cos"
+        },
+        {
+          "m": 5,
+          "n": 0,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 5,
+          "n": 0,
+          "chi_function": "sin",
+          "psi_function": "cos"
+        },
+        {
+          "m": 6,
+          "n": 0,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 6,
+          "n": 0,
+          "chi_function": "sin",
+          "psi_function": "cos"
+        },
+        {
+          "m": 7,
+          "n": 0,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 7,
+          "n": 0,
+          "chi_function": "sin",
+          "psi_function": "cos"
+        },
+        {
+          "m": 8,
+          "n": 0,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 8,
+          "n": 0,
+          "chi_function": "sin",
+          "psi_function": "cos"
+        },
+        {
+          "m": 9,
+          "n": 0,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 9,
+          "n": 0,
+          "chi_function": "sin",
+          "psi_function": "cos"
+        },
+        {
+          "m": 10,
+          "n": 0,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 10,
+          "n": 0,
+          "chi_function": "sin",
+          "psi_function": "cos"
+        },
+        {
+          "m": 11,
+          "n": 0,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 11,
+          "n": 0,
+          "chi_function": "sin",
+          "psi_function": "cos"
+        },
+        {
+          "m": 12,
+          "n": 0,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 12,
+          "n": 0,
+          "chi_function": "sin",
+          "psi_function": "cos"
+        },
+        {
+          "m": 13,
+          "n": 0,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 13,
+          "n": 0,
+          "chi_function": "sin",
+          "psi_function": "cos"
+        },
+        {
+          "m": 14,
+          "n": 0,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 14,
+          "n": 0,
+          "chi_function": "sin",
+          "psi_function": "cos"
+        },
+        {
+          "m": 15,
+          "n": 0,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 15,
+          "n": 0,
+          "chi_function": "sin",
+          "psi_function": "cos"
+        },
+        {
+          "m": 16,
+          "n": 0,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 16,
+          "n": 0,
+          "chi_function": "sin",
+          "psi_function": "cos"
+        },
+        {
+          "m": 17,
+          "n": 0,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 17,
+          "n": 0,
+          "chi_function": "sin",
+          "psi_function": "cos"
+        },
+        {
+          "m": 18,
+          "n": 0,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 18,
+          "n": 0,
+          "chi_function": "sin",
+          "psi_function": "cos"
+        },
+        {
+          "m": 19,
+          "n": 0,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 19,
+          "n": 0,
+          "chi_function": "sin",
+          "psi_function": "cos"
+        },
+        {
+          "m": 20,
+          "n": 0,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 20,
+          "n": 0,
+          "chi_function": "sin",
+          "psi_function": "cos"
+        },
+        {
+          "m": 0,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 0,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "sin"
+        },
+        {
+          "m": 1,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 1,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "sin"
+        },
+        {
+          "m": 1,
+          "n": 9,
+          "chi_function": "sin",
+          "psi_function": "cos"
+        },
+        {
+          "m": 1,
+          "n": 9,
+          "chi_function": "sin",
+          "psi_function": "sin"
+        },
+        {
+          "m": 2,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 2,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "sin"
+        },
+        {
+          "m": 2,
+          "n": 9,
+          "chi_function": "sin",
+          "psi_function": "cos"
+        },
+        {
+          "m": 2,
+          "n": 9,
+          "chi_function": "sin",
+          "psi_function": "sin"
+        },
+        {
+          "m": 3,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 3,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "sin"
+        },
+        {
+          "m": 3,
+          "n": 9,
+          "chi_function": "sin",
+          "psi_function": "cos"
+        },
+        {
+          "m": 3,
+          "n": 9,
+          "chi_function": "sin",
+          "psi_function": "sin"
+        },
+        {
+          "m": 4,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 4,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "sin"
+        },
+        {
+          "m": 4,
+          "n": 9,
+          "chi_function": "sin",
+          "psi_function": "cos"
+        },
+        {
+          "m": 4,
+          "n": 9,
+          "chi_function": "sin",
+          "psi_function": "sin"
+        },
+        {
+          "m": 5,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 5,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "sin"
+        },
+        {
+          "m": 5,
+          "n": 9,
+          "chi_function": "sin",
+          "psi_function": "cos"
+        },
+        {
+          "m": 5,
+          "n": 9,
+          "chi_function": "sin",
+          "psi_function": "sin"
+        },
+        {
+          "m": 6,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 6,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "sin"
+        },
+        {
+          "m": 6,
+          "n": 9,
+          "chi_function": "sin",
+          "psi_function": "cos"
+        },
+        {
+          "m": 6,
+          "n": 9,
+          "chi_function": "sin",
+          "psi_function": "sin"
+        },
+        {
+          "m": 7,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 7,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "sin"
+        },
+        {
+          "m": 7,
+          "n": 9,
+          "chi_function": "sin",
+          "psi_function": "cos"
+        },
+        {
+          "m": 7,
+          "n": 9,
+          "chi_function": "sin",
+          "psi_function": "sin"
+        },
+        {
+          "m": 8,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 8,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "sin"
+        },
+        {
+          "m": 8,
+          "n": 9,
+          "chi_function": "sin",
+          "psi_function": "cos"
+        },
+        {
+          "m": 8,
+          "n": 9,
+          "chi_function": "sin",
+          "psi_function": "sin"
+        },
+        {
+          "m": 9,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 9,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "sin"
+        },
+        {
+          "m": 9,
+          "n": 9,
+          "chi_function": "sin",
+          "psi_function": "cos"
+        },
+        {
+          "m": 9,
+          "n": 9,
+          "chi_function": "sin",
+          "psi_function": "sin"
+        },
+        {
+          "m": 10,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 10,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "sin"
+        },
+        {
+          "m": 10,
+          "n": 9,
+          "chi_function": "sin",
+          "psi_function": "cos"
+        },
+        {
+          "m": 10,
+          "n": 9,
+          "chi_function": "sin",
+          "psi_function": "sin"
+        },
+        {
+          "m": 11,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 11,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "sin"
+        },
+        {
+          "m": 11,
+          "n": 9,
+          "chi_function": "sin",
+          "psi_function": "cos"
+        },
+        {
+          "m": 11,
+          "n": 9,
+          "chi_function": "sin",
+          "psi_function": "sin"
+        },
+        {
+          "m": 12,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 12,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "sin"
+        },
+        {
+          "m": 12,
+          "n": 9,
+          "chi_function": "sin",
+          "psi_function": "cos"
+        },
+        {
+          "m": 12,
+          "n": 9,
+          "chi_function": "sin",
+          "psi_function": "sin"
+        },
+        {
+          "m": 13,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 13,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "sin"
+        },
+        {
+          "m": 13,
+          "n": 9,
+          "chi_function": "sin",
+          "psi_function": "cos"
+        },
+        {
+          "m": 13,
+          "n": 9,
+          "chi_function": "sin",
+          "psi_function": "sin"
+        },
+        {
+          "m": 14,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 14,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "sin"
+        },
+        {
+          "m": 14,
+          "n": 9,
+          "chi_function": "sin",
+          "psi_function": "cos"
+        },
+        {
+          "m": 14,
+          "n": 9,
+          "chi_function": "sin",
+          "psi_function": "sin"
+        },
+        {
+          "m": 15,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 15,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "sin"
+        },
+        {
+          "m": 15,
+          "n": 9,
+          "chi_function": "sin",
+          "psi_function": "cos"
+        },
+        {
+          "m": 15,
+          "n": 9,
+          "chi_function": "sin",
+          "psi_function": "sin"
+        },
+        {
+          "m": 16,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 16,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "sin"
+        },
+        {
+          "m": 16,
+          "n": 9,
+          "chi_function": "sin",
+          "psi_function": "cos"
+        },
+        {
+          "m": 16,
+          "n": 9,
+          "chi_function": "sin",
+          "psi_function": "sin"
+        },
+        {
+          "m": 17,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 17,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "sin"
+        },
+        {
+          "m": 17,
+          "n": 9,
+          "chi_function": "sin",
+          "psi_function": "cos"
+        },
+        {
+          "m": 17,
+          "n": 9,
+          "chi_function": "sin",
+          "psi_function": "sin"
+        },
+        {
+          "m": 18,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 18,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "sin"
+        },
+        {
+          "m": 18,
+          "n": 9,
+          "chi_function": "sin",
+          "psi_function": "cos"
+        },
+        {
+          "m": 18,
+          "n": 9,
+          "chi_function": "sin",
+          "psi_function": "sin"
+        },
+        {
+          "m": 19,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 19,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "sin"
+        },
+        {
+          "m": 19,
+          "n": 9,
+          "chi_function": "sin",
+          "psi_function": "cos"
+        },
+        {
+          "m": 19,
+          "n": 9,
+          "chi_function": "sin",
+          "psi_function": "sin"
+        },
+        {
+          "m": 20,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "cos"
+        },
+        {
+          "m": 20,
+          "n": 9,
+          "chi_function": "cos",
+          "psi_function": "sin"
+        },
+        {
+          "m": 20,
+          "n": 9,
+          "chi_function": "sin",
+          "psi_function": "cos"
+        },
+        {
+          "m": 20,
+          "n": 9,
+          "chi_function": "sin",
+          "psi_function": "sin"
+        }
+      ],
+      "parameters": {
+        "D": {
+          "type": "fourier",
+          "coefficients": [
+            0.6959456254216878,
+            0.06829290821148626,
+            -0.10529250029909988,
+            -0.07758771088886247,
+            0.0028981069260879126,
+            -0.029536126837997743,
+            0.22145367919032788,
+            -0.16480530902549895,
+            -0.1825718391841687,
+            -0.04529406583738693,
+            -0.050570445330572374,
+            -0.0742926113450465,
+            -0.028018476630107782,
+            0.11156986108527613,
+            -0.026391102666778157,
+            0.04158539390457153,
+            0.020586799744872777,
+            0.008610322138364143,
+            -0.005127434462182562,
+            -0.007051971045871206,
+            0.06289155667754473,
+            -0.02609054690570156,
+            -0.0020772682077851135,
+            -0.013579385979963082,
+            -0.0008343990568787976,
+            -0.018820272138664912,
+            -0.013284626291108045,
+            0.015735640041790705,
+            -0.01545275303831998,
+            0.003999570500906255,
+            -0.0029085251390982988,
+            0.01209813113129829,
+            -0.001953519817187231,
+            0.0022357547138903075,
+            0.012549506011648403,
+            -0.0017752664791293865,
+            0.0015966232207967658,
+            -0.0024209639185986016,
+            0.00480514895454905,
+            -0.006588326967108742,
+            -0.002239929542488986,
+            0.0003252947569192871,
+            -5.5604309850011e-06,
+            -0.0003684215734102089,
+            5.482840565187996e-06,
+            -0.0007255185822748374,
+            -6.44246565748921e-05,
+            -0.0007728760671254498,
+            -5.787500832423603e-05,
+            -0.00028022570721104607,
+            1.63758265304334e-05,
+            0.0005787764275602472,
+            1.253086104637674e-05,
+            0.00015261671176719158,
+            -4.324158258541162e-05,
+            8.88874979028953e-05,
+            -1.711724014276817e-05,
+            5.2874645007900886e-05,
+            -9.586215929844981e-06,
+            -0.001045576350052646,
+            7.427082704827663e-05,
+            -0.00034863479056263576,
+            -8.55732844493827e-05,
+            2.6831403248439578e-05,
+            7.118321596711642e-05,
+            0.0007961631174144036,
+            4.370941611073903e-05,
+            0.0011105354584702454,
+            2.271155226135635e-06,
+            0.0006709158030319389,
+            2.1915787992890512e-05,
+            1.724150183863302e-05,
+            1.7589441043994007e-05,
+            -0.00017079440184326368,
+            3.187336543201665e-05,
+            -0.0003165908092774179,
+            -0.00013247580072989207,
+            -0.0008724242900931198,
+            4.960760545969639e-05,
+            -0.000740138180029333,
+            -1.8322358294971253e-05,
+            1.4525573080757803e-05,
+            -1.4585626564498754e-05,
+            0.00019546886663031598,
+            -1.623991463887682e-05,
+            0.0003954577608011843,
+            -1.4876810540680185e-05,
+            0.00018139414739463608,
+            1.6342550169112444e-05,
+            -4.911514136875239e-06,
+            -6.456725604552481e-05,
+            -0.0005027200169391861,
+            4.482386593824758e-05,
+            0.00037475458909108465,
+            9.933829477788703e-06,
+            -0.0003584651054208887,
+            3.878752460037549e-06,
+            -4.759104075461847e-05,
+            3.3569499623062327e-06,
+            -0.0005283800160831645,
+            1.9066309558595645e-05,
+            -0.00041077412923903184,
+            1.8291274713762296e-05,
+            0.00014918533144408531,
+            -1.3014735020598633e-05,
+            4.607433993620777e-05,
+            5.35997391780407e-06,
+            -0.00027552168053179144,
+            1.263836386095063e-05,
+            -0.00016164445331487854,
+            2.5231693258587814e-05,
+            0.00011352359583263055,
+            -9.224213789550684e-06,
+            0.00026137118111185017,
+            2.4745217300347483e-06,
+            0.00020339375393879297,
+            -2.890520474845698e-06,
+            0.0005765819705647532,
+            -3.2904117058252247e-06,
+            0.00019912191325376083,
+            -1.7773000400359007e-05,
+            -0.0004501318848897373,
+            9.611527182096236e-06
+          ]
+        },
+        "re": {
+          "type": "fourier",
+          "coefficients": [
+            9.31365285631612,
+            -0.20534090878863615,
+            0.29224180812988354,
+            0.15499300505445524,
+            0.04570647634898754,
+            0.09160154487739533,
+            -0.5318977323358407,
+            0.38720396582581107,
+            0.389421823069982,
+            0.013784557160935528,
+            0.06012817582795943,
+            0.11568275580596046,
+            0.08920441165487716,
+            -0.14429703486665618,
+            0.0176823265659985,
+            -0.04260284305300527,
+            -0.0028832747073893137,
+            -0.021016286002784268,
+            0.005625532174604724,
+            0.022464749623984013,
+            -0.06089635322440954,
+            0.015938803449282828,
+            -0.0001470346371904769,
+            0.018574110966622148,
+            -0.018574511102581074,
+            0.0021022872139946913,
+            0.023461504571206843,
+            -0.009122464490743942,
+            0.004074535935951711,
+            0.005107488959280648,
+            0.01100291165819251,
+            -0.01022218753920448,
+            0.001641543853166815,
+            0.003851832599212443,
+            -0.004385318873735434,
+            -0.0064954089294297634,
+            -9.719504401033488e-05,
+            0.003025590171273504,
+            -0.004788392705142121,
+            -0.0016898071331771791,
+            0.0014794386704064244,
+            0.0008337600776731611,
+            5.4828423573811264e-05,
+            0.0009990452813685435,
+            8.151123701967411e-05,
+            0.0022227071275749723,
+            0.00016756955543139815,
+            0.002438144602866156,
+            -8.017553276187805e-06,
+            0.003156946757974996,
+            -6.80724151371076e-05,
+            -0.00027151289201413076,
+            5.828144013991787e-05,
+            -0.003412430872539526,
+            5.279745809055186e-05,
+            0.0011422205380464956,
+            0.00014930139047216254,
+            0.0007172352029319491,
+            -1.3872915473307247e-05,
+            0.0026673319685038555,
+            -0.00012211396311547548,
+            0.0015321012394208591,
+            0.00021630103002557438,
+            0.0009620491027021588,
+            -8.068420145847591e-05,
+            0.0027088018064238967,
+            -0.00011154928664554309,
+            -0.002414608678562283,
+            5.878297575953248e-05,
+            -0.0007961083725028864,
+            -4.474956278616854e-05,
+            0.00125559369923238,
+            7.852404515951844e-05,
+            -0.0016281958929263984,
+            -2.2635307778125918e-05,
+            -0.0010821359536070004,
+            0.00024292882846664587,
+            0.0008764565542638686,
+            -0.00012634935721872464,
+            -0.0012550669964800087,
+            -7.325730914387041e-07,
+            0.00209458401849974,
+            -6.038937599332078e-05,
+            -0.0024520874344569135,
+            7.563539651095266e-05,
+            -0.002046937034743887,
+            6.24189752834064e-05,
+            0.0019395859014849151,
+            -4.577742967823428e-05,
+            -0.0015505564623422424,
+            6.801562730571892e-05,
+            -0.0005715087518079129,
+            1.2673450195545277e-05,
+            0.0010118274181739606,
+            3.6570293186738434e-05,
+            0.0001584644958501115,
+            4.167728136064697e-06,
+            0.0011139624938322733,
+            -8.129984534451656e-05,
+            0.0009988700361160952,
+            -3.400850958854007e-05,
+            0.00034275788681276814,
+            -1.0348871842556784e-05,
+            -0.0019977943421812805,
+            -7.339281332921499e-05,
+            -0.001042664591128074,
+            1.8996019722114857e-05,
+            0.0027284136229145245,
+            -5.5929638967472384e-05,
+            -0.0009303838157111062,
+            -4.782294700596962e-05,
+            -0.0011698393997390671,
+            5.560438107589383e-05,
+            3.1895369120509e-05,
+            2.3990271803830954e-07,
+            0.000262065737255391,
+            1.886361140945869e-05,
+            -0.0001861663227539223,
+            -7.277658202679144e-05,
+            0.0010907832423083241,
+            -4.977021717325614e-05,
+            0.001134657885696111,
+            -3.74697427658055e-05
+          ]
+        },
+        "alpha": {
+          "type": "constant",
+          "value": 1.1
+        }
+      }
+    }
+  }
+}

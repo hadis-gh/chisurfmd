@@ -1,0 +1,237 @@
+{
+  "cutoff": 12.0,
+  "basis_terms": [
+    {
+      "m": 0,
+      "n": 0,
+      "chi_function": "cos",
+      "psi_function": "cos"
+    },
+    {
+      "m": 1,
+      "n": 0,
+      "chi_function": "cos",
+      "psi_function": "cos"
+    },
+    {
+      "m": 2,
+      "n": 0,
+      "chi_function": "cos",
+      "psi_function": "cos"
+    },
+    {
+      "m": 3,
+      "n": 0,
+      "chi_function": "cos",
+      "psi_function": "cos"
+    },
+    {
+      "m": 4,
+      "n": 0,
+      "chi_function": "cos",
+      "psi_function": "cos"
+    },
+    {
+      "m": 5,
+      "n": 0,
+      "chi_function": "cos",
+      "psi_function": "cos"
+    },
+    {
+      "m": 6,
+      "n": 0,
+      "chi_function": "cos",
+      "psi_function": "cos"
+    },
+    {
+      "m": 7,
+      "n": 0,
+      "chi_function": "cos",
+      "psi_function": "cos"
+    },
+    {
+      "m": 8,
+      "n": 0,
+      "chi_function": "cos",
+      "psi_function": "cos"
+    },
+    {
+      "m": 0,
+      "n": 9,
+      "chi_function": "cos",
+      "psi_function": "cos"
+    },
+    {
+      "m": 0,
+      "n": 9,
+      "chi_function": "cos",
+      "psi_function": "sin"
+    },
+    {
+      "m": 1,
+      "n": 9,
+      "chi_function": "cos",
+      "psi_function": "cos"
+    },
+    {
+      "m": 1,
+      "n": 9,
+      "chi_function": "cos",
+      "psi_function": "sin"
+    },
+    {
+      "m": 2,
+      "n": 9,
+      "chi_function": "cos",
+      "psi_function": "cos"
+    },
+    {
+      "m": 2,
+      "n": 9,
+      "chi_function": "cos",
+      "psi_function": "sin"
+    },
+    {
+      "m": 3,
+      "n": 9,
+      "chi_function": "cos",
+      "psi_function": "cos"
+    },
+    {
+      "m": 3,
+      "n": 9,
+      "chi_function": "cos",
+      "psi_function": "sin"
+    },
+    {
+      "m": 4,
+      "n": 9,
+      "chi_function": "cos",
+      "psi_function": "cos"
+    },
+    {
+      "m": 4,
+      "n": 9,
+      "chi_function": "cos",
+      "psi_function": "sin"
+    },
+    {
+      "m": 5,
+      "n": 9,
+      "chi_function": "cos",
+      "psi_function": "cos"
+    },
+    {
+      "m": 5,
+      "n": 9,
+      "chi_function": "cos",
+      "psi_function": "sin"
+    },
+    {
+      "m": 6,
+      "n": 9,
+      "chi_function": "cos",
+      "psi_function": "cos"
+    },
+    {
+      "m": 6,
+      "n": 9,
+      "chi_function": "cos",
+      "psi_function": "sin"
+    },
+    {
+      "m": 7,
+      "n": 9,
+      "chi_function": "cos",
+      "psi_function": "cos"
+    },
+    {
+      "m": 7,
+      "n": 9,
+      "chi_function": "cos",
+      "psi_function": "sin"
+    },
+    {
+      "m": 8,
+      "n": 9,
+      "chi_function": "cos",
+      "psi_function": "cos"
+    },
+    {
+      "m": 8,
+      "n": 9,
+      "chi_function": "cos",
+      "psi_function": "sin"
+    }
+  ],
+  "parameters": {
+    "D": {
+      "type": "fourier",
+      "coefficients": [
+        0.5431244727431058,
+        0.21080500734541974,
+        0.11629752701836676,
+        0.12363829911800894,
+        -0.007891199406226502,
+        0.012196060344726074,
+        0.01834524372395866,
+        -0.006799809746181866,
+        0.005673208627960712,
+        -0.002067417770796765,
+        -0.0014981162376765961,
+        0.011037704094803348,
+        0.027477026649503473,
+        0.03718002823659933,
+        -0.003163993976744611,
+        0.002143097603580949,
+        0.0,
+        -0.0015137508855173763,
+        0.0013276392658483163,
+        0.00889226240307377,
+        0.0010943882644145109,
+        -0.003901043977856327,
+        0.0,
+        0.0,
+        0.0,
+        0.0028756787577305055,
+        0.0
+      ]
+    },
+    "re": {
+      "type": "fourier",
+      "coefficients": [
+        9.59205321180591,
+        -0.5091520363110433,
+        -0.1654513980327161,
+        -0.2855222595850792,
+        0.0665993284094195,
+        -0.01603642552006934,
+        -0.03798201293877223,
+        0.008878869242191246,
+        -0.006048428710069822,
+        0.022344534979239033,
+        0.02697694955040782,
+        0.0,
+        -0.05382798667178485,
+        -0.08242889035602523,
+        0.011043560649617591,
+        0.01726185497145463,
+        0.003183868482480121,
+        0.021005030546677596,
+        0.007142978232214718,
+        -0.01158084499051836,
+        -0.007087109783406092,
+        0.003477445519834654,
+        0.0,
+        0.003815961513640985,
+        0.0,
+        -0.004876583108507799,
+        -0.0033512770071530435
+      ]
+    },
+    "alpha": {
+      "type": "constant",
+      "value": 1.1
+    }
+  }
+}
