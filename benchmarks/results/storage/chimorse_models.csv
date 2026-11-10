@@ -1,0 +1,5 @@
+model,model_path,json_bytes,basis_positions,stored_coefficients,nonzero_coefficients,active_basis_positions,coefficient_only_bytes,estimated_cpp_term_arrays_bytes
+compact_pruned,/home/hadis/chimorse/examples/models/compact_pruned/chimorse_all.json,47985,264,528,283,173,4224,12672
+compact_unpruned,/home/hadis/chimorse/examples/models/compact_unpruned/chimorse_all.json,52553,264,528,528,264,4224,12672
+full_pruned,/home/hadis/chimorse/examples/models/full_pruned/chimorse_all.json,73990,368,1104,475,203,8832,26496
+full_unpruned,/home/hadis/chimorse/examples/models/full_unpruned/chimorse_all.json,85784,368,1104,1104,368,8832,26496

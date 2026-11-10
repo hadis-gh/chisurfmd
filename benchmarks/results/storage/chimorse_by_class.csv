@@ -1,0 +1,17 @@
+class,basis_positions,stored_coefficients,nonzero_coefficients,active_basis_positions,D_nonzero,re_nonzero,alpha_nonzero,coefficient_only_bytes,estimated_cpp_term_arrays_bytes,model
+EP,27,54,46,25,22,24,constant,432,1296,compact_pruned
+EA,51,102,65,35,30,35,constant,816,2448,compact_pruned
+OP,63,126,60,41,25,35,constant,1008,3024,compact_pruned
+OA,123,246,112,72,42,70,constant,1968,5904,compact_pruned
+EP,27,54,54,27,27,27,constant,432,1296,compact_unpruned
+EA,51,102,102,51,51,51,constant,816,2448,compact_unpruned
+OP,63,126,126,63,63,63,constant,1008,3024,compact_unpruned
+OA,123,246,246,123,123,123,constant,1968,5904,compact_unpruned
+EP,63,189,115,54,25,40,50,1512,4536,full_pruned
+EA,119,357,120,53,30,40,50,2856,8568,full_pruned
+OP,63,189,80,34,20,30,30,1512,4536,full_pruned
+OA,123,369,160,62,50,55,55,2952,8856,full_pruned
+EP,63,189,189,63,63,63,63,1512,4536,full_unpruned
+EA,119,357,357,119,119,119,119,2856,8568,full_unpruned
+OP,63,189,189,63,63,63,63,1512,4536,full_unpruned
+OA,123,369,369,123,123,123,123,2952,8856,full_unpruned
