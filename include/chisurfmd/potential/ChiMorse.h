@@ -349,6 +349,18 @@ private:
         const auto& terms = basis->terms();
 
         for (std::size_t i = 0; i < terms.size(); ++i) {
+            const bool D_zero =
+                m_D.isConstant() ||
+                m_D.surface().terms()[i].coefficient == T{0};
+            const bool re_zero =
+                m_re.isConstant() ||
+                m_re.surface().terms()[i].coefficient == T{0};
+            const bool alpha_zero =
+                m_alpha.isConstant() ||
+                m_alpha.surface().terms()[i].coefficient == T{0};
+            if (D_zero && re_zero && alpha_zero) {
+                continue;
+            }
             const auto& b = terms[i];
             const T m = static_cast<T>(b.m);
             const T n = static_cast<T>(b.n);
