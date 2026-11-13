@@ -5,6 +5,7 @@
 #include <random>
 #include <iomanip>
 #include <sstream>
+#include <chrono>
 
 #include <boost/program_options.hpp>
 
@@ -252,6 +253,9 @@ int main(int argc, char* argv[]) {
 
     clock_t startTime = clock();
 
+    using BenchmarkClock = std::chrono::steady_clock;
+    double integrationSeconds = 0.0;
+
 // ================================== Integration Loop ==================================
 
     applyFixRadius(particles, fixRadius, areaL);
@@ -261,7 +265,13 @@ int main(int argc, char* argv[]) {
         engine.BeginStep();
 
         const auto nextEventStep = std::min({writeStateStep, writeEnergyStep, thermoStep, nsteps});
+        
+        const auto t0 = BenchmarkClock::now();
+
         integrate(particles, allSpecies, dt, (nextEventStep - step) * dt, boxPBC, force, integrationMethod);
+        
+        const auto t1 = BenchmarkClock::now();
+        integrationSeconds += std::chrono::duration<double>(t1 - t0).count();
 
         step = nextEventStep;
         Real currentTime = step * dt;
@@ -329,6 +339,24 @@ int main(int argc, char* argv[]) {
         engine.EndStep();
     }
     engine.Close();
+
+// ================================== integration time output ==================================
+
+    std::cout << "\n=== MD BENCHMARK ===\n";
+    std::cout << "Number of MD steps: "
+            << nsteps << '\n';
+
+    std::cout << "Integration time (s): "
+            << integrationSeconds << '\n';
+
+    std::cout << "Time per step (ms): "
+            << 1000.0 * integrationSeconds / nsteps
+            << '\n';
+
+    std::cout << "MD steps per second: "
+            << nsteps / integrationSeconds
+            << '\n';
+    std::cout << "=====================\n";
     
 // ================================== run time output ==================================
 
