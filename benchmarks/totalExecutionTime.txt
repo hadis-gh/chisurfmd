@@ -1,0 +1,340 @@
+(.chimorse) hadis@hypmola401:/home/hadis/chisurfmd$ /usr/bin/time -f 'Total wall time: %e seconds\nPeak memory: %M KB' ./bu
+ildTabular/examples/chisurfmd_md     --dataReferenceDir /home/hadis/chimorse/data_internal/PA     --time 50     --dt 0.01  
+   --particlesNum 49     --seed 1     --chirality homochiral     --alignment polar     --temperature 0.3     --writeStateIn
+terval 50     --writeEnergyInterval 50     --saveFile outputs/benchmark_tabular.bp
+1.
+=== MD BENCHMARK ===
+Number of MD steps: 5000
+Integration time (s): 0.197342
+Time per step (ms): 0.0394685
+MD steps per second: 25336.7
+=====================
+
+Time taken: 0m 0.20s
+Total wall time: 14.03 seconds
+Peak memory: 136192 KB
+2.
+=== MD BENCHMARK ===
+Number of MD steps: 5000
+Integration time (s): 0.202658
+Time per step (ms): 0.0405317
+MD steps per second: 24672.1
+=====================
+
+Time taken: 0m 0.20s
+Total wall time: 14.08 seconds
+Peak memory: 136448 KB
+3.
+=== MD BENCHMARK ===
+Number of MD steps: 5000
+Integration time (s): 0.194365
+Time per step (ms): 0.0388729
+MD steps per second: 25724.9
+=====================
+
+Time taken: 0m 0.20s
+Total wall time: 14.04 seconds
+Peak memory: 136704 KB
+
+4.
+=== MD BENCHMARK ===
+Number of MD steps: 5000
+Integration time (s): 0.201742
+Time per step (ms): 0.0403484
+MD steps per second: 24784.1
+=====================
+
+Time taken: 0m 0.20s
+Total wall time: 14.07 seconds
+Peak memory: 136704 KB
+
+5.
+=== MD BENCHMARK ===
+Number of MD steps: 5000
+Integration time (s): 0.234963
+Time per step (ms): 0.0469925
+MD steps per second: 21280
+=====================
+
+Time taken: 0m 0.24s
+Total wall time: 14.36 seconds
+Peak memory: 136704 KB
+------------------------------------------------------
+time                : 500
+1.
+=== MD BENCHMARK ===
+Number of MD steps: 50000
+Integration time (s): 1.80074
+Time per step (ms): 0.0360149
+MD steps per second: 27766.3
+=====================
+
+Time taken: 0m 1.80s
+Total wall time: 15.69 seconds
+Peak memory: 136704 KB
+
+2.
+=== MD BENCHMARK ===
+Number of MD steps: 50000
+Integration time (s): 1.82587
+Time per step (ms): 0.0365175
+MD steps per second: 27384.1
+=====================
+
+Time taken: 0m 1.83s
+Total wall time: 16.67 seconds
+Peak memory: 137216 KB
+
+3.
+=== MD BENCHMARK ===
+Number of MD steps: 50000
+Integration time (s): 1.81025
+Time per step (ms): 0.0362049
+MD steps per second: 27620.5
+=====================
+
+Time taken: 0m 1.81s
+Total wall time: 16.16 seconds
+Peak memory: 136704 KB
+
+4.
+=== MD BENCHMARK ===
+Number of MD steps: 50000
+Integration time (s): 1.80919
+Time per step (ms): 0.0361838
+MD steps per second: 27636.7
+=====================
+
+Time taken: 0m 1.81s
+Total wall time: 19.92 seconds
+Peak memory: 136704 KB
+
+5.
+=== MD BENCHMARK ===
+Number of MD steps: 50000
+Integration time (s): 1.7735
+Time per step (ms): 0.03547
+MD steps per second: 28192.8
+=====================
+
+Time taken: 0m 1.78s
+Total wall time: 17.14 seconds
+Peak memory: 136960 KB
+****************************************
+(.chimorse) hadis@hypmola401:/home/hadis/chisurfmd$ /usr/bin/time -f 'Total wall time: %e seconds\nPeak memory: %M KB' ./buildChimorse/examples/chisurfmd_md     --chiMorseModel /home/hadis/chimorse/examples/models/compact_pruned/chimorse_all.json
+     --time 50     --dt 0.01     --particlesNum 49     --seed 1     --chirality homochiral     --alignment polar     --temp
+erature 0.3     --writeStateInterval 50     --writeEnergyInterval 50     --saveFile outputs/benchmark_compact_pruned.bp
+1.
+=== MD BENCHMARK ===
+Number of MD steps: 5000
+Integration time (s): 0.454363
+Time per step (ms): 0.0908727
+MD steps per second: 11004.4
+=====================
+
+Time taken: 0m 0.46s
+Total wall time: 0.46 seconds
+Peak memory: 18688 KB
+
+2.
+=== MD BENCHMARK ===
+Number of MD steps: 5000
+Integration time (s): 0.455538
+Time per step (ms): 0.0911075
+MD steps per second: 10976
+=====================
+
+Time taken: 0m 0.46s
+Total wall time: 0.46 seconds
+Peak memory: 18432 KB
+
+3.
+=== MD BENCHMARK ===
+Number of MD steps: 5000
+Integration time (s): 0.454235
+Time per step (ms): 0.0908471
+MD steps per second: 11007.5
+=====================
+
+Time taken: 0m 0.45s
+Total wall time: 0.46 seconds
+Peak memory: 18688 KB
+
+4.
+=== MD BENCHMARK ===
+Number of MD steps: 5000
+Integration time (s): 0.453858
+Time per step (ms): 0.0907716
+MD steps per second: 11016.7
+=====================
+
+Time taken: 0m 0.45s
+Total wall time: 0.46 seconds
+Peak memory: 18688 KB
+
+5.
+=== MD BENCHMARK ===
+Number of MD steps: 5000
+Integration time (s): 0.45575
+Time per step (ms): 0.09115
+MD steps per second: 10970.9
+=====================
+
+Time taken: 0m 0.46s
+Total wall time: 0.46 seconds
+Peak memory: 18432 KB
+
+6.
+=== MD BENCHMARK ===
+Number of MD steps: 5000
+Integration time (s): 0.454446
+Time per step (ms): 0.0908891
+MD steps per second: 11002.4
+=====================
+
+Time taken: 0m 0.46s
+Total wall time: 0.46 seconds
+Peak memory: 18432 KB
+
+7.
+=== MD BENCHMARK ===
+Number of MD steps: 5000
+Integration time (s): 0.454022
+Time per step (ms): 0.0908043
+MD steps per second: 11012.7
+=====================
+
+Time taken: 0m 0.45s
+Total wall time: 0.46 seconds
+Peak memory: 18432 KB
+-----------------------------------------------
+time                : 500
+1.
+=== MD BENCHMARK ===
+Number of MD steps: 50000
+Integration time (s): 4.64563
+Time per step (ms): 0.0929126
+MD steps per second: 10762.8
+=====================
+
+Time taken: 0m 4.65s
+Total wall time: 4.65 seconds
+Peak memory: 18688 KB
+
+2.
+=== MD BENCHMARK ===
+Number of MD steps: 50000
+Integration time (s): 4.6194
+Time per step (ms): 0.0923881
+MD steps per second: 10823.9
+=====================
+
+Time taken: 0m 4.62s
+Total wall time: 4.63 seconds
+Peak memory: 18688 KB
+
+3.
+
+=== MD BENCHMARK ===
+Number of MD steps: 50000
+Integration time (s): 4.65288
+Time per step (ms): 0.0930575
+MD steps per second: 10746
+=====================
+
+Time taken: 0m 4.65s
+Total wall time: 4.66 seconds
+Peak memory: 18432 KB
+
+4.
+=== MD BENCHMARK ===
+Number of MD steps: 50000
+Integration time (s): 4.61198
+Time per step (ms): 0.0922395
+MD steps per second: 10841.3
+=====================
+
+Time taken: 0m 4.61s
+Total wall time: 4.62 seconds
+Peak memory: 18688 KB
+
+5.
+=== MD BENCHMARK ===
+Number of MD steps: 50000
+Integration time (s): 4.65423
+Time per step (ms): 0.0930845
+MD steps per second: 10742.9
+=====================
+
+Time taken: 0m 4.66s
+Total wall time: 4.66 seconds
+Peak memory: 18432 KB
+------------------------------------------------------
+Tabulated with files zeta=0 selected:
+
+    --dataReferenceDir /home/hadis/chimorse/data_internal/PA_zeta0 \
+    --time 500 \
+
+TabularDFT reduced units: E0=0.4 eV, L0=7 Angstrom, cutoff*=1.71429
+TabularDFT angular coverage missing nodes: EP=0, EA=0, OP=0, OA=0
+TabularDFT reduced units: E0=0.4 eV, L0=7 Angstrom, cutoff*=1.71429
+TabularDFT angular coverage missing nodes: EP=0, EA=0, OP=0, OA=0
+1.
+=== MD BENCHMARK ===
+Number of MD steps: 50000
+Integration time (s): 1.82655
+Time per step (ms): 0.036531
+MD steps per second: 27374
+=====================
+
+Time taken: 0m 1.83s
+Total wall time: 2.95 seconds
+Peak memory: 136960 KB
+
+2.
+=== MD BENCHMARK ===
+Number of MD steps: 50000
+Integration time (s): 1.79845
+Time per step (ms): 0.035969
+MD steps per second: 27801.7
+=====================
+
+Time taken: 0m 1.80s
+Total wall time: 2.87 seconds
+Peak memory: 136448 KB
+
+3.
+=== MD BENCHMARK ===
+Number of MD steps: 50000
+Integration time (s): 1.7941
+Time per step (ms): 0.035882
+MD steps per second: 27869.2
+=====================
+
+Time taken: 0m 1.80s
+Total wall time: 2.87 seconds
+Peak memory: 136704 KB
+
+4.
+=== MD BENCHMARK ===
+Number of MD steps: 50000
+Integration time (s): 1.80792
+Time per step (ms): 0.0361585
+MD steps per second: 27656
+=====================
+
+Time taken: 0m 1.81s
+Total wall time: 2.93 seconds
+Peak memory: 136960 KB
+
+5.
+=== MD BENCHMARK ===
+Number of MD steps: 50000
+Integration time (s): 1.90045
+Time per step (ms): 0.0380091
+MD steps per second: 26309.5
+=====================
+
+Time taken: 0m 1.90s
+Total wall time: 3.01 seconds
+Peak memory: 136704 KB
