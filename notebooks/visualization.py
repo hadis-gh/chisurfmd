@@ -491,7 +491,13 @@ def apply_style(ax, spine=False, grid=True, hide_top_right=True):
             ax.spines[side].set_color('gray')
 
 # ----------------------------------------------------------------------
-_PUB_COLORS = ["#235470", "#B7608D", "#74B8E2", "#44977A", '#E69F00']  # Wong colorblind-safe palette
+_PUB_COLORS = [
+    "#0072B2",  # K_x
+    "#D55E00",  # K_y
+    "#56B4E9",  # K_omega
+    "#009E73",  # U
+    "#E69F00",  # E_total
+]
 
 def plot_energies(
     kinetic_energy, potential_energy, m_temperatures,
