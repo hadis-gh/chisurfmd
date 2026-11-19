@@ -1,6 +1,7 @@
 #pragma once
 #include <algorithm>
 #include <array>
+#include <atomic>
 #include <cmath>
 #include <cstddef>
 #include <fstream>
@@ -41,6 +42,39 @@ RefInteractionType getRefInteractionType(
     if (equal) return parallel ? RefInteractionType::EP : RefInteractionType::EA;
     return parallel ? RefInteractionType::OP : RefInteractionType::OA;
 }
+
+// The reference EA/OP/OA landscapes have a designated first particle.
+// Match the canonical convention used by ChiMorse before looking up angles.
+template<typename T>
+struct TabularCanonicalPair {
+    const ParticleOriented<T>* first;
+    const ParticleOriented<T>* second;
+    RefInteractionType type;
+    bool swapped;
+};
+
+template<typename T>
+TabularCanonicalPair<T> canonicalizeTabularPair(
+    const ParticleOriented<T>& p1,
+    const ParticleOriented<T>& p2
+) {
+    const auto type = getRefInteractionType(p1, p2);
+    bool swapped = false;
+    switch (type) {
+        case RefInteractionType::EP:
+            break;
+        case RefInteractionType::EA:
+            swapped = p1.alignment < p2.alignment;
+            break;
+        case RefInteractionType::OP:
+        case RefInteractionType::OA:
+            swapped = p1.handedness < p2.handedness;
+            break;
+    }
+    return swapped
+        ? TabularCanonicalPair<T>{&p2, &p1, type, true}
+        : TabularCanonicalPair<T>{&p1, &p2, type, false};
+}
 template<typename T>
 struct TabularDFTConfig {
     T isolatedHelixEnergyEV;
@@ -63,12 +97,72 @@ inline constexpr long double isolatedHelixEnergyEV = -6227.1749L;
 inline constexpr bool inputEnergyIsBinding = false;
 inline constexpr long double E0 = 0.4L;               // eV
 inline constexpr long double L0 = 7.0L;               // Angstrom
-inline constexpr long double cutoffAngstrom = 12.0L;  // Angstrom
+inline constexpr long double cutoffAngstrom = 20.0L;  // Angstrom
 inline constexpr long double zeta = 0.0L;             // Angstrom
 inline constexpr long double zetaTolerance = 1e-8L;
 inline constexpr int screwStepDeg = 20;
 inline constexpr bool requireFullAngularCoverage = true;
 }
+
+// Diagnostic instrumentation for annealing tests. Disable for performance
+// benchmarking with -DTABULARDFT_ENABLE_MONITOR=0 (rebuild afterward).
+#ifndef TABULARDFT_ENABLE_MONITOR
+#define TABULARDFT_ENABLE_MONITOR 1
+#endif
+
+// Enable a bounded-force, C1-continuous continuation beyond the first
+// 0.25 reduced units of UNSAMPLED short-range separation. Set this to 0
+// to recover the original exponential continuation for a control run.
+#ifndef TABULARDFT_BOUNDED_SHORT_RANGE
+#define TABULARDFT_BOUNDED_SHORT_RANGE 1
+#endif
+
+#if TABULARDFT_ENABLE_MONITOR
+namespace TabularDFTDiagnostics {
+struct Summary {
+    std::atomic<double> minReducedR{
+        std::numeric_limits<double>::infinity()
+    };
+    std::atomic<double> maxReducedForce{0.0};
+    std::atomic<double> maxReducedTorque{0.0};
+
+    static void updateMin(std::atomic<double>& stored, double value) {
+        double old = stored.load(std::memory_order_relaxed);
+        while (value < old && !stored.compare_exchange_weak(
+            old, value, std::memory_order_relaxed
+        )) {}
+    }
+
+    static void updateMax(std::atomic<double>& stored, double value) {
+        double old = stored.load(std::memory_order_relaxed);
+        while (value > old && !stored.compare_exchange_weak(
+            old, value, std::memory_order_relaxed
+        )) {}
+    }
+
+    void observe(double r, double force, double torque) {
+        updateMin(minReducedR, r);
+        updateMax(maxReducedForce, force);
+        updateMax(maxReducedTorque, torque);
+    }
+
+    ~Summary() {
+        const double r = minReducedR.load();
+        if (std::isfinite(r)) {
+            std::cerr << "[TabularDFT diagnostic] minimum r*: " << r
+                      << ", maximum |F*|: " << maxReducedForce.load()
+                      << ", maximum |torque*|: " << maxReducedTorque.load()
+                      << '\n';
+        }
+    }
+};
+
+inline Summary& summary() {
+    static Summary result;
+    return result;
+}
+} // namespace TabularDFTDiagnostics
+#endif
 
 // ------------------------------------------------------------
 inline int inferScrewDirection(RefInteractionType type) {
@@ -363,6 +457,9 @@ private:
     //
     // Below the first R:
     //   exponential repulsive continuation if the first slope is negative.
+    //   For very short distances, use its tangent continuation to keep
+    //   forces bounded while preserving U and dU/dr at the transition.
+    //   This modifies only the UNSAMPLED short-range extension.
     //
     // Inside the table:
     //   linear interpolation.
@@ -386,6 +483,24 @@ private:
                 const T beta = T{12};
                 const T x = a.r - r;
                 const T amplitude = -slope / beta;
+#if TABULARDFT_BOUNDED_SHORT_RANGE
+                // The exponential is unchanged for the first 0.25
+                // reduced length units below the minimum sampled radius.
+                // Past that depth, continue along its tangent to prevent
+                // enormous repulsive kicks when particles overlap.
+                const T capDepth = T{0.25};
+                if (x > capDepth) {
+                    const T expAtCap = std::exp(beta * capDepth);
+                    const T energyAtCap =
+                        a.energy + amplitude * (expAtCap - T{1});
+                    const T slopeAtCap = slope * expAtCap;
+                    const T rAtCap = a.r - capDepth;
+                    return {
+                        energyAtCap + slopeAtCap * (r - rAtCap),
+                        slopeAtCap
+                    };
+                }
+#endif
                 const T expTerm = std::exp(beta * x);
                 return {
                     a.energy + amplitude * (expTerm - T{1}),
@@ -483,6 +598,10 @@ private:
             << " eV, L0=" << cfg.L0
             << " Angstrom, cutoff*=" << m_cutoff << '\n';
         std::cerr
+            << "TabularDFT canonical ordering: enabled, "
+            << "bounded short-range: " << TABULARDFT_BOUNDED_SHORT_RANGE
+            << ", force monitor: " << TABULARDFT_ENABLE_MONITOR << '\n';
+        std::cerr
             << "TabularDFT angular coverage missing nodes: "
             << "EP=" << table(RefInteractionType::EP).missingAngularNodes() << ", "
             << "EA=" << table(RefInteractionType::EA).missingAngularNodes() << ", "
@@ -498,8 +617,9 @@ public:
         T r
     ) const {
         if (r <= T{0} || r > m_cutoff) return T{0};
-        return table(getRefInteractionType(p1, p2))
-            .evaluate(r, p1.phi, p2.phi)
+        const auto pair = canonicalizeTabularPair(p1, p2);
+        return table(pair.type)
+            .evaluate(r, pair.first->phi, pair.second->phi)
             .energy;
     }
     std::pair<T, Vec<T, 3>> energyAndForces(
@@ -511,14 +631,18 @@ public:
         if (r <= T{0} || r > m_cutoff) {
             return {T{0}, {{T{0}, T{0}, T{0}}}};
         }
-        const auto value =
-            table(getRefInteractionType(p1, p2))
-                .evaluate(r, p1.phi, p2.phi);
+        const auto pair = canonicalizeTabularPair(p1, p2);
+        const auto value = table(pair.type).evaluate(
+            r, pair.first->phi, pair.second->phi
+        );
         const T radialForce = -value.dUdr;
         const T fx = radialForce * dr[0] / r;
         const T fy = radialForce * dr[1] / r;
-        // The force functor returns the generalized force acting on p2.
-        const T torqueOn2 = -value.dUdPhi2;
+        // The force functor returns the generalized force on actual p2.
+        // If the pair was swapped, actual p2 is canonical particle 1.
+        const T torqueOn2 = pair.swapped
+            ? -value.dUdPhi1
+            : -value.dUdPhi2;
         return {
             value.energy,
             {{fx, fy, torqueOn2}}
@@ -565,7 +689,27 @@ public:
         const Vec<T, 2>& dr,
         T r
     ) const {
-        return m_potential.energyAndForces(p1, p2, dr, r).second;
+        if (!std::isfinite(r)) {
+            throw std::runtime_error(
+                "TabularDFT received a non-finite pair separation"
+            );
+        }
+        const auto value = m_potential.energyAndForces(p1, p2, dr, r).second;
+        if (!std::isfinite(value[0]) || !std::isfinite(value[1]) ||
+            !std::isfinite(value[2])) {
+            throw std::runtime_error(
+                "TabularDFT produced a non-finite force or torque"
+            );
+        }
+#if TABULARDFT_ENABLE_MONITOR
+        TabularDFTDiagnostics::summary().observe(
+            static_cast<double>(r),
+            std::hypot(static_cast<double>(value[0]),
+                       static_cast<double>(value[1])),
+            std::abs(static_cast<double>(value[2]))
+        );
+#endif
+        return value;
     }
 private:
     TabularDFTPotential<T> m_potential;
